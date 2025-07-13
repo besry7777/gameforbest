@@ -466,36 +466,51 @@
             }
             
             // AI move using minimax algorithm with alpha-beta pruning
-            function makeAIMove() {
-                const depth = 5; // Higher = stronger but slower
-                const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
-                
-                if (bestMove) {
-                    makeMove(bestMove);
-                    
-                    // Check for consecutive captures
-                    if (bestMove.captures.length > 0) {
-                        const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
-                        if (nextCaptures.length > 0) {
-                            setTimeout(() => {
-                                makeAIMove();
-                            }, 800);
-                            return;
-                        }
-                    }
-                    
-                    currentPlayer = 1;
-                    statusDisplay.textContent = "ตาคุณ (แดง)";
-                } else {
-                    // No valid moves for AI
-                    currentPlayer = 1;
-                    statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
-                }
-                
-                selectedPiece = null;
-                possibleMoves = [];
-                renderBoard();
+    function makeAIMove() {
+    // ตรวจสอบก่อนว่าเกมยังไม่จบ
+    checkGameOver();
+    if (gameOver) return;
+
+    const depth = 5;
+    let validMoves = getAllValidMoves(gameState, 2);
+    
+    // ตรวจสอบว่ามีตาเดินที่ถูกต้องหรือไม่
+    if (validMoves.length === 0) {
+        currentPlayer = 1;
+        statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
+        renderBoard();
+        return;
+    }
+
+    const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
+    
+    if (bestMove) {
+        makeMove(bestMove);
+        
+        // ตรวจสอบการกินต่อ
+        if (bestMove.captures.length > 0) {
+            const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
+            if (nextCaptures.length > 0) {
+                setTimeout(() => {
+                    makeAIMove();
+                }, 800);
+                return;
             }
+        }
+        
+        currentPlayer = 1;
+        statusDisplay.textContent = "ตาคุณ (แดง)";
+    } else {
+        // กรณีไม่มีตาเดินที่ดี (ควรไม่เกิดขึ้นถ้ามี validMoves)
+        currentPlayer = 1;
+        statusDisplay.textContent = "AI ส่งตาให้คุณ (แดง)";
+    }
+    
+    selectedPiece = null;
+    possibleMoves = [];
+    renderBoard();
+    checkGameOver();
+}
             
             // Minimax algorithm with alpha-beta pruning
             function minimax(state, depth, alpha, beta, maximizingPlayer) {
