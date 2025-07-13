@@ -2,1136 +2,176 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>หมากฮอส - เกมกระดานไทย</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือคำนวณตรีโกณมิติ</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f5f5f5;
+            line-height: 1.6;
             margin: 0;
-            padding: 10px;
+            padding: 20px;
+            background-color: #f5f5f5;
             color: #333;
-            touch-action: manipulation;
-            overflow: hidden;
-            height: 100vh;
         }
-        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
         h1 {
             color: #2c3e50;
-            margin-bottom: 5px;
-            font-size: 1.5rem;
-        }
-        
-        .game-container {
-            width: 100%;
-            max-width: 100vw;
-            max-height: 100vw;
-            margin: 5px auto;
-            position: relative;
-        }
-        
-        .board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            width: 100%;
-            aspect-ratio: 1/1;
-            border: 2px solid #333;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            touch-action: none;
-        }
-        
-        .cell {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        
-        .dark {
-            background-color: #8b4513;
-        }
-        
-        .light {
-            background-color: #f0d9b5;
-        }
-        
-        .piece {
-            width: 80%;
-            height: 80%;
-            border-radius: 50%;
-            cursor: pointer;
-            position: relative;
-            z-index: 2;
-            transition: transform 0.2s;
-            touch-action: none;
-        }
-        
-        .piece:active {
-            transform: scale(1.1);
-        }
-        
-        .player1 {
-            background-color: #e74c3c;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .player2 {
-            background-color: #2c3e50;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .king {
-            border: 3px solid gold;
-            box-sizing: border-box;
-        }
-        
-        .selected {
-            transform: scale(1.1);
-            box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7);
-        }
-        
-        .possible-move {
-            position: absolute;
-            width: 30%;
-            height: 30%;
-            background-color: rgba(46, 204, 113, 0.5);
-            border-radius: 50%;
-            z-index: 1;
-        }
-        
-        .capture-move {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(231, 76, 60, 0.3);
-            border-radius: 50%;
-            z-index: 1;
-        }
-        
-        .game-info {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
             text-align: center;
-            font-size: 0.9rem;
         }
-        
-        .timer {
-            font-weight: bold;
-            color: #e74c3c;
-            margin: 5px 0;
+        .input-area {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
         }
-        
-        .controls {
-            margin-top: 10px;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            font-size: 16px;
         }
-        
         button {
-            padding: 8px 12px;
-            background-color: #3498db;
+            background: #3498db;
             color: white;
             border: none;
+            padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: background-color 0.2s;
-            touch-action: manipulation;
+            font-size: 16px;
         }
-        
         button:hover {
-            background-color: #2980b9;
+            background: #2980b9;
         }
-        
-        .rules {
-            margin-top: 10px;
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4fc;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .examples {
+            margin-top: 30px;
+        }
+        .example {
+            background: #f0f0f0;
             padding: 10px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-            font-size: 0.8rem;
-            overflow-y: auto;
-            max-height: 20vh;
-        }
-        
-        .rules h2 {
-            color: #2c3e50;
-            margin-top: 0;
-            font-size: 1rem;
-        }
-        
-        .rules ul {
-            padding-left: 20px;
             margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        
-        @media (min-width: 500px) {
-            .game-container {
-                max-width: 500px;
-                max-height: 500px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .game-info, .rules {
-                font-size: 1rem;
-            }
-            
-            button {
-                font-size: 1rem;
-            }
+        .example:hover {
+            background: #e0e0e0;
         }
     </style>
 </head>
 <body>
-    <h1>เกมหมากฮอส</h1>
-    <p>ผู้เล่น (แดง) vs AI (ดำ)</p>
-    
-    <div class="game-container">
-        <div class="board" id="board"></div>
-    </div>
-    
-    <div class="game-info">
-        <div id="status">ตาคุณ (แดง) เล่นก่อน</div>
-        <div class="timer" id="timer">เวลาเหลือ: 10 วินาที</div>
-        <div class="controls">
-            <button id="new-game">เกมใหม่</button>
-            <button id="hint">คำแนะนำ</button>
+    <div class="container">
+        <h1>เครื่องมือคำนวณตรีโกณมิติ</h1>
+        
+        <div class="input-area">
+            <h2>ป้อนโจทย์ของคุณ</h2>
+            <textarea id="problemInput" placeholder="ตัวอย่าง: จงหาปริมาตรของทรงกลมเมื่อมุม x=45° และ F=120"></textarea>
+            <button onclick="solveProblem()">คำนวณ</button>
         </div>
-    </div>
-    
-    <div class="rules">
-        <h2>กติกาหมากฮอสสากล</h2>
-        <ul>
-            <li>ผู้เล่นเริ่มจากฝั่งตัวเอง (แดงเล่นก่อน)</li>
-            <li>เดินหน้าเฉียงทีละ 1 ช่อง</li>
-            <li>หากมีหมากของคู่แข่งอยู่เฉียงหน้าและมีช่องว่างด้านหลัง สามารถกินได้โดยกระโดดข้าม</li>
-            <li>หากกินได้หลายทาง ต้องกินให้มากที่สุด</li>
-            <li>เมื่อเดินถึงแถวสุดท้ายจะกลายเป็น "King" ที่เดินถอยหลังได้</li>
-            <li>ชนะโดยกินหมากคู่แข่งทั้งหมดหรือทำให้คู่แข่งเดินไม่ได้</li>
-            <li>ต้องเดินภายใน 10 วินาที ไม่เช่นนั้นจะเสียตา</li>
-        </ul>
+        
+        <div class="result" id="result">
+            ผลลัพธ์จะแสดงที่นี่...
+        </div>
+        
+        <div class="examples">
+            <h2>ตัวอย่างโจทย์</h2>
+            <div class="example" onclick="useExample(this)">จงหาค่า sin(45°)</div>
+            <div class="example" onclick="useExample(this)">คำนวณ cos(60°) + tan(30°)</div>
+            <div class="example" onclick="useExample(this)">หาค่า tan(x) เมื่อ x=30°</div>
+            <div class="example" onclick="useExample(this)">จงหาปริมาตรของทรงกลมเมื่อมุม x=45° และ F=120</div>
+            <div class="example" onclick="useExample(this)">คำนวณ sin²(45°) + cos²(45°)</div>
+        </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const board = document.getElementById('board');
-            const statusDisplay = document.getElementById('status');
-            const timerDisplay = document.getElementById('timer');
-            const newGameBtn = document.getElementById('new-game');
-            const hintBtn = document.getElementById('hint');
+        function solveProblem() {
+            const problem = document.getElementById('problemInput').value;
+            let result = "ผลลัพธ์: \n";
             
-            let gameState = initializeGame();
-            let selectedPiece = null;
-            let possibleMoves = [];
-            let currentPlayer = 1; // 1 for human (red), 2 for AI (black)
-            let gameOver = false;
-            let hintActive = false;
-            let timer = 10;
-            let timerInterval = null;
-            
-            // Initialize the game board
-            function initializeGame() {
-                const state = Array(8).fill().map(() => Array(8).fill(null));
-                
-                // Set up player 1 (human) pieces
-                for (let row = 5; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        if ((row + col) % 2 === 1) {
-                            state[row][col] = { player: 1, king: false };
-                        }
-                    }
-                }
-                
-                // Set up player 2 (AI) pieces
-                for (let row = 0; row < 3; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        if ((row + col) % 2 === 1) {
-                            state[row][col] = { player: 2, king: false };
-                        }
-                    }
-                }
-                
-                return state;
-            }
-            
-            // Start or reset timer
-            function startTimer() {
-                clearInterval(timerInterval);
-                timer = 10;
-                updateTimerDisplay();
-                
-                timerInterval = setInterval(() => {
-                    timer--;
-                    updateTimerDisplay();
-                    
-                    if (timer <= 0) {
-                        clearInterval(timerInterval);
-                        timeOut();
-                    }
-                }, 1000);
-            }
-            
-            // Update timer display
-            function updateTimerDisplay() {
-                timerDisplay.textContent = `เวลาเหลือ: ${timer} วินาที`;
-                
-                // Change color when time is running out
-                if (timer <= 3) {
-                    timerDisplay.style.color = '#e74c3c';
-                } else {
-                    timerDisplay.style.color = '#2c3e50';
+            // ตรวจสอบและคำนวณ sin
+            if (problem.includes('sin')) {
+                const angle = extractAngle(problem);
+                if (angle !== null) {
+                    const radians = angle * Math.PI / 180;
+                    const sinValue = Math.sin(radians);
+                    result += `sin(${angle}°) = ${sinValue.toFixed(4)}\n`;
                 }
             }
             
-            // Handle time out
-            function timeOut() {
-                if (gameOver || currentPlayer !== 1) return;
-                
-                statusDisplay.textContent = "เวลาเกิน! ตาของ AI (ดำ)...";
-                currentPlayer = 2;
-                selectedPiece = null;
-                possibleMoves = [];
-                renderBoard();
-                
-                // AI move after a short delay
-                setTimeout(() => {
-                    if (!gameOver) {
-                        makeAIMove();
-                    }
-                }, 800);
-            }
-            
-            // Render the game board
-            function renderBoard() {
-                board.innerHTML = '';
-                
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const cell = document.createElement('div');
-                        cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
-                        cell.dataset.row = row;
-                        cell.dataset.col = col;
-                        
-                        if (gameState[row][col]) {
-                            const piece = document.createElement('div');
-                            piece.className = `piece player${gameState[row][col].player} ${gameState[row][col].king ? 'king' : ''}`;
-                            piece.dataset.row = row;
-                            piece.dataset.col = col;
-                            
-                            if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
-                                piece.classList.add('selected');
-                            }
-                            
-                            piece.addEventListener('click', () => handlePieceClick(row, col));
-                            cell.appendChild(piece);
-                        } else {
-                            cell.addEventListener('click', () => handleCellClick(row, col));
-                        }
-                        
-                        // Highlight possible moves
-                        if (selectedPiece) {
-                            const move = possibleMoves.find(m => 
-                                m.endRow === row && m.endCol === col);
-                            if (move) {
-                                const highlight = document.createElement('div');
-                                highlight.className = move.captures.length > 0 ? 'capture-move' : 'possible-move';
-                                cell.appendChild(highlight);
-                            }
-                        }
-                        
-                        board.appendChild(cell);
-                    }
+            // ตรวจสอบและคำนวณ cos
+            if (problem.includes('cos')) {
+                const angle = extractAngle(problem);
+                if (angle !== null) {
+                    const radians = angle * Math.PI / 180;
+                    const cosValue = Math.cos(radians);
+                    result += `cos(${angle}°) = ${cosValue.toFixed(4)}\n`;
                 }
             }
             
-            // Handle piece selection
-            function handlePieceClick(row, col) {
-                if (gameOver || currentPlayer !== 1) return;
-                
-                const piece = gameState[row][col];
-                
-                // Select a piece of the current player
-                if (piece.player === currentPlayer) {
-                    selectedPiece = { row, col };
-                    possibleMoves = getValidMoves(row, col);
-                    renderBoard();
-                }
-                // If a piece is already selected, try to capture
-                else if (selectedPiece) {
-                    handleCellClick(row, col);
+            // ตรวจสอบและคำนวณ tan
+            if (problem.includes('tan')) {
+                const angle = extractAngle(problem);
+                if (angle !== null) {
+                    const radians = angle * Math.PI / 180;
+                    const tanValue = Math.tan(radians);
+                    result += `tan(${angle}°) = ${tanValue.toFixed(4)}\n`;
                 }
             }
             
-            // Handle cell click (move or capture)
-            function handleCellClick(row, col) {
-                if (gameOver || currentPlayer !== 1 || !selectedPiece) return;
+            // ตรวจสอบโจทย์ตัวอย่างเกี่ยวกับปริมาตร
+            if (problem.includes('ปริมาตร') && problem.includes('มุม x=45°') && problem.includes('F=120')) {
+                const angle = 45;
+                const force = 120;
                 
-                const move = possibleMoves.find(m => m.endRow === row && m.endCol === col);
-                if (!move) return;
-                
-                // Reset timer when player makes a move
-                startTimer();
-                
-                // Make the move
-                makeMove(move);
-                
-                // Check if there's a consecutive capture
-                if (move.captures.length > 0) {
-                    const nextCaptures = getCaptures(row, col);
-                    if (nextCaptures.length > 0) {
-                        selectedPiece = { row, col };
-                        possibleMoves = nextCaptures;
-                        renderBoard();
-                        statusDisplay.textContent = "คุณสามารถกินต่อได้!";
-                        return;
-                    }
-                }
-                
-                // Switch to AI turn
-                selectedPiece = null;
-                possibleMoves = [];
-                currentPlayer = 2;
-                statusDisplay.textContent = "ตาของ AI (ดำ)...";
-                renderBoard();
-                
-                // AI move after a short delay
-                setTimeout(() => {
-                    if (!gameOver) {
-                        makeAIMove();
-                    }
-                }, 800);
+                // สมมติการคำนวณปริมาตร (ตัวอย่างเท่านั้น)
+                const volume = Math.pow(force, 3) * Math.cos(angle * Math.PI / 180) / 1000;
+                result += `ปริมาตรของทรงกลมเมื่อมุม x=${angle}° และ F=${force} คือ ${volume.toFixed(2)} หน่วย³\n`;
             }
             
-            // Make a move on the board
-            function makeMove(move) {
-                const { startRow, startCol, endRow, endCol, captures, becomesKing } = move;
-                const piece = gameState[startRow][startCol];
-                
-                // Move the piece
-                gameState[endRow][endCol] = {
-                    player: piece.player,
-                    king: becomesKing || piece.king
-                };
-                gameState[startRow][startCol] = null;
-                
-                // Remove captured pieces
-                captures.forEach(({ row, col }) => {
-                    gameState[row][col] = null;
-                });
-                
-                // Check for win
-                checkGameOver();
+            // ถ้าไม่พบฟังก์ชันตรีโกณมิติ
+            if (!problem.includes('sin') && !problem.includes('cos') && !problem.includes('tan')) {
+                result += "ไม่พบฟังก์ชันตรีโกณมิติในโจทย์ (sin, cos, tan)\n";
+                result += "กรุณาป้อนโจทย์ที่เกี่ยวข้องกับ sin, cos หรือ tan";
             }
             
-            // Get all valid moves for a piece
-            function getValidMoves(row, col) {
-                const piece = gameState[row][col];
-                if (!piece) return [];
-                
-                const moves = [];
-                const captures = getCaptures(row, col);
-                
-                // If captures are available, only return captures (must capture)
-                if (captures.length > 0) {
-                    return captures;
-                }
-                
-                // Regular moves
-                const directions = piece.king ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
-                    piece.player === 1 ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
-                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
-                
-                for (const { dr, dc } of directions) {
-                    const newRow = row + dr;
-                    const newCol = col + dc;
-                    
-                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !gameState[newRow][newCol]) {
-                        const becomesKing = (piece.player === 1 && newRow === 0) || 
-                                          (piece.player === 2 && newRow === 7);
-                        moves.push({
-                            startRow: row,
-                            startCol: col,
-                            endRow: newRow,
-                            endCol: newCol,
-                            captures: [],
-                            becomesKing
-                        });
-                    }
-                }
-                
-                return moves;
+            document.getElementById('result').textContent = result;
+        }
+        
+        function extractAngle(text) {
+            // หามุมจากรูปแบบต่างๆ เช่น sin(45°), sin(30), sin x=45°
+            const angleRegex = /(sin|cos|tan)[\( ]*(\d+)/;
+            const match = text.match(angleRegex);
+            if (match && match[2]) {
+                return parseFloat(match[2]);
             }
             
-            // Get all possible captures for a piece
-            function getCaptures(row, col) {
-                const piece = gameState[row][col];
-                if (!piece) return [];
-                
-                const captures = [];
-                const directions = piece.king ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
-                    piece.player === 1 ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
-                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
-                
-                for (const { dr, dc } of directions) {
-                    const jumpRow = row + dr;
-                    const jumpCol = col + dc;
-                    const landRow = row + 2 * dr;
-                    const landCol = col + 2 * dc;
-                    
-                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
-                        gameState[jumpRow][jumpCol] && gameState[jumpRow][jumpCol].player !== piece.player &&
-                        !gameState[landRow][landCol]) {
-                        
-                        const becomesKing = (piece.player === 1 && landRow === 0) || 
-                                          (piece.player === 2 && landRow === 7);
-                        
-                        // Simulate the capture to check for multi-captures
-                        const originalPiece = gameState[row][col];
-                        const capturedPiece = gameState[jumpRow][jumpCol];
-                        gameState[row][col] = null;
-                        gameState[jumpRow][jumpCol] = null;
-                        gameState[landRow][landCol] = originalPiece;
-                        
-                        const nextCaptures = getCaptures(landRow, landCol);
-                        
-                        // Restore the board
-                        gameState[row][col] = originalPiece;
-                        gameState[jumpRow][jumpCol] = capturedPiece;
-                        gameState[landRow][landCol] = null;
-                        
-                        if (nextCaptures.length > 0) {
-                            // If there are further captures, only include the longest capture chains
-                            const maxLength = Math.max(...nextCaptures.map(c => c.captures.length));
-                            nextCaptures
-                                .filter(c => c.captures.length === maxLength)
-                                .forEach(nextCapture => {
-                                    captures.push({
-                                        startRow: row,
-                                        startCol: col,
-                                        endRow: nextCapture.endRow,
-                                        endCol: nextCapture.endCol,
-                                        captures: [{ row: jumpRow, col: jumpCol }, ...nextCapture.captures],
-                                        becomesKing: nextCapture.becomesKing
-                                    });
-                                });
-                        } else {
-                            captures.push({
-                                startRow: row,
-                                startCol: col,
-                                endRow: landRow,
-                                endCol: landCol,
-                                captures: [{ row: jumpRow, col: jumpCol }],
-                                becomesKing
-                            });
-                        }
-                    }
-                }
-                
-                return captures;
+            // หามุมจากรูปแบบ x=45°
+            const xAngleRegex = /x\s*=\s*(\d+)/;
+            const xMatch = text.match(xAngleRegex);
+            if (xMatch && xMatch[1]) {
+                return parseFloat(xMatch[1]);
             }
             
-            // AI move using minimax algorithm with alpha-beta pruning
-            function makeAIMove() {
-                const depth = 6; // Increased depth for stronger AI
-                
-                // First check if game is already over
-                checkGameOver();
-                if (gameOver) return;
-                
-                // Get all valid moves for AI
-                const validMoves = getAllValidMoves(gameState, 2);
-                
-                if (validMoves.length === 0) {
-                    // No valid moves for AI
-                    currentPlayer = 1;
-                    statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
-                    startTimer();
-                    renderBoard();
-                    checkGameOver();
-                    return;
-                }
-                
-                // Use minimax to find best move
-                const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
-                
-                if (bestMove) {
-                    makeMove(bestMove);
-                    
-                    // Check for consecutive captures
-                    if (bestMove.captures.length > 0) {
-                        const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
-                        if (nextCaptures.length > 0) {
-                            // AI must continue capturing
-                            setTimeout(() => {
-                                makeAIMove();
-                            }, 800);
-                            return;
-                        }
-                    }
-                    
-                    currentPlayer = 1;
-                    statusDisplay.textContent = "ตาคุณ (แดง)";
-                    startTimer();
-                } else {
-                    // Shouldn't happen since we checked validMoves
-                    currentPlayer = 1;
-                    statusDisplay.textContent = "AI ส่งตาให้คุณ (แดง)";
-                    startTimer();
-                }
-                
-                selectedPiece = null;
-                possibleMoves = [];
-                renderBoard();
-                checkGameOver();
-            }
-            
-            // Minimax algorithm with alpha-beta pruning
-            function minimax(state, depth, alpha, beta, maximizingPlayer) {
-                if (depth === 0 || isTerminalState(state)) {
-                    return { value: evaluateState(state) };
-                }
-                
-                const player = maximizingPlayer ? 2 : 1;
-                let validMoves = getAllValidMoves(state, player);
-                
-                // If no valid moves, it's terminal
-                if (validMoves.length === 0) {
-                    return { value: evaluateState(state) };
-                }
-                
-                // Sort moves by heuristic to improve pruning
-                validMoves.sort((a, b) => {
-                    const scoreA = evaluateMove(a);
-                    const scoreB = evaluateMove(b);
-                    return maximizingPlayer ? scoreB - scoreA : scoreA - scoreB;
-                });
-                
-                let bestMove = validMoves[0];
-                let bestValue = maximizingPlayer ? -Infinity : Infinity;
-                
-                for (const move of validMoves) {
-                    // Make the move on a copy of the state
-                    const newState = JSON.parse(JSON.stringify(state));
-                    applyMove(newState, move);
-                    
-                    // If the move is a capture and can capture more, force it to capture more
-                    if (move.captures.length > 0) {
-                        const nextCaptures = getCapturesForState(newState, move.endRow, move.endCol);
-                        if (nextCaptures.length > 0) {
-                            // Find the best continuation of captures
-                            const { value: captureValue } = minimaxCaptures(newState, nextCaptures, alpha, beta, maximizingPlayer);
-                            if ((maximizingPlayer && captureValue > bestValue) || 
-                                (!maximizingPlayer && captureValue < bestValue)) {
-                                bestValue = captureValue;
-                                bestMove = move;
-                            }
-                            
-                            if (maximizingPlayer) {
-                                alpha = Math.max(alpha, bestValue);
-                            } else {
-                                beta = Math.min(beta, bestValue);
-                            }
-                            
-                            if (beta <= alpha) {
-                                break;
-                            }
-                            
-                            continue;
-                        }
-                    }
-                    
-                    // Recurse
-                    const { value } = minimax(newState, depth - 1, alpha, beta, !maximizingPlayer);
-                    
-                    if ((maximizingPlayer && value > bestValue) || 
-                        (!maximizingPlayer && value < bestValue)) {
-                        bestValue = value;
-                        bestMove = move;
-                    }
-                    
-                    if (maximizingPlayer) {
-                        alpha = Math.max(alpha, bestValue);
-                    } else {
-                        beta = Math.min(beta, bestValue);
-                    }
-                    
-                    if (beta <= alpha) {
-                        break;
-                    }
-                }
-                
-                return { value: bestValue, bestMove };
-            }
-            
-            // Special case for consecutive captures in minimax
-            function minimaxCaptures(state, captures, alpha, beta, maximizingPlayer) {
-                let bestValue = maximizingPlayer ? -Infinity : Infinity;
-                let bestMove = captures[0];
-                
-                for (const move of captures) {
-                    const newState = JSON.parse(JSON.stringify(state));
-                    applyMove(newState, move);
-                    
-                    const nextCaptures = getCapturesForState(newState, move.endRow, move.endCol);
-                    if (nextCaptures.length > 0) {
-                        const { value } = minimaxCaptures(newState, nextCaptures, alpha, beta, maximizingPlayer);
-                        if ((maximizingPlayer && value > bestValue) || 
-                            (!maximizingPlayer && value < bestValue)) {
-                            bestValue = value;
-                            bestMove = move;
-                        }
-                    } else {
-                        const { value } = minimax(newState, 0, alpha, beta, !maximizingPlayer);
-                        if ((maximizingPlayer && value > bestValue) || 
-                            (!maximizingPlayer && value < bestValue)) {
-                            bestValue = value;
-                            bestMove = move;
-                        }
-                    }
-                    
-                    if (maximizingPlayer) {
-                        alpha = Math.max(alpha, bestValue);
-                    } else {
-                        beta = Math.min(beta, bestValue);
-                    }
-                    
-                    if (beta <= alpha) {
-                        break;
-                    }
-                }
-                
-                return { value: bestValue, bestMove };
-            }
-            
-            // Apply a move to a game state
-            function applyMove(state, move) {
-                const { startRow, startCol, endRow, endCol, captures, becomesKing } = move;
-                const piece = state[startRow][startCol];
-                
-                // Move the piece
-                state[endRow][endCol] = {
-                    player: piece.player,
-                    king: becomesKing || piece.king
-                };
-                state[startRow][startCol] = null;
-                
-                // Remove captured pieces
-                captures.forEach(({ row, col }) => {
-                    state[row][col] = null;
-                });
-            }
-            
-            // Get captures for a piece in a given state
-            function getCapturesForState(state, row, col) {
-                const piece = state[row][col];
-                if (!piece) return [];
-                
-                const captures = [];
-                const directions = piece.king ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
-                    piece.player === 1 ? 
-                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
-                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
-                
-                for (const { dr, dc } of directions) {
-                    const jumpRow = row + dr;
-                    const jumpCol = col + dc;
-                    const landRow = row + 2 * dr;
-                    const landCol = col + 2 * dc;
-                    
-                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
-                        state[jumpRow][jumpCol] && state[jumpRow][jumpCol].player !== piece.player &&
-                        !state[landRow][landCol]) {
-                        
-                        const becomesKing = (piece.player === 1 && landRow === 0) || 
-                                          (piece.player === 2 && landRow === 7);
-                        
-                        // Simulate the capture to check for multi-captures
-                        const originalPiece = state[row][col];
-                        const capturedPiece = state[jumpRow][jumpCol];
-                        state[row][col] = null;
-                        state[jumpRow][jumpCol] = null;
-                        state[landRow][landCol] = originalPiece;
-                        
-                        const nextCaptures = getCapturesForState(state, landRow, landCol);
-                        
-                        // Restore the board
-                        state[row][col] = originalPiece;
-                        state[jumpRow][jumpCol] = capturedPiece;
-                        state[landRow][landCol] = null;
-                        
-                        if (nextCaptures.length > 0) {
-                            const maxLength = Math.max(...nextCaptures.map(c => c.captures.length));
-                            nextCaptures
-                                .filter(c => c.captures.length === maxLength)
-                                .forEach(nextCapture => {
-                                    captures.push({
-                                        startRow: row,
-                                        startCol: col,
-                                        endRow: nextCapture.endRow,
-                                        endCol: nextCapture.endCol,
-                                        captures: [{ row: jumpRow, col: jumpCol }, ...nextCapture.captures],
-                                        becomesKing: nextCapture.becomesKing
-                                    });
-                                });
-                        } else {
-                            captures.push({
-                                startRow: row,
-                                startCol: col,
-                                endRow: landRow,
-                                endCol: landCol,
-                                captures: [{ row: jumpRow, col: jumpCol }],
-                                becomesKing
-                            });
-                        }
-                    }
-                }
-                
-                return captures;
-            }
-            
-            // Get all valid moves for a player in a given state
-            function getAllValidMoves(state, player) {
-                const moves = [];
-                let hasCaptures = false;
-                
-                // First check for captures (mandatory)
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = state[row][col];
-                        if (piece && piece.player === player) {
-                            const captures = getCapturesForState(state, row, col);
-                            if (captures.length > 0) {
-                                moves.push(...captures);
-                                hasCaptures = true;
-                            }
-                        }
-                    }
-                }
-                
-                if (hasCaptures) return moves;
-                
-                // If no captures, get regular moves
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = state[row][col];
-                        if (piece && piece.player === player) {
-                            const directions = piece.king ? 
-                                [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
-                                player === 1 ? 
-                                [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
-                                [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
-                            
-                            for (const { dr, dc } of directions) {
-                                const newRow = row + dr;
-                                const newCol = col + dc;
-                                
-                                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !state[newRow][newCol]) {
-                                    const becomesKing = (player === 1 && newRow === 0) || 
-                                                      (player === 2 && newRow === 7);
-                                    moves.push({
-                                        startRow: row,
-                                        startCol: col,
-                                        endRow: newRow,
-                                        endCol: newCol,
-                                        captures: [],
-                                        becomesKing
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                return moves;
-            }
-            
-            // Evaluate a move for move ordering
-            function evaluateMove(move) {
-                let score = 0;
-                
-                // Captures are good
-                score += move.captures.length * 10;
-                
-                // Becoming king is good
-                if (move.becomesKing) score += 5;
-                
-                // Moving forward is generally better
-                if (move.endRow !== move.startRow) {
-                    const direction = move.captures.length > 0 ? 
-                        (move.endRow - move.startRow) / Math.abs(move.endRow - move.startRow) :
-                        move.endRow > move.startRow ? 1 : -1;
-                    
-                    const player = gameState[move.startRow][move.startCol].player;
-                    if ((player === 1 && direction === -1) || (player === 2 && direction === 1)) {
-                        score += 1;
-                    }
-                }
-                
-                // Prefer moves that don't leave pieces vulnerable
-                const originalPiece = gameState[move.startRow][move.startCol];
-                gameState[move.startRow][move.startCol] = null;
-                gameState[move.endRow][move.endCol] = originalPiece;
-                
-                if (isPieceVulnerable(move.endRow, move.endCol)) {
-                    score -= 3;
-                }
-                
-                // Restore the board
-                gameState[move.startRow][move.startCol] = originalPiece;
-                gameState[move.endRow][move.endCol] = null;
-                
-                return score;
-            }
-            
-            // Check if a piece is vulnerable to capture
-            function isPieceVulnerable(row, col) {
-                const piece = gameState[row][col];
-                if (!piece) return false;
-                
-                const directions = [
-                    { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
-                    { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
-                ];
-                
-                for (const { dr, dc } of directions) {
-                    const attackRow = row + dr;
-                    const attackCol = col + dc;
-                    const landRow = row - dr;
-                    const landCol = col - dc;
-                    
-                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
-                        gameState[attackRow] && gameState[attackRow][attackCol] &&
-                        gameState[attackRow][attackCol].player !== piece.player &&
-                        !gameState[landRow][landCol]) {
-                        return true;
-                    }
-                }
-                
-                return false;
-            }
-            
-            // Evaluate the game state
-            function evaluateState(state) {
-                let score = 0;
-                let p1Pieces = 0;
-                let p1Kings = 0;
-                let p2Pieces = 0;
-                let p2Kings = 0;
-                
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = state[row][col];
-                        if (piece) {
-                            if (piece.player === 1) {
-                                p1Pieces++;
-                                if (piece.king) p1Kings++;
-                                // Encourage pieces to become kings
-                                score += piece.king ? 10 : 5;
-                                // Encourage central control
-                                score += (3.5 - Math.abs(col - 3.5)) * 0.2;
-                                // Penalize vulnerable pieces
-                                if (isPieceVulnerable(row, col)) score -= 3;
-                            } else {
-                                p2Pieces++;
-                                if (piece.king) p2Kings++;
-                                // Penalize opponent's pieces
-                                score -= piece.king ? 10 : 5;
-                                // Discourage opponent's central control
-                                score -= (3.5 - Math.abs(col - 3.5)) * 0.2;
-                                // Reward threatening opponent's pieces
-                                if (isPieceVulnerable(row, col)) score += 3;
-                            }
-                        }
-                    }
-                }
-                
-                // Winning/losing conditions
-                if (p1Pieces === 0) return -1000;
-                if (p2Pieces === 0) return 1000;
-                
-                const p1Moves = getAllValidMoves(state, 1).length;
-                const p2Moves = getAllValidMoves(state, 2).length;
-                
-                if (p1Moves === 0) return -1000;
-                if (p2Moves === 0) return 1000;
-                
-                // Mobility bonus
-                score += (p1Moves - p2Moves) * 0.5;
-                
-                // King ratio bonus
-                if (p1Pieces > 0 && p2Pieces > 0) {
-                    score += (p1Kings / p1Pieces - p2Kings / p2Pieces) * 5;
-                }
-                
-                return score;
-            }
-            
-            // Check if the game is over
-            function checkGameOver() {
-                let p1Pieces = 0;
-                let p2Pieces = 0;
-                let p1HasMoves = false;
-                let p2HasMoves = false;
-                
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState[row][col];
-                        if (piece) {
-                            if (piece.player === 1) {
-                                p1Pieces++;
-                            } else {
-                                p2Pieces++;
-                            }
-                        }
-                    }
-                }
-                
-                const p1Moves = getAllValidMoves(gameState, 1);
-                const p2Moves = getAllValidMoves(gameState, 2);
-                
-                p1HasMoves = p1Moves.length > 0;
-                p2HasMoves = p2Moves.length > 0;
-                
-                if (p1Pieces === 0 || !p1HasMoves) {
-                    gameOver = true;
-                    clearInterval(timerInterval);
-                    statusDisplay.textContent = "คุณแพ้! AI ชนะ!";
-                } else if (p2Pieces === 0 || !p2HasMoves) {
-                    gameOver = true;
-                    clearInterval(timerInterval);
-                    statusDisplay.textContent = "คุณชนะ!";
-                }
-            }
-            
-            // Check if the state is terminal
-            function isTerminalState(state) {
-                let p1Pieces = 0;
-                let p2Pieces = 0;
-                
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = state[row][col];
-                        if (piece) {
-                            if (piece.player === 1) p1Pieces++;
-                            else p2Pieces++;
-                        }
-                    }
-                }
-                
-                if (p1Pieces === 0 || p2Pieces === 0) return true;
-                
-                const p1Moves = getAllValidMoves(state, 1);
-                const p2Moves = getAllValidMoves(state, 2);
-                
-                return p1Moves.length === 0 || p2Moves.length === 0;
-            }
-            
-            // Show hint for the human player
-            function showHint() {
-                if (currentPlayer !== 1 || gameOver) return;
-                
-                const moves = [];
-                let hasCaptures = false;
-                
-                // Find all possible captures first (mandatory)
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState[row][col];
-                        if (piece && piece.player === 1) {
-                            const captures = getCaptures(row, col);
-                            if (captures.length > 0) {
-                                moves.push(...captures);
-                                hasCaptures = true;
-                            }
-                        }
-                    }
-                }
-                
-                if (!hasCaptures) {
-                    // If no captures, find all regular moves
-                    for (let row = 0; row < 8; row++) {
-                        for (let col = 0; col < 8; col++) {
-                            const piece = gameState[row][col];
-                            if (piece && piece.player === 1) {
-                                moves.push(...getValidMoves(row, col));
-                            }
-                        }
-                    }
-                }
-                
-                if (moves.length > 0) {
-                    // Find the best move (simple heuristic)
-                    moves.sort((a, b) => {
-                        const scoreA = evaluateMove(a);
-                        const scoreB = evaluateMove(b);
-                        return scoreB - scoreA; // Descending
-                    });
-                    
-                    const bestMove = moves[0];
-                    selectedPiece = { row: bestMove.startRow, col: bestMove.startCol };
-                    possibleMoves = [bestMove];
-                    hintActive = true;
-                    renderBoard();
-                    
-                    setTimeout(() => {
-                        hintActive = false;
-                        selectedPiece = null;
-                        possibleMoves = [];
-                        renderBoard();
-                    }, 1500);
-                }
-            }
-            
-            // Start a new game
-            function newGame() {
-                clearInterval(timerInterval);
-                gameState = initializeGame();
-                selectedPiece = null;
-                possibleMoves = [];
-                currentPlayer = 1;
-                gameOver = false;
-                statusDisplay.textContent = "ตาคุณ (แดง) เล่นก่อน";
-                startTimer();
-                renderBoard();
-            }
-            
-            // Prevent zooming and scrolling on mobile
-            document.addEventListener('touchmove', function(e) {
-                if (e.target.className.includes('piece') || e.target.className.includes('cell')) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            // Event listeners
-            newGameBtn.addEventListener('click', newGame);
-            hintBtn.addEventListener('click', showHint);
-            
-            // Initial render
-            newGame();
-        });
+            return null;
+        }
+        
+        function useExample(element) {
+            document.getElementById('problemInput').value = element.textContent;
+        }
     </script>
 </body>
 </html>
