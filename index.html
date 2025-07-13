@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บาคาร่า Premium</title>
+    <title>บาคาร่า Real-Time</title>
     <style>
+        /* Reset */
         * {
             margin: 0;
             padding: 0;
@@ -13,10 +14,10 @@
             -webkit-user-select: none;
             user-select: none;
             overflow: hidden;
+            font-family: 'Noto Sans Thai', sans-serif;
         }
         
         body {
-            font-family: 'Kanit', sans-serif;
             background: #000;
             color: #fff;
             width: 100vw;
@@ -25,6 +26,7 @@
             touch-action: manipulation;
         }
         
+        /* Game Container */
         .game-container {
             width: 100%;
             height: 100%;
@@ -39,42 +41,79 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
         }
         
+        /* Header */
         .header {
-            height: 60px;
+            height: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid #ff0077;
+            padding: 0 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid #ff3366;
         }
         
         .logo {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
-            color: #ff0077;
-            text-shadow: 0 0 10px rgba(255, 0, 119, 0.7);
+            color: #ff3366;
+            text-shadow: 0 0 5px rgba(255, 51, 102, 0.7);
         }
         
         .balance {
-            font-size: 18px;
+            font-size: 16px;
             color: #fff;
-            background: rgba(255, 0, 119, 0.3);
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid #ff0077;
+            background: rgba(255, 51, 102, 0.3);
+            padding: 5px 12px;
+            border-radius: 15px;
+            border: 1px solid #ff3366;
         }
         
+        /* Timer */
+        .timer-container {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff3366, #ff9933);
+            transition: width 1s linear;
+        }
+        
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Game Area */
         .game-area {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 10px;
         }
         
         .cards-area {
@@ -88,22 +127,23 @@
         .cards-row {
             display: flex;
             justify-content: center;
-            margin: 10px 0;
+            margin: 5px 0;
             position: relative;
         }
         
+        /* Cards */
         .card {
-            width: 80px;
-            height: 110px;
+            width: 70px;
+            height: 95px;
             background: #fff;
             border-radius: 5px;
-            margin: 0 5px;
+            margin: 0 3px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 30px;
+            font-size: 26px;
             color: #000;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
             position: relative;
             transition: transform 0.3s;
         }
@@ -113,48 +153,49 @@
         }
         
         .card-back {
-            background: linear-gradient(135deg, #ff0077, #ff00cc);
+            background: linear-gradient(135deg, #ff3366, #cc0066);
             color: white;
         }
         
         .card-value {
             position: absolute;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         .top-left {
-            top: 5px;
-            left: 5px;
+            top: 3px;
+            left: 3px;
         }
         
         .bottom-right {
-            bottom: 5px;
-            right: 5px;
+            bottom: 3px;
+            right: 3px;
             transform: rotate(180deg);
         }
         
+        /* Betting Area */
         .betting-area {
-            height: 150px;
+            height: 120px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border-top: 1px solid #ff0077;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid #ff3366;
         }
         
         .bet-option {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             position: relative;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
         }
         
         .bet-option:active {
@@ -162,32 +203,32 @@
         }
         
         .banker {
-            background: linear-gradient(135deg, #ff0077, #cc0066);
-            border: 2px solid #ff0077;
+            background: linear-gradient(135deg, #ff3366, #cc0066);
+            border: 1px solid #ff3366;
         }
         
         .player {
-            background: linear-gradient(135deg, #00aaff, #0077cc);
-            border: 2px solid #00aaff;
+            background: linear-gradient(135deg, #3399ff, #0066cc);
+            border: 1px solid #3399ff;
         }
         
         .tie {
-            background: linear-gradient(135deg, #00ff77, #00cc66);
-            border: 2px solid #00ff77;
+            background: linear-gradient(135deg, #33cc33, #009933);
+            border: 1px solid #33cc33;
         }
         
         .bet-amount {
             position: absolute;
-            bottom: -20px;
-            font-size: 14px;
+            bottom: -15px;
+            font-size: 12px;
             color: #fff;
             white-space: nowrap;
         }
         
         .chip {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             background: #ffcc00;
             border-radius: 50%;
             display: flex;
@@ -195,41 +236,87 @@
             align-items: center;
             font-weight: bold;
             color: #000;
-            top: -10px;
-            right: -10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            font-size: 12px;
+            top: -5px;
+            right: -5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            font-size: 10px;
         }
         
+        /* Bet Controls */
+        .bet-controls {
+            position: absolute;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 5px;
+            border: 1px solid #ff3366;
+        }
+        
+        .bet-button {
+            width: 50px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #ff3366;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #fff;
+        }
+        
+        .bet-button:active {
+            background: rgba(255, 51, 102, 0.5);
+        }
+        
+        .current-bet {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Result */
         .result-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #ffcc00;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
             background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 8px 15px;
+            border-radius: 15px;
             display: none;
         }
         
+        /* History */
         .history {
             position: absolute;
-            bottom: 160px;
+            bottom: 170px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 5px;
+            gap: 3px;
+            max-width: 90%;
+            overflow-x: auto;
+            padding: 5px;
         }
         
         .history-item {
-            width: 20px;
+            min-width: 20px;
             height: 20px;
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -237,33 +324,34 @@
         }
         
         .history-banker {
-            background: #ff0077;
+            background: #ff3366;
         }
         
         .history-player {
-            background: #00aaff;
+            background: #3399ff;
         }
         
         .history-tie {
-            background: #00ff77;
+            background: #33cc33;
         }
         
+        /* Auto Play */
         .auto-play {
             position: absolute;
-            top: 70px;
-            right: 20px;
-            background: rgba(255, 0, 119, 0.3);
-            border: 1px solid #ff0077;
+            top: 60px;
+            right: 10px;
+            background: rgba(255, 51, 102, 0.3);
+            border: 1px solid #ff3366;
             color: #fff;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 14px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -274,11 +362,16 @@
                 <div class="balance" id="balance">10,000</div>
             </div>
             
+            <div class="timer-container">
+                <div class="timer-bar" id="timer-bar"></div>
+                <div class="timer-text" id="timer-text">วางเดิมพัน 15 วินาที</div>
+            </div>
+            
+            <div class="auto-play">
+                <i class="fas fa-play"></i> AUTO
+            </div>
+            
             <div class="game-area">
-                <div class="auto-play">
-                    <i class="fas fa-play"></i> AUTO
-                </div>
-                
                 <div class="cards-area">
                     <div class="history" id="history"></div>
                     
@@ -291,6 +384,14 @@
                     </div>
                     
                     <div class="result-display" id="result"></div>
+                </div>
+                
+                <div class="bet-controls">
+                    <div class="bet-button" id="bet-100">+100</div>
+                    <div class="bet-button" id="bet-500">+500</div>
+                    <div class="current-bet" id="current-bet">100</div>
+                    <div class="bet-button" id="bet-1000">+1000</div>
+                    <div class="bet-button" id="bet-5000">+5000</div>
                 </div>
                 
                 <div class="betting-area">
@@ -320,18 +421,22 @@
         // Game configuration
         const config = {
             initialBalance: 10000,
-            betAmount: 100,
-            autoPlayDelay: 3000,
-            cardDealSpeed: 300
+            initialBet: 100,
+            bettingTime: 15, // seconds
+            dealingTime: 10, // seconds
+            autoPlayDelay: 2000
         };
         
         // Game state
         let state = {
             balance: config.initialBalance,
-            currentBet: null,
+            currentBetType: null,
+            currentBetAmount: config.initialBet,
             gameInProgress: false,
+            bettingPhase: true,
             history: [],
-            autoPlay: false
+            timer: null,
+            timeLeft: config.bettingTime
         };
         
         // DOM elements
@@ -340,6 +445,9 @@
         const historyElement = document.getElementById('history');
         const bankerCardsElement = document.getElementById('banker-cards');
         const playerCardsElement = document.getElementById('player-cards');
+        const timerBar = document.getElementById('timer-bar');
+        const timerText = document.getElementById('timer-text');
+        const currentBetElement = document.getElementById('current-bet');
         
         // Betting elements
         const betBanker = document.getElementById('bet-banker');
@@ -348,6 +456,12 @@
         const bankerChip = document.getElementById('banker-chip');
         const playerChip = document.getElementById('player-chip');
         const tieChip = document.getElementById('tie-chip');
+        
+        // Bet amount controls
+        const bet100 = document.getElementById('bet-100');
+        const bet500 = document.getElementById('bet-500');
+        const bet1000 = document.getElementById('bet-1000');
+        const bet5000 = document.getElementById('bet-5000');
         
         // Card data
         const cardValues = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -361,38 +475,111 @@
         betPlayer.addEventListener('click', () => placeBet('player'));
         betTie.addEventListener('click', () => placeBet('tie'));
         
+        bet100.addEventListener('click', () => adjustBet(100));
+        bet500.addEventListener('click', () => adjustBet(500));
+        bet1000.addEventListener('click', () => adjustBet(1000));
+        bet5000.addEventListener('click', () => adjustBet(5000));
+        
         // Game functions
         function initGame() {
             updateBalance();
-            startAutoPlay();
+            updateCurrentBetDisplay();
+            startBettingTimer();
+        }
+        
+        function startBettingTimer() {
+            state.bettingPhase = true;
+            state.timeLeft = config.bettingTime;
+            updateTimerDisplay();
+            
+            clearInterval(state.timer);
+            state.timer = setInterval(() => {
+                state.timeLeft--;
+                updateTimerDisplay();
+                
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
+                    endBettingPhase();
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const percentage = (state.timeLeft / config.bettingTime) * 100;
+            timerBar.style.width = `${percentage}%`;
+            
+            if (state.bettingPhase) {
+                timerText.textContent = `วางเดิมพัน ${state.timeLeft} วินาที`;
+                
+                // Change color when time is running out
+                if (state.timeLeft <= 5) {
+                    timerBar.style.background = 'linear-gradient(90deg, #ff0000, #ff6600)';
+                } else {
+                    timerBar.style.background = 'linear-gradient(90deg, #ff3366, #ff9933)';
+                }
+            } else {
+                timerText.textContent = `กำลังแจกไพ่ ${state.timeLeft} วินาที`;
+                timerBar.style.background = 'linear-gradient(90deg, #3399ff, #33ccff)';
+            }
+        }
+        
+        function endBettingPhase() {
+            state.bettingPhase = false;
+            state.timeLeft = config.dealingTime;
+            
+            // Auto place bet if none was placed
+            if (!state.currentBetType && state.balance >= state.currentBetAmount) {
+                const randomBet = ['banker', 'player', 'tie'][Math.floor(Math.random() * 3)];
+                placeBet(randomBet);
+            }
+            
+            // Start dealing phase
+            state.timer = setInterval(() => {
+                state.timeLeft--;
+                updateTimerDisplay();
+                
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
+                    startGame();
+                }
+            }, 1000);
         }
         
         function placeBet(type) {
-            if (state.gameInProgress || state.autoPlay) return;
+            if (!state.bettingPhase || state.gameInProgress || state.balance < state.currentBetAmount) return;
             
             // Reset current bet
             resetBetsUI();
             
             // Place new bet
-            if (state.balance >= config.betAmount) {
-                state.currentBet = type;
-                state.balance -= config.betAmount;
-                
-                // Update UI
-                updateBalance();
-                showBetChip(type);
-                
-                // Start game automatically
-                setTimeout(() => {
-                    if (!state.gameInProgress && state.currentBet) {
-                        playGame();
-                    }
-                }, 500);
-            }
+            state.currentBetType = type;
+            state.balance -= state.currentBetAmount;
+            
+            // Update UI
+            updateBalance();
+            showBetChip(type);
         }
         
-        function playGame() {
-            if (state.gameInProgress || !state.currentBet) return;
+        function adjustBet(amount) {
+            if (!state.bettingPhase) return;
+            
+            state.currentBetAmount += amount;
+            
+            // Ensure bet amount doesn't exceed balance
+            if (state.currentBetAmount > state.balance) {
+                state.currentBetAmount = state.balance;
+            }
+            
+            // Minimum bet
+            if (state.currentBetAmount < 100) {
+                state.currentBetAmount = 100;
+            }
+            
+            updateCurrentBetDisplay();
+        }
+        
+        function startGame() {
+            if (state.gameInProgress) return;
             
             state.gameInProgress = true;
             
@@ -447,12 +634,12 @@
                                             calculateScore(playerCards)
                                         );
                                     });
-                                }, config.cardDealSpeed);
+                                }, 500);
                             } else {
                                 finishGame(bankerCards, playerCards, bankerScore, calculateScore(playerCards));
                             }
                         });
-                    }, config.cardDealSpeed);
+                    }, 500);
                 } else {
                     // Banker drawing rules when player stands
                     if (bankerScore <= 5) {
@@ -467,7 +654,7 @@
                                     playerScore
                                 );
                             });
-                        }, config.cardDealSpeed);
+                        }, 500);
                     } else {
                         finishGame(bankerCards, playerCards, bankerScore, playerScore);
                     }
@@ -494,14 +681,14 @@
                         createCardFace(bankerCards[1], bankerCard);
                         
                         if (callback) callback();
-                    }, config.cardDealSpeed);
-                }, config.cardDealSpeed);
-            }, config.cardDealSpeed);
+                    }, 500);
+                }, 500);
+            }, 500);
         }
         
         function dealThirdCard(card, type, callback) {
             createCardElement(card, type);
-            if (callback) setTimeout(callback, config.cardDealSpeed);
+            if (callback) setTimeout(callback, 500);
         }
         
         function createCardElement(card, type, isFaceDown = false) {
@@ -527,7 +714,7 @@
             
             element.innerHTML = `
                 <div class="card-value top-left">${card.value}</div>
-                <div style="font-size: 30px;">${card.suit}</div>
+                <div style="font-size: 26px;">${card.suit}</div>
                 <div class="card-value bottom-right">${card.value}</div>
             `;
         }
@@ -574,11 +761,11 @@
             if (bankerScore > playerScore) {
                 winner = 'banker';
                 payoutMultiplier = 1.95;
-                showResult(`BANKER WINS ${bankerScore}-${playerScore}`);
+                showResult(`BANKER ${bankerScore}-${playerScore}`);
             } else if (playerScore > bankerScore) {
                 winner = 'player';
                 payoutMultiplier = 2;
-                showResult(`PLAYER WINS ${playerScore}-${bankerScore}`);
+                showResult(`PLAYER ${playerScore}-${bankerScore}`);
             } else {
                 winner = 'tie';
                 payoutMultiplier = 8;
@@ -590,26 +777,26 @@
             updateHistory();
             
             // Calculate winnings
-            if (state.currentBet === winner) {
-                const winnings = Math.floor(config.betAmount * payoutMultiplier);
+            if (state.currentBetType === winner) {
+                const winnings = Math.floor(state.currentBetAmount * payoutMultiplier);
                 state.balance += winnings;
-                showResult(`${winner.toUpperCase()} WINS! +${winnings}`);
+                showResult(`${winner.toUpperCase()} WIN +${winnings}`);
             }
             
             // Reset for next round
-            state.currentBet = null;
+            resetRound();
+            
+            // Start next round after delay
+            setTimeout(() => {
+                startBettingTimer();
+            }, 2000);
+        }
+        
+        function resetRound() {
+            state.currentBetType = null;
             state.gameInProgress = false;
             updateBalance();
             resetBetsUI();
-            
-            // Continue auto-play
-            if (state.autoPlay) {
-                setTimeout(() => {
-                    if (!state.gameInProgress) {
-                        placeBet(getRandomBet());
-                    }
-                }, config.autoPlayDelay);
-            }
         }
         
         function showResult(message) {
@@ -625,10 +812,14 @@
             balanceElement.textContent = state.balance.toLocaleString();
         }
         
+        function updateCurrentBetDisplay() {
+            currentBetElement.textContent = state.currentBetAmount.toLocaleString();
+        }
+        
         function updateHistory() {
             historyElement.innerHTML = '';
             
-            const recentHistory = state.history.slice(-10);
+            const recentHistory = state.history.slice(-12);
             for (const result of recentHistory) {
                 const item = document.createElement('div');
                 item.className = `history-item history-${result}`;
@@ -646,24 +837,14 @@
         function showBetChip(type) {
             if (type === 'banker') {
                 bankerChip.style.display = 'flex';
-                bankerChip.textContent = config.betAmount;
+                bankerChip.textContent = state.currentBetAmount;
             } else if (type === 'player') {
                 playerChip.style.display = 'flex';
-                playerChip.textContent = config.betAmount;
+                playerChip.textContent = state.currentBetAmount;
             } else {
                 tieChip.style.display = 'flex';
-                tieChip.textContent = config.betAmount;
+                tieChip.textContent = state.currentBetAmount;
             }
-        }
-        
-        function startAutoPlay() {
-            state.autoPlay = true;
-            placeBet(getRandomBet());
-        }
-        
-        function getRandomBet() {
-            const options = ['banker', 'player', 'tie'];
-            return options[Math.floor(Math.random() * options.length)];
         }
         
         function generateDeck() {
