@@ -1,531 +1,967 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>รักเบสไหม?</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Mitr', sans-serif;
-      background: #ffe4e1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
-      text-align: center;
-      transition: background 1s ease;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      color: #ff1493;
-      margin-bottom: 20px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .cartoon-container {
-      position: relative;
-      width: 300px;
-      height: 400px;
-      margin: 20px;
-    }
-
-    .cartoon {
-      width: 100%;
-      height: 100%;
-      animation: bounce 2s infinite ease-in-out;
-      transition: all 0.5s;
-    }
-
-    .angryFace circle {
-      fill: #f99;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); }
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-5px); }
-      100% { transform: translateX(0); }
-    }
-
-    @keyframes blush {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.8; }
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
-    }
-
-    @keyframes heartbeat {
-      0% { transform: scale(1); }
-      25% { transform: scale(1.1); }
-      50% { transform: scale(1); }
-      75% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    .buttons-container {
-      position: relative;
-      max-width: 400px;
-      height: 100px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-    }
-
-    button {
-      padding: 15px 30px;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      margin: 10px;
-      transition: 0.3s;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    #yesBtn {
-      background-color: #4CAF50;
-      color: white;
-    }
-
-    #yesBtn:hover {
-      background-color: #3e8e41;
-      transform: scale(1.05);
-    }
-
-    #noBtn {
-      background-color: #f44336;
-      color: white;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #noBtn:hover {
-      background-color: #c62828;
-    }
-
-    .angry {
-      animation: shake 0.5s infinite;
-    }
-
-    /* ฉากสุดท้าย */
-    #finalScene {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 100;
-      color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-
-    .couple-container {
-      position: relative;
-      width: 500px;
-      height: 400px;
-      margin-bottom: 30px;
-    }
-
-    .final-text {
-      text-align: center;
-    }
-
-    .final-text h1 {
-      font-size: 3em;
-      margin-bottom: 15px;
-      color: #fff;
-      animation: heartbeat 1.5s infinite;
-    }
-
-    .final-text p {
-      font-size: 1.5em;
-      margin-bottom: 20px;
-    }
-
-    .hearts {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .heart {
-      position: absolute;
-      pointer-events: none;
-      animation: float 4s ease-in-out infinite;
-      font-size: 24px;
-    }
-
-    .bg-hearts {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      opacity: 0.3;
-      z-index: -1;
-    }
-
-    canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 5;
-      pointer-events: none;
-    }
-
-    @media (max-width: 600px) {
-      h1 { font-size: 2em; }
-      .cartoon-container { width: 200px; height: 300px; }
-      .couple-container { width: 300px; height: 250px; }
-      button { font-size: 1em; padding: 12px 25px; }
-      .buttons-container { flex-direction: column; height: auto; }
-      #noBtn { position: relative; transform: none; left: auto; }
-      .final-text h1 { font-size: 2em; }
-      .final-text p { font-size: 1.2em; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หมากฮอส - เกมกระดานไทย</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 2px solid #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .dark {
+            background-color: #8b4513;
+        }
+        
+        .light {
+            background-color: #f0d9b5;
+        }
+        
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.2s;
+        }
+        
+        .piece:hover {
+            transform: scale(1.1);
+        }
+        
+        .player1 {
+            background-color: #e74c3c;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .player2 {
+            background-color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .king {
+            border: 3px solid gold;
+            box-sizing: border-box;
+        }
+        
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7);
+        }
+        
+        .possible-move {
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: rgba(46, 204, 113, 0.5);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .capture-move {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(231, 76, 60, 0.3);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .game-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .rules {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .rules h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        .rules ul {
+            padding-left: 20px;
+        }
+        
+        @media (max-width: 500px) {
+            .piece {
+                width: 70%;
+                height: 70%;
+            }
+            
+            .game-info, .rules {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1 id="question">อุ้ม รักเบสไหม?</h1>
-
-  <!-- การ์ตูนน่ารัก SVG แบบเต็มตัว -->
-  <div class="cartoon-container">
-    <svg id="cartoon" class="cartoon" viewBox="0 0 200 300">
-      <!-- ร่างกาย -->
-      <ellipse cx="100" cy="220" rx="60" ry="80" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-      
-      <!-- ใบหน้า -->
-      <circle cx="100" cy="100" r="60" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-      
-      <!-- ตาขวา -->
-      <circle cx="125" cy="90" r="8" fill="#333"/>
-      <circle cx="125" cy="90" r="3" fill="#fff"/>
-      
-      <!-- ตาซ้าย -->
-      <circle cx="75" cy="90" r="8" fill="#333"/>
-      <circle cx="75" cy="90" r="3" fill="#fff"/>
-      
-      <!-- ปากยิ้ม -->
-      <path d="M80,130 Q100,150 120,130" stroke="#FF69B4" stroke-width="3" fill="none" stroke-linecap="round"/>
-      
-      <!-- แก้มแดงซ้าย -->
-      <circle cx="70" cy="110" r="10" fill="#FF9999" class="blush"/>
-      
-      <!-- แก้มแดงขวา -->
-      <circle cx="130" cy="110" r="10" fill="#FF9999" class="blush"/>
-      
-      <!-- หัวใจบนหัว -->
-      <path d="M100,40 Q110,20 120,40 Q130,50 100,60 Q70,50 80,40 Q90,20 100,40" fill="#FF69B4"/>
-      
-      <!-- ขนตาขวา -->
-      <path d="M125,80 Q128,70 131,80" stroke="#333" stroke-width="1.5" fill="none"/>
-      <path d="M123,77 Q126,67 129,77" stroke="#333" stroke-width="1.5" fill="none"/>
-      
-      <!-- ขนตาซ้าย -->
-      <path d="M75,80 Q72,70 69,80" stroke="#333" stroke-width="1.5" fill="none"/>
-      <path d="M77,77 Q74,67 71,77" stroke="#333" stroke-width="1.5" fill="none"/>
-      
-      <!-- มือซ้าย -->
-      <circle cx="50" cy="180" r="15" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-      
-      <!-- มือขวา -->
-      <circle cx="150" cy="180" r="15" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-      
-      <!-- ขาซ้าย -->
-      <rect x="70" y="280" width="25" height="40" rx="10" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-      
-      <!-- ขาขวา -->
-      <rect x="105" y="280" width="25" height="40" rx="10" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-    </svg>
-  </div>
-
-  <div class="buttons-container" id="buttonBox">
-    <button id="yesBtn">รักสุดหัวใจ! 💖</button>
-    <button id="noBtn">ไม่รัก... 😒</button>
-  </div>
-
-  <!-- ฉากสุดท้าย -->
-  <div id="finalScene">
-    <div class="bg-hearts" id="bgHearts"></div>
+    <h1>เกมหมากฮอส</h1>
+    <p>ผู้เล่น (แดง) vs AI (ดำ)</p>
     
-    <div class="couple-container">
-      <svg viewBox="0 0 500 400">
-        <!-- เบส (ผู้ชาย) -->
-        <!-- ร่างกาย -->
-        <ellipse cx="150" cy="250" rx="50" ry="70" fill="#A2D2FF" stroke="#457B9D" stroke-width="2"/>
-        
-        <!-- ใบหน้า -->
-        <circle cx="150" cy="150" r="50" fill="#FFD1DC" stroke="#457B9D" stroke-width="2"/>
-        
-        <!-- ตา -->
-        <circle cx="130" cy="140" r="6" fill="#333"/>
-        <circle cx="170" cy="140" r="6" fill="#333"/>
-        
-        <!-- ปากยิ้ม -->
-        <path d="M130,170 Q150,190 170,170" stroke="#457B9D" stroke-width="2" fill="none"/>
-        
-        <!-- แก้มแดง -->
-        <circle cx="120" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
-        <circle cx="180" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
-        
-        <!-- ผม -->
-        <path d="M100,100 Q150,70 200,100" fill="#333" stroke="#333" stroke-width="2"/>
-        
-        <!-- อุ้ม (ผู้หญิง) -->
-        <!-- ร่างกาย -->
-        <ellipse cx="350" cy="250" rx="50" ry="70" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-        
-        <!-- ใบหน้า -->
-        <circle cx="350" cy="150" r="50" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-        
-        <!-- ตา -->
-        <circle cx="330" cy="140" r="6" fill="#333"/>
-        <circle cx="370" cy="140" r="6" fill="#333"/>
-        
-        <!-- ปากยิ้ม -->
-        <path d="M330,170 Q350,190 370,170" stroke="#FF69B4" stroke-width="2" fill="none"/>
-        
-        <!-- แก้มแดง -->
-        <circle cx="320" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
-        <circle cx="380" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
-        
-        <!-- ผม -->
-        <path d="M300,100 Q350,70 400,100" fill="#FF69B4" stroke="#FF69B4" stroke-width="2"/>
-        
-        <!-- หัวใจระหว่างคู่ -->
-        <path d="M250,200 Q275,150 300,200 Q325,250 250,250 Q175,250 200,200 Q225,150 250,200" 
-              fill="#FF69B4" opacity="0.8" stroke="#FF1493" stroke-width="2"
-              style="animation: heartbeat 1s infinite; transform-origin: center;"/>
-        
-        <!-- มือจับกัน -->
-        <path d="M200,220 Q225,200 250,220" stroke="#FFD1DC" stroke-width="10" fill="none" stroke-linecap="round"/>
-      </svg>
+    <div class="game-container">
+        <div class="board" id="board"></div>
     </div>
     
-    <div class="final-text">
-      <h1>อุ้มกับเบสคู่กันตลอดไป! 💕</h1>
-      <p>รักกันมากๆ นะคะ~ 🥰</p>
+    <div class="game-info">
+        <div id="status">ตาคุณ (แดง) เล่นก่อน</div>
+        <div class="controls">
+            <button id="new-game">เกมใหม่</button>
+            <button id="hint">คำแนะนำ</button>
+        </div>
     </div>
     
-    <div class="hearts" id="heartsContainer"></div>
-  </div>
-  
-  <canvas id="fireworksCanvas"></canvas>
+    <div class="rules">
+        <h2>กติกาหมากฮอสสากล</h2>
+        <ul>
+            <li>ผู้เล่นเริ่มจากฝั่งตัวเอง (แดงเล่นก่อน)</li>
+            <li>เดินหน้าเฉียงทีละ 1 ช่อง</li>
+            <li>หากมีหมากของคู่แข่งอยู่เฉียงหน้าและมีช่องว่างด้านหลัง สามารถกินได้โดยกระโดดข้าม</li>
+            <li>หากกินได้หลายทาง ต้องกินให้มากที่สุด</li>
+            <li>เมื่อเดินถึงแถวสุดท้ายจะกลายเป็น "King" ที่เดินถอยหลังได้</li>
+            <li>ชนะโดยกินหมากคู่แข่งทั้งหมดหรือทำให้คู่แข่งเดินไม่ได้</li>
+        </ul>
+    </div>
 
-  <script>
-    const yesBtn = document.getElementById('yesBtn');
-    const noBtn = document.getElementById('noBtn');
-    const cartoon = document.getElementById('cartoon');
-    const question = document.getElementById('question');
-    const buttonBox = document.getElementById('buttonBox');
-    const finalScene = document.getElementById('finalScene');
-    const canvas = document.getElementById('fireworksCanvas');
-    const ctx = canvas.getContext('2d');
-    const heartsContainer = document.getElementById('heartsContainer');
-    const bgHearts = document.getElementById('bgHearts');
-
-    let noMoved = false;
-    let clickCount = 0;
-
-    // สร้างหัวใจพื้นหลัง
-    function createBackgroundHearts() {
-      const colors = ['#ff9a9e', '#fad0c4', '#ffb7b2', '#ffd3b6', '#ffaaa5'];
-      for (let i = 0; i < 30; i++) {
-        const heart = document.createElement('div');
-        heart.innerHTML = '❤️';
-        heart.style.position = 'absolute';
-        heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.top = Math.random() * 100 + 'vh';
-        heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
-        heart.style.opacity = Math.random() * 0.3 + 0.1;
-        heart.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
-        heart.style.animationDelay = Math.random() * 5 + 's';
-        heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-        bgHearts.appendChild(heart);
-      }
-    }
-
-    noBtn.addEventListener('mouseover', () => {
-      if (window.innerWidth > 600) {
-        const container = buttonBox.getBoundingClientRect();
-        const btnWidth = noBtn.offsetWidth;
-        const btnHeight = noBtn.offsetHeight;
-
-        const randX = Math.random() * (container.width - btnWidth);
-        const randY = Math.random() * (container.height - btnHeight);
-
-        noBtn.style.left = `${randX}px`;
-        noBtn.style.top = `${randY}px`;
-        noBtn.textContent = ['ไม่จริงๆ', 'อย่ากดนะ!', 'หยุดเลย!', 'พอได้แล้ว'][Math.floor(Math.random() * 4)];
-        
-        clickCount++;
-        
-        if (clickCount > 3) {
-          cartoon.innerHTML = `
-            <!-- ร่างกายโกรธ -->
-            <ellipse cx="100" cy="220" rx="60" ry="80" fill="#f99" stroke="#c62828" stroke-width="2"/>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const statusDisplay = document.getElementById('status');
+            const newGameBtn = document.getElementById('new-game');
+            const hintBtn = document.getElementById('hint');
             
-            <!-- ใบหน้าโกรธ -->
-            <circle cx="100" cy="100" r="60" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            let gameState = initializeGame();
+            let selectedPiece = null;
+            let possibleMoves = [];
+            let currentPlayer = 1; // 1 for human (red), 2 for AI (black)
+            let gameOver = false;
+            let hintActive = false;
             
-            <!-- ตาขวาโกรธ -->
-            <line x1="115" y1="85" x2="125" y2="95" stroke="#000" stroke-width="3"/>
-            <line x1="125" y1="85" x2="115" y2="95" stroke="#000" stroke-width="3"/>
+            // Initialize the game board
+            function initializeGame() {
+                const state = Array(8).fill().map(() => Array(8).fill(null));
+                
+                // Set up player 1 (human) pieces
+                for (let row = 5; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if ((row + col) % 2 === 1) {
+                            state[row][col] = { player: 1, king: false };
+                        }
+                    }
+                }
+                
+                // Set up player 2 (AI) pieces
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if ((row + col) % 2 === 1) {
+                            state[row][col] = { player: 2, king: false };
+                        }
+                    }
+                }
+                
+                return state;
+            }
             
-            <!-- ตาซ้ายโกรธ -->
-            <line x1="75" y1="85" x2="85" y2="95" stroke="#000" stroke-width="3"/>
-            <line x1="85" y1="85" x2="75" y2="95" stroke="#000" stroke-width="3"/>
+            // Render the game board
+            function renderBoard() {
+                board.innerHTML = '';
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        if (gameState[row][col]) {
+                            const piece = document.createElement('div');
+                            piece.className = `piece player${gameState[row][col].player} ${gameState[row][col].king ? 'king' : ''}`;
+                            piece.dataset.row = row;
+                            piece.dataset.col = col;
+                            
+                            if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
+                                piece.classList.add('selected');
+                            }
+                            
+                            piece.addEventListener('click', () => handlePieceClick(row, col));
+                            cell.appendChild(piece);
+                        } else {
+                            cell.addEventListener('click', () => handleCellClick(row, col));
+                        }
+                        
+                        // Highlight possible moves
+                        if (selectedPiece) {
+                            const move = possibleMoves.find(m => 
+                                m.endRow === row && m.endCol === col);
+                            if (move) {
+                                const highlight = document.createElement('div');
+                                highlight.className = move.captures.length > 0 ? 'capture-move' : 'possible-move';
+                                cell.appendChild(highlight);
+                            }
+                        }
+                        
+                        board.appendChild(cell);
+                    }
+                }
+            }
             
-            <!-- ปากโกรธ -->
-            <path d="M80,140 Q100,120 120,140" stroke="#000" stroke-width="3" fill="none"/>
+            // Handle piece selection
+            function handlePieceClick(row, col) {
+                if (gameOver || currentPlayer !== 1) return;
+                
+                const piece = gameState[row][col];
+                
+                // Select a piece of the current player
+                if (piece.player === currentPlayer) {
+                    selectedPiece = { row, col };
+                    possibleMoves = getValidMoves(row, col);
+                    renderBoard();
+                }
+                // If a piece is already selected, try to capture
+                else if (selectedPiece) {
+                    handleCellClick(row, col);
+                }
+            }
             
-            <!-- ข้อความโกรธ -->
-            <text x="100" y="50" text-anchor="middle" fill="#000" font-size="12" font-weight="bold">โกรธแล้วนะ!</text>
+            // Handle cell click (move or capture)
+            function handleCellClick(row, col) {
+                if (gameOver || currentPlayer !== 1 || !selectedPiece) return;
+                
+                const move = possibleMoves.find(m => m.endRow === row && m.endCol === col);
+                if (!move) return;
+                
+                // Make the move
+                makeMove(move);
+                
+                // Check if there's a consecutive capture
+                if (move.captures.length > 0) {
+                    const nextCaptures = getCaptures(row, col);
+                    if (nextCaptures.length > 0) {
+                        selectedPiece = { row, col };
+                        possibleMoves = nextCaptures;
+                        renderBoard();
+                        statusDisplay.textContent = "คุณสามารถกินต่อได้!";
+                        return;
+                    }
+                }
+                
+                // Switch to AI turn
+                selectedPiece = null;
+                possibleMoves = [];
+                currentPlayer = 2;
+                statusDisplay.textContent = "ตาของ AI (ดำ)...";
+                renderBoard();
+                
+                // AI move after a short delay
+                setTimeout(() => {
+                    if (!gameOver) {
+                        makeAIMove();
+                    }
+                }, 800);
+            }
             
-            <!-- มือซ้าย -->
-            <circle cx="50" cy="180" r="15" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            // Make a move on the board
+            function makeMove(move) {
+                const { startRow, startCol, endRow, endCol, captures, becomesKing } = move;
+                const piece = gameState[startRow][startCol];
+                
+                // Move the piece
+                gameState[endRow][endCol] = {
+                    player: piece.player,
+                    king: becomesKing || piece.king
+                };
+                gameState[startRow][startCol] = null;
+                
+                // Remove captured pieces
+                captures.forEach(({ row, col }) => {
+                    gameState[row][col] = null;
+                });
+                
+                // Check for win
+                checkGameOver();
+            }
             
-            <!-- มือขวา -->
-            <circle cx="150" cy="180" r="15" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            // Get all valid moves for a piece
+            function getValidMoves(row, col) {
+                const piece = gameState[row][col];
+                if (!piece) return [];
+                
+                const moves = [];
+                const captures = getCaptures(row, col);
+                
+                // If captures are available, only return captures (must capture)
+                if (captures.length > 0) {
+                    return captures;
+                }
+                
+                // Regular moves
+                const directions = piece.king ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
+                    piece.player === 1 ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
+                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
+                
+                for (const { dr, dc } of directions) {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    
+                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !gameState[newRow][newCol]) {
+                        const becomesKing = (piece.player === 1 && newRow === 0) || 
+                                          (piece.player === 2 && newRow === 7);
+                        moves.push({
+                            startRow: row,
+                            startCol: col,
+                            endRow: newRow,
+                            endCol: newCol,
+                            captures: [],
+                            becomesKing
+                        });
+                    }
+                }
+                
+                return moves;
+            }
             
-            <!-- ขาซ้าย -->
-            <rect x="70" y="280" width="25" height="40" rx="10" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            // Get all possible captures for a piece
+            function getCaptures(row, col) {
+                const piece = gameState[row][col];
+                if (!piece) return [];
+                
+                const captures = [];
+                const directions = piece.king ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
+                    piece.player === 1 ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
+                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
+                
+                for (const { dr, dc } of directions) {
+                    const jumpRow = row + dr;
+                    const jumpCol = col + dc;
+                    const landRow = row + 2 * dr;
+                    const landCol = col + 2 * dc;
+                    
+                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
+                        gameState[jumpRow][jumpCol] && gameState[jumpRow][jumpCol].player !== piece.player &&
+                        !gameState[landRow][landCol]) {
+                        
+                        const becomesKing = (piece.player === 1 && landRow === 0) || 
+                                          (piece.player === 2 && landRow === 7);
+                        
+                        // Simulate the capture to check for multi-captures
+                        const originalPiece = gameState[row][col];
+                        const capturedPiece = gameState[jumpRow][jumpCol];
+                        gameState[row][col] = null;
+                        gameState[jumpRow][jumpCol] = null;
+                        gameState[landRow][landCol] = originalPiece;
+                        
+                        const nextCaptures = getCaptures(landRow, landCol);
+                        
+                        // Restore the board
+                        gameState[row][col] = originalPiece;
+                        gameState[jumpRow][jumpCol] = capturedPiece;
+                        gameState[landRow][landCol] = null;
+                        
+                        if (nextCaptures.length > 0) {
+                            // If there are further captures, only include the longest capture chains
+                            const maxLength = Math.max(...nextCaptures.map(c => c.captures.length));
+                            nextCaptures
+                                .filter(c => c.captures.length === maxLength)
+                                .forEach(nextCapture => {
+                                    captures.push({
+                                        startRow: row,
+                                        startCol: col,
+                                        endRow: nextCapture.endRow,
+                                        endCol: nextCapture.endCol,
+                                        captures: [{ row: jumpRow, col: jumpCol }, ...nextCapture.captures],
+                                        becomesKing: nextCapture.becomesKing
+                                    });
+                                });
+                        } else {
+                            captures.push({
+                                startRow: row,
+                                startCol: col,
+                                endRow: landRow,
+                                endCol: landCol,
+                                captures: [{ row: jumpRow, col: jumpCol }],
+                                becomesKing
+                            });
+                        }
+                    }
+                }
+                
+                return captures;
+            }
             
-            <!-- ขาขวา -->
-            <rect x="105" y="280" width="25" height="40" rx="10" fill="#f99" stroke="#c62828" stroke-width="2"/>
-          `;
-          cartoon.classList.add("angry");
-          question.textContent = "อุ้ม! บอกความจริงสิ รักเบสไหม?";
-        }
-      }
-    });
-
-    yesBtn.addEventListener('click', () => {
-      question.style.display = "none";
-      document.querySelector('.cartoon-container').style.display = "none";
-      buttonBox.style.display = "none";
-      finalScene.style.display = "flex";
-      canvas.style.display = "block";
-      createBackgroundHearts();
-      launchFireworks();
-      createHearts();
-      playLoveSound();
-    });
-
-    function playLoveSound() {
-      const sounds = [
-        'https://assets.mixkit.co/sfx/preview/mixkit-romantic-heart-beat-1490.mp3',
-        'https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3'
-      ];
-      const audio = new Audio(sounds[Math.floor(Math.random() * sounds.length)]);
-      audio.volume = 0.3;
-      audio.play().catch(e => console.log("Audio play failed:", e));
-    }
-
-    function createHearts() {
-      setInterval(() => {
-        const heart = document.createElement('div');
-        heart.innerHTML = ['❤️', '💖', '💗', '💓', '💞'][Math.floor(Math.random() * 5)];
-        heart.classList.add('heart');
-        heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
-        heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        heart.style.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
-        heartsContainer.appendChild(heart);
-        
-        setTimeout(() => {
-          heart.remove();
-        }, 4000);
-      }, 200);
-    }
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    let particles = [];
-
-    function launchFireworks() {
-      setInterval(() => {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height / 2;
-        const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
-        const particleCount = Math.floor(Math.random() * 50) + 50;
-        
-        for (let i = 0; i < particleCount; i++) {
-          particles.push({
-            x: x,
-            y: y,
-            angle: Math.random() * 2 * Math.PI,
-            speed: Math.random() * 5 + 2,
-            radius: Math.random() * 3 + 1,
-            alpha: 1,
-            color: color,
-            gravity: Math.random() * 0.1 + 0.05
-          });
-        }
-      }, 500);
-      animateFireworks();
-    }
-
-    function animateFireworks() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // วาดพื้นหลังโปร่งใส
-      ctx.fillStyle = 'rgba(255, 228, 225, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      particles.forEach((p, i) => {
-        p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed + p.gravity;
-        p.speed *= 0.98;
-        p.alpha -= 0.01;
-        if (p.alpha <= 0) particles.splice(i, 1);
-        else {
-          ctx.globalAlpha = p.alpha;
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-      
-      // วาดหัวใจลอยบ้าง
-      if (Math.random() > 0.9) {
-        const size = Math.random() * 30 + 20;
-        ctx.font = `${size}px Arial`;
-        ctx.fillStyle = `hsla(${Math.random() * 360}, 100%, 70%, ${Math.random() * 0.5 + 0.3})`;
-        ctx.fillText(['❤','💖','💗','💓','💞'][Math.floor(Math.random() * 5)], 
-                     Math.random() * canvas.width, 
-                     Math.random() * canvas.height);
-      }
-      
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(animateFireworks);
-    }
-  </script>
+            // AI move using minimax algorithm with alpha-beta pruning
+            function makeAIMove() {
+                const depth = 5; // Higher = stronger but slower
+                const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
+                
+                if (bestMove) {
+                    makeMove(bestMove);
+                    
+                    // Check for consecutive captures
+                    if (bestMove.captures.length > 0) {
+                        const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
+                        if (nextCaptures.length > 0) {
+                            setTimeout(() => {
+                                makeAIMove();
+                            }, 800);
+                            return;
+                        }
+                    }
+                    
+                    currentPlayer = 1;
+                    statusDisplay.textContent = "ตาคุณ (แดง)";
+                } else {
+                    // No valid moves for AI
+                    currentPlayer = 1;
+                    statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
+                }
+                
+                selectedPiece = null;
+                possibleMoves = [];
+                renderBoard();
+            }
+            
+            // Minimax algorithm with alpha-beta pruning
+            function minimax(state, depth, alpha, beta, maximizingPlayer) {
+                if (depth === 0 || isTerminalState(state)) {
+                    return { value: evaluateState(state) };
+                }
+                
+                const player = maximizingPlayer ? 2 : 1;
+                let validMoves = getAllValidMoves(state, player);
+                
+                // If no valid moves, it's terminal
+                if (validMoves.length === 0) {
+                    return { value: evaluateState(state) };
+                }
+                
+                // Sort moves by heuristic to improve pruning
+                validMoves.sort((a, b) => {
+                    const scoreA = evaluateMove(a);
+                    const scoreB = evaluateMove(b);
+                    return maximizingPlayer ? scoreB - scoreA : scoreA - scoreB;
+                });
+                
+                let bestMove = validMoves[0];
+                let bestValue = maximizingPlayer ? -Infinity : Infinity;
+                
+                for (const move of validMoves) {
+                    // Make the move on a copy of the state
+                    const newState = JSON.parse(JSON.stringify(state));
+                    applyMove(newState, move);
+                    
+                    // If the move is a capture and can capture more, force it to capture more
+                    if (move.captures.length > 0) {
+                        const nextCaptures = getCapturesForState(newState, move.endRow, move.endCol);
+                        if (nextCaptures.length > 0) {
+                            // Find the best continuation of captures
+                            const { value: captureValue } = minimaxCaptures(newState, nextCaptures, alpha, beta, maximizingPlayer);
+                            if ((maximizingPlayer && captureValue > bestValue) || 
+                                (!maximizingPlayer && captureValue < bestValue)) {
+                                bestValue = captureValue;
+                                bestMove = move;
+                            }
+                            
+                            if (maximizingPlayer) {
+                                alpha = Math.max(alpha, bestValue);
+                            } else {
+                                beta = Math.min(beta, bestValue);
+                            }
+                            
+                            if (beta <= alpha) {
+                                break;
+                            }
+                            
+                            continue;
+                        }
+                    }
+                    
+                    // Recurse
+                    const { value } = minimax(newState, depth - 1, alpha, beta, !maximizingPlayer);
+                    
+                    if ((maximizingPlayer && value > bestValue) || 
+                        (!maximizingPlayer && value < bestValue)) {
+                        bestValue = value;
+                        bestMove = move;
+                    }
+                    
+                    if (maximizingPlayer) {
+                        alpha = Math.max(alpha, bestValue);
+                    } else {
+                        beta = Math.min(beta, bestValue);
+                    }
+                    
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+                
+                return { value: bestValue, bestMove };
+            }
+            
+            // Special case for consecutive captures in minimax
+            function minimaxCaptures(state, captures, alpha, beta, maximizingPlayer) {
+                let bestValue = maximizingPlayer ? -Infinity : Infinity;
+                let bestMove = captures[0];
+                
+                for (const move of captures) {
+                    const newState = JSON.parse(JSON.stringify(state));
+                    applyMove(newState, move);
+                    
+                    const nextCaptures = getCapturesForState(newState, move.endRow, move.endCol);
+                    if (nextCaptures.length > 0) {
+                        const { value } = minimaxCaptures(newState, nextCaptures, alpha, beta, maximizingPlayer);
+                        if ((maximizingPlayer && value > bestValue) || 
+                            (!maximizingPlayer && value < bestValue)) {
+                            bestValue = value;
+                            bestMove = move;
+                        }
+                    } else {
+                        const { value } = minimax(newState, 0, alpha, beta, !maximizingPlayer);
+                        if ((maximizingPlayer && value > bestValue) || 
+                            (!maximizingPlayer && value < bestValue)) {
+                            bestValue = value;
+                            bestMove = move;
+                        }
+                    }
+                    
+                    if (maximizingPlayer) {
+                        alpha = Math.max(alpha, bestValue);
+                    } else {
+                        beta = Math.min(beta, bestValue);
+                    }
+                    
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+                
+                return { value: bestValue, bestMove };
+            }
+            
+            // Apply a move to a game state
+            function applyMove(state, move) {
+                const { startRow, startCol, endRow, endCol, captures, becomesKing } = move;
+                const piece = state[startRow][startCol];
+                
+                // Move the piece
+                state[endRow][endCol] = {
+                    player: piece.player,
+                    king: becomesKing || piece.king
+                };
+                state[startRow][startCol] = null;
+                
+                // Remove captured pieces
+                captures.forEach(({ row, col }) => {
+                    state[row][col] = null;
+                });
+            }
+            
+            // Get captures for a piece in a given state
+            function getCapturesForState(state, row, col) {
+                const piece = state[row][col];
+                if (!piece) return [];
+                
+                const captures = [];
+                const directions = piece.king ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
+                    piece.player === 1 ? 
+                    [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
+                    [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
+                
+                for (const { dr, dc } of directions) {
+                    const jumpRow = row + dr;
+                    const jumpCol = col + dc;
+                    const landRow = row + 2 * dr;
+                    const landCol = col + 2 * dc;
+                    
+                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
+                        state[jumpRow][jumpCol] && state[jumpRow][jumpCol].player !== piece.player &&
+                        !state[landRow][landCol]) {
+                        
+                        const becomesKing = (piece.player === 1 && landRow === 0) || 
+                                          (piece.player === 2 && landRow === 7);
+                        
+                        // Simulate the capture to check for multi-captures
+                        const originalPiece = state[row][col];
+                        const capturedPiece = state[jumpRow][jumpCol];
+                        state[row][col] = null;
+                        state[jumpRow][jumpCol] = null;
+                        state[landRow][landCol] = originalPiece;
+                        
+                        const nextCaptures = getCapturesForState(state, landRow, landCol);
+                        
+                        // Restore the board
+                        state[row][col] = originalPiece;
+                        state[jumpRow][jumpCol] = capturedPiece;
+                        state[landRow][landCol] = null;
+                        
+                        if (nextCaptures.length > 0) {
+                            const maxLength = Math.max(...nextCaptures.map(c => c.captures.length));
+                            nextCaptures
+                                .filter(c => c.captures.length === maxLength)
+                                .forEach(nextCapture => {
+                                    captures.push({
+                                        startRow: row,
+                                        startCol: col,
+                                        endRow: nextCapture.endRow,
+                                        endCol: nextCapture.endCol,
+                                        captures: [{ row: jumpRow, col: jumpCol }, ...nextCapture.captures],
+                                        becomesKing: nextCapture.becomesKing
+                                    });
+                                });
+                        } else {
+                            captures.push({
+                                startRow: row,
+                                startCol: col,
+                                endRow: landRow,
+                                endCol: landCol,
+                                captures: [{ row: jumpRow, col: jumpCol }],
+                                becomesKing
+                            });
+                        }
+                    }
+                }
+                
+                return captures;
+            }
+            
+            // Get all valid moves for a player in a given state
+            function getAllValidMoves(state, player) {
+                const moves = [];
+                let hasCaptures = false;
+                
+                // First check for captures (mandatory)
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = state[row][col];
+                        if (piece && piece.player === player) {
+                            const captures = getCapturesForState(state, row, col);
+                            if (captures.length > 0) {
+                                moves.push(...captures);
+                                hasCaptures = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (hasCaptures) return moves;
+                
+                // If no captures, get regular moves
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = state[row][col];
+                        if (piece && piece.player === player) {
+                            const directions = piece.king ? 
+                                [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }, { dr: 1, dc: -1 }, { dr: 1, dc: 1 }] :
+                                player === 1 ? 
+                                [{ dr: -1, dc: -1 }, { dr: -1, dc: 1 }] : 
+                                [{ dr: 1, dc: -1 }, { dr: 1, dc: 1 }];
+                            
+                            for (const { dr, dc } of directions) {
+                                const newRow = row + dr;
+                                const newCol = col + dc;
+                                
+                                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && !state[newRow][newCol]) {
+                                    const becomesKing = (player === 1 && newRow === 0) || 
+                                                      (player === 2 && newRow === 7);
+                                    moves.push({
+                                        startRow: row,
+                                        startCol: col,
+                                        endRow: newRow,
+                                        endCol: newCol,
+                                        captures: [],
+                                        becomesKing
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return moves;
+            }
+            
+            // Evaluate a move for move ordering
+            function evaluateMove(move) {
+                let score = 0;
+                
+                // Captures are good
+                score += move.captures.length * 10;
+                
+                // Becoming king is good
+                if (move.becomesKing) score += 5;
+                
+                // Moving forward is generally better
+                if (move.endRow !== move.startRow) {
+                    const direction = move.captures.length > 0 ? 
+                        (move.endRow - move.startRow) / Math.abs(move.endRow - move.startRow) :
+                        move.endRow > move.startRow ? 1 : -1;
+                    
+                    const player = gameState[move.startRow][move.startCol].player;
+                    if ((player === 1 && direction === -1) || (player === 2 && direction === 1)) {
+                        score += 1;
+                    }
+                }
+                
+                return score;
+            }
+            
+            // Evaluate the game state
+            function evaluateState(state) {
+                let score = 0;
+                let p1Pieces = 0;
+                let p1Kings = 0;
+                let p2Pieces = 0;
+                let p2Kings = 0;
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = state[row][col];
+                        if (piece) {
+                            if (piece.player === 1) {
+                                p1Pieces++;
+                                if (piece.king) p1Kings++;
+                                // Encourage pieces to become kings
+                                score += piece.king ? 10 : 5;
+                                // Encourage central control
+                                score += (3.5 - Math.abs(col - 3.5)) * 0.2;
+                            } else {
+                                p2Pieces++;
+                                if (piece.king) p2Kings++;
+                                // Penalize opponent's pieces
+                                score -= piece.king ? 10 : 5;
+                                // Discourage opponent's central control
+                                score -= (3.5 - Math.abs(col - 3.5)) * 0.2;
+                            }
+                        }
+                    }
+                }
+                
+                // Winning/losing conditions
+                if (p1Pieces === 0) return -1000;
+                if (p2Pieces === 0) return 1000;
+                
+                const p1Moves = getAllValidMoves(state, 1).length;
+                const p2Moves = getAllValidMoves(state, 2).length;
+                
+                if (p1Moves === 0) return -1000;
+                if (p2Moves === 0) return 1000;
+                
+                // Mobility bonus
+                score += (p1Moves - p2Moves) * 0.5;
+                
+                return score;
+            }
+            
+            // Check if the game is over
+            function checkGameOver() {
+                let p1Pieces = 0;
+                let p2Pieces = 0;
+                let p1HasMoves = false;
+                let p2HasMoves = false;
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState[row][col];
+                        if (piece) {
+                            if (piece.player === 1) {
+                                p1Pieces++;
+                            } else {
+                                p2Pieces++;
+                            }
+                        }
+                    }
+                }
+                
+                const p1Moves = getAllValidMoves(gameState, 1);
+                const p2Moves = getAllValidMoves(gameState, 2);
+                
+                p1HasMoves = p1Moves.length > 0;
+                p2HasMoves = p2Moves.length > 0;
+                
+                if (p1Pieces === 0 || !p1HasMoves) {
+                    gameOver = true;
+                    statusDisplay.textContent = "คุณแพ้! AI ชนะ!";
+                } else if (p2Pieces === 0 || !p2HasMoves) {
+                    gameOver = true;
+                    statusDisplay.textContent = "คุณชนะ!";
+                }
+            }
+            
+            // Check if the state is terminal
+            function isTerminalState(state) {
+                let p1Pieces = 0;
+                let p2Pieces = 0;
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = state[row][col];
+                        if (piece) {
+                            if (piece.player === 1) p1Pieces++;
+                            else p2Pieces++;
+                        }
+                    }
+                }
+                
+                if (p1Pieces === 0 || p2Pieces === 0) return true;
+                
+                const p1Moves = getAllValidMoves(state, 1);
+                const p2Moves = getAllValidMoves(state, 2);
+                
+                return p1Moves.length === 0 || p2Moves.length === 0;
+            }
+            
+            // Show hint for the human player
+            function showHint() {
+                if (currentPlayer !== 1 || gameOver) return;
+                
+                const moves = [];
+                let hasCaptures = false;
+                
+                // Find all possible captures first (mandatory)
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState[row][col];
+                        if (piece && piece.player === 1) {
+                            const captures = getCaptures(row, col);
+                            if (captures.length > 0) {
+                                moves.push(...captures);
+                                hasCaptures = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (!hasCaptures) {
+                    // If no captures, find all regular moves
+                    for (let row = 0; row < 8; row++) {
+                        for (let col = 0; col < 8; col++) {
+                            const piece = gameState[row][col];
+                            if (piece && piece.player === 1) {
+                                moves.push(...getValidMoves(row, col));
+                            }
+                        }
+                    }
+                }
+                
+                if (moves.length > 0) {
+                    // Find the best move (simple heuristic)
+                    moves.sort((a, b) => {
+                        const scoreA = evaluateMove(a);
+                        const scoreB = evaluateMove(b);
+                        return scoreB - scoreA; // Descending
+                    });
+                    
+                    const bestMove = moves[0];
+                    selectedPiece = { row: bestMove.startRow, col: bestMove.startCol };
+                    possibleMoves = [bestMove];
+                    hintActive = true;
+                    renderBoard();
+                    
+                    setTimeout(() => {
+                        hintActive = false;
+                        selectedPiece = null;
+                        possibleMoves = [];
+                        renderBoard();
+                    }, 1500);
+                }
+            }
+            
+            // Start a new game
+            function newGame() {
+                gameState = initializeGame();
+                selectedPiece = null;
+                possibleMoves = [];
+                currentPlayer = 1;
+                gameOver = false;
+                statusDisplay.textContent = "ตาคุณ (แดง) เล่นก่อน";
+                renderBoard();
+            }
+            
+            // Event listeners
+            newGameBtn.addEventListener('click', newGame);
+            hintBtn.addEventListener('click', showHint);
+            
+            // Initial render
+            renderBoard();
+        });
+    </script>
 </body>
 </html>
