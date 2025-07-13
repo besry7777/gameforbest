@@ -19,35 +19,116 @@
             overflow: hidden; /* ป้องกัน scrollbar เมื่อปุ่มหนี */
             padding: 20px; /* เพิ่ม padding เพื่อให้มีที่ว่างรอบๆ */
             box-sizing: border-box; /* ทำให้ padding ไม่เพิ่มขนาดรวม */
+            position: relative; /* สำหรับให้หัวใจลอยเหนือทุกอย่าง */
         }
         h1 {
             color: #ff69b4; /* สีชมพูเข้ม */
             font-size: 2.5em;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            z-index: 1; /* ให้ข้อความอยู่เหนือการ์ตูนบางส่วน */
         }
-        .cartoon {
+        .cartoon-container {
+            position: relative; /* สำหรับจัดองค์ประกอบภายใน */
             width: 150px;
             height: 150px;
             margin: 20px auto;
-            animation: bounce 2s infinite ease-in-out; /* แอนิเมชั่นเด้งๆ */
+            z-index: 0; /* การ์ตูนอยู่ด้านล่างข้อความและปุ่ม */
         }
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-15px);
-            }
+        /* รูปร่างการ์ตูน */
+        .cartoon-body {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 120px;
+            background-color: #fdd8e6; /* สีชมพูอ่อนกว่า */
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* รูปร่างหยดน้ำ */
+            animation: bob 1.8s infinite ease-in-out alternate;
         }
+        .cartoon-head {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background-color: #fdd8e6;
+            border-radius: 50%;
+        }
+        .cartoon-ears {
+            position: absolute;
+            top: -30px;
+            width: 25px;
+            height: 40px;
+            background-color: #fdd8e6;
+            border-radius: 50% 50% 0 0;
+        }
+        .cartoon-ears:first-of-type {
+            left: 10px;
+            transform: rotate(-15deg);
+        }
+        .cartoon-ears:last-of-type {
+            right: 10px;
+            transform: rotate(15deg);
+        }
+
+        /* ตา */
+        .cartoon-eyes {
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 15px; /* ความสูงปกติ */
+            display: flex;
+            justify-content: space-between;
+        }
+        .eye {
+            width: 15px;
+            height: 15px;
+            background-color: #333;
+            border-radius: 50%;
+            animation: blink 3s infinite ease-in-out; /* แอนิเมชั่นกระพริบตา */
+        }
+        /* แก้ม */
+        .cartoon-blush {
+            position: absolute;
+            top: 70px;
+            width: 20px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ffb6c1; /* สีชมพูอ่อน */
+            opacity: 0.7;
+        }
+        .cartoon-blush:first-of-type {
+            left: 20px;
+        }
+        .cartoon-blush:last-of-type {
+            right: 20px;
+        }
+
+        /* แอนิเมชั่น */
+        @keyframes bob {
+            0% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes blink {
+            0%, 20%, 40%, 60%, 80%, 100% { transform: scaleY(1); }
+            10%, 30%, 50%, 70%, 90% { transform: scaleY(0.1); }
+        }
+
         .buttons-container {
             position: relative; /* สำหรับให้ปุ่มไม่รักสามารถหนีได้ */
             width: 100%;
-            max-width: 400px;
-            height: 100px; /* กำหนดความสูงเพื่อให้ปุ่มไม่รักมีพื้นที่เคลื่อนที่ */
+            max-width: 450px; /* เพิ่มความกว้างเผื่อปุ่มหนีไปได้ไกลขึ้น */
+            height: 150px; /* กำหนดความสูงเพื่อให้ปุ่มไม่รักมีพื้นที่เคลื่อนที่ */
             display: flex;
             justify-content: center;
             align-items: center;
             margin-top: 30px;
+            z-index: 1; /* ให้ปุ่มอยู่เหนือการ์ตูน */
         }
         button {
             padding: 15px 30px;
@@ -72,24 +153,65 @@
             background-color: #f44336; /* สีแดง */
             color: white;
             position: absolute; /* ทำให้ปุ่มสามารถเคลื่อนที่ได้อิสระ */
-            transition: all 0.1s ease-out; /* เคลื่อนที่เร็วขึ้น */
+            transition: all 0.2s ease-out; /* เคลื่อนที่เร็วขึ้น */
             left: 50%; /* เริ่มต้นที่กึ่งกลาง */
             transform: translateX(-50%); /* จัดกึ่งกลางจริงๆ */
         }
         #noBtn:hover {
             background-color: #da190b;
         }
-        .message {
+
+        /* ข้อความตอบรับ */
+        .message-container {
             margin-top: 40px;
+            display: none; /* ซ่อนไว้ตอนแรก */
+            flex-direction: column;
+            align-items: center;
+            z-index: 2; /* ให้อยู่บนสุด */
+        }
+        .message {
             font-size: 1.8em;
             color: #ff69b4;
             font-weight: bold;
-            display: none; /* ซ่อนไว้ตอนแรก */
-            animation: fadeIn 1s ease-in-out;
+            opacity: 0; /* ซ่อนไว้ก่อน */
+            animation: fadeIn 1s ease-in-out forwards;
         }
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* หัวใจลอย */
+        .heart-float {
+            position: absolute;
+            background-color: #ff69b4;
+            width: 20px;
+            height: 20px;
+            transform: rotate(-45deg);
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatUp 3s ease-out forwards;
+            pointer-events: none; /* ไม่ให้หัวใจบังการคลิก */
+        }
+        .heart-float::before,
+        .heart-float::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ff69b4;
+        }
+        .heart-float::before {
+            left: 10px;
+        }
+        .heart-float::after {
+            top: -10px;
+        }
+
+        @keyframes floatUp {
+            0% { transform: rotate(-45deg) translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: rotate(-45deg) translateY(-200px) scale(1.2); opacity: 0; }
         }
 
         /* Responsive adjustments */
@@ -97,10 +219,37 @@
             h1 {
                 font-size: 2em;
             }
-            .cartoon {
-                width: 120px;
+            .cartoon-container {
+                width: 100px;
                 height: 120px;
             }
+            .cartoon-body {
+                width: 70px;
+                height: 90px;
+            }
+            .cartoon-head {
+                width: 60px;
+                height: 60px;
+            }
+            .cartoon-ears {
+                width: 20px;
+                height: 30px;
+            }
+            .cartoon-eyes {
+                top: 25px;
+                width: 40px;
+                height: 12px;
+            }
+            .eye {
+                width: 12px;
+                height: 12px;
+            }
+            .cartoon-blush {
+                top: 55px;
+                width: 15px;
+                height: 10px;
+            }
+
             button {
                 padding: 12px 25px;
                 font-size: 1em;
@@ -127,14 +276,29 @@
 <body>
     <h1>รักอุ้มอุ้ม รักเบสไหม?</h1>
 
-    <img src="https://i.imgur.com/8Y2Z1Zq.png" alt="Cute Cartoon" class="cartoon">
+    <div class="cartoon-container">
+        <div class="cartoon-head">
+            <div class="cartoon-eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
+            </div>
+            <div class="cartoon-blush"></div>
+            <div class="cartoon-blush" style="right: 20px; left: auto;"></div>
+        </div>
+        <div class="cartoon-body"></div>
+        <div class="cartoon-ears"></div>
+        <div class="cartoon-ears" style="right: 10px; left: auto;"></div>
+    </div>
+
     <div class="buttons-container">
         <button id="yesBtn">รักสิ!</button>
         <button id="noBtn">ไม่รัก</button>
     </div>
 
-    <div id="loveMessage" class="message">
-        โอ้โห! เบสดีใจที่สุดเลย! รักอุ้มอุ้มเหมือนกันนะ! ❤️
+    <div id="messageContainer" class="message-container">
+        <div id="loveMessage" class="message">
+            โอ้โห! เบสดีใจที่สุดเลย! รักอุ้มอุ้มเหมือนกันนะ! ❤️
+        </div>
     </div>
 
     <script>
@@ -142,29 +306,30 @@
         const yesBtn = document.getElementById('yesBtn');
         const loveMessage = document.getElementById('loveMessage');
         const buttonsContainer = document.querySelector('.buttons-container');
+        const messageContainer = document.getElementById('messageContainer');
 
         // ฟังก์ชันสำหรับสุ่มตำแหน่งปุ่ม "ไม่รัก"
         function moveNoButton() {
-            // ตรวจสอบขนาดหน้าจอเพื่อปรับการทำงาน
+            // บนมือถือ ปุ่มจะไม่หนี แต่จะถูกจัดตำแหน่งปกติ
             if (window.innerWidth <= 600) {
-                // บนมือถือ ให้ปุ่มไม่รักเป็นปุ่มปกติ ไม่ต้องหนี
                 return;
             }
 
-            const containerRect = buttonsContainer.getBoundingClientRect();
+            const bodyRect = document.body.getBoundingClientRect();
             const buttonRect = noBtn.getBoundingClientRect();
 
-            // คำนวณขอบเขตที่ปุ่มสามารถเคลื่อนที่ได้ภายใน buttonsContainer
-            const maxX = containerRect.width - buttonRect.width;
-            const maxY = containerRect.height - buttonRect.height;
+            // คำนวณขอบเขตที่ปุ่มสามารถเคลื่อนที่ได้ทั่วหน้าจอ (ยกเว้น Header และ Footer เล็กน้อย)
+            const padding = 50; // ระยะห่างจากขอบ
+            const maxX = bodyRect.width - buttonRect.width - padding * 2;
+            const maxY = bodyRect.height - buttonRect.height - padding * 2;
 
-            // สุ่มตำแหน่งใหม่
-            const newX = Math.random() * maxX;
-            const newY = Math.random() * maxY;
+            // สุ่มตำแหน่งใหม่ทั่วหน้าจอ
+            const newX = Math.random() * maxX + padding;
+            const newY = Math.random() * maxY + padding;
 
-            // กำหนดตำแหน่งใหม่ให้ปุ่ม
-            noBtn.style.left = `${newX}px`;
-            noBtn.style.top = `${newY}px`;
+            // กำหนดตำแหน่งใหม่ให้ปุ่มโดยใช้ CSS transform เพื่อประสิทธิภาพที่ดีกว่า
+            noBtn.style.transform = `translate(${newX - (bodyRect.width / 2 - buttonRect.width / 2)}px, ${newY - (bodyRect.height / 2 - buttonRect.height / 2)}px)`;
+            // (คำนวณปรับให้ relative กับตำแหน่งเริ่มต้นที่จัดกึ่งกลาง)
         }
 
         // เมื่อเอาเมาส์ไปชี้ที่ปุ่ม "ไม่รัก" ให้ปุ่มหนี
@@ -174,16 +339,57 @@
         yesBtn.addEventListener('click', () => {
             // ซ่อนปุ่มทั้งหมด
             buttonsContainer.style.display = 'none';
+
             // แสดงข้อความบอกรัก
-            loveMessage.style.display = 'block';
-            // อาจจะเพิ่มเสียงเพลงหรือแอนิเมชั่นพิเศษตรงนี้ได้
+            messageContainer.style.display = 'flex';
+            loveMessage.style.opacity = 0; // ตั้งค่า opacity เริ่มต้นเป็น 0 ก่อนเริ่ม animation
+
+            // สร้างหัวใจลอย
+            for (let i = 0; i < 20; i++) { // สร้างหัวใจ 20 ดวง
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('heart-float');
+                    // สุ่มตำแหน่งเริ่มต้นให้หัวใจลอยจากปุ่ม "รักสิ!"
+                    const btnRect = yesBtn.getBoundingClientRect();
+                    heart.style.left = `${btnRect.left + btnRect.width / 2 + (Math.random() * 40 - 20)}px`; // สุ่มซ้ายขวาเล็กน้อย
+                    heart.style.top = `${btnRect.top + btnRect.height / 2 + (Math.random() * 40 - 20)}px`; // สุ่มบนล่างเล็กน้อย
+                    document.body.appendChild(heart);
+
+                    // ลบหัวใจออกเมื่อแอนิเมชั่นจบ เพื่อไม่ให้ DOM ค้าง
+                    heart.addEventListener('animationend', () => {
+                        heart.remove();
+                    });
+                }, i * 100); // หน่วงเวลาให้หัวใจค่อยๆ ลอยขึ้น
+            }
+        });
+
+        // ทำให้ปุ่ม "ไม่รัก" หนีทันทีที่โหลดหน้าจอสำหรับ Desktop
+        window.addEventListener('load', () => {
+            if (window.innerWidth > 600) { // ทำงานเฉพาะบน Desktop
+                moveNoButton();
+            }
         });
 
         // เมื่อหน้าจอถูกปรับขนาด ให้เรียก moveNoButton เพื่อปรับการทำงานบนมือถือ
-        window.addEventListener('resize', moveNoButton);
-        // เรียกครั้งแรกเผื่อเปิดบนมือถือตั้งแต่แรก
-        moveNoButton();
-
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 600) {
+                // บนมือถือ ให้ปุ่มไม่รักกลับไปอยู่ตำแหน่งปกติ
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
+                noBtn.style.transform = 'none';
+                buttonsContainer.style.flexDirection = 'column'; // จัดเรียงปุ่มในแนวตั้ง
+                yesBtn.style.marginRight = '0';
+                yesBtn.style.marginBottom = '20px';
+            } else {
+                // บน Desktop ให้ปุ่มไม่รักเป็น absolute และหนี
+                noBtn.style.position = 'absolute';
+                buttonsContainer.style.flexDirection = 'row'; // จัดเรียงปุ่มในแนวนอน
+                yesBtn.style.marginRight = '20px';
+                yesBtn.style.marginBottom = '0';
+                moveNoButton(); // ให้ปุ่มหนีเมื่อกลับมาที่ Desktop
+            }
+        });
     </script>
 </body>
 </html>
