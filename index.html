@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>บาคาร่า Real-Time</title>
+    <title>บาคาร่า Premium</title>
     <style>
         /* Reset */
         * {
@@ -33,6 +33,25 @@
             position: relative;
             background: url('https://images.unsplash.com/photo-1518895949257-7621c3c786d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1480&q=80') no-repeat center center;
             background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Table */
+        .baccarat-table {
+            width: 95%;
+            max-width: 800px;
+            height: 80%;
+            background: url('https://images.unsplash.com/photo-1596838132731-3301c3fd4317?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+            background-size: cover;
+            border-radius: 20px;
+            border: 8px solid #5a3e2b;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
         }
         
         .table-overlay {
@@ -41,7 +60,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
         }
@@ -52,25 +72,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
-            background: rgba(0, 0, 0, 0.9);
-            border-bottom: 1px solid #ff3366;
+            padding: 0 20px;
+            z-index: 10;
         }
         
         .logo {
             font-size: 20px;
             font-weight: bold;
-            color: #ff3366;
-            text-shadow: 0 0 5px rgba(255, 51, 102, 0.7);
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
         }
         
         .balance {
             font-size: 16px;
             color: #fff;
-            background: rgba(255, 51, 102, 0.3);
-            padding: 5px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 15px;
             border-radius: 15px;
-            border: 1px solid #ff3366;
+            border: 1px solid #ffcc00;
         }
         
         /* Timer */
@@ -79,11 +98,10 @@
             top: 60px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            height: 20px;
+            width: 80%;
+            height: 15px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
             z-index: 10;
         }
@@ -104,8 +122,51 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
+        }
+        
+        /* Dealer */
+        .dealer {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 120px;
+            z-index: 5;
+        }
+        
+        .dealer-character {
+            width: 100%;
+            height: 100%;
+            background: url('https://i.imgur.com/JQ1Ef8j.png') no-repeat center center;
+            background-size: contain;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .dealer-hand {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: url('https://i.imgur.com/VvWq3Xk.png') no-repeat center center;
+            background-size: contain;
+            top: 40px;
+            right: -20px;
+            animation: dealCard 0.5s ease-out;
+            transform-origin: bottom left;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes dealCard {
+            0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+            100% { transform: rotate(-20deg) scale(1); opacity: 1; }
         }
         
         /* Game Area */
@@ -114,6 +175,7 @@
             display: flex;
             flex-direction: column;
             padding: 10px;
+            position: relative;
         }
         
         .cards-area {
@@ -179,15 +241,18 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.9);
-            border-top: 1px solid #ff3366;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            margin-top: 10px;
+            position: relative;
+            z-index: 5;
         }
         
         .bet-option {
             width: 80px;
             height: 80px;
-            border-radius: 50%;
+            border-radius: 5px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -196,6 +261,7 @@
             transition: all 0.2s;
             position: relative;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            border: 2px solid transparent;
         }
         
         .bet-option:active {
@@ -203,18 +269,18 @@
         }
         
         .banker {
-            background: linear-gradient(135deg, #ff3366, #cc0066);
-            border: 1px solid #ff3366;
+            background: rgba(255, 51, 102, 0.3);
+            border-color: #ff3366;
         }
         
         .player {
-            background: linear-gradient(135deg, #3399ff, #0066cc);
-            border: 1px solid #3399ff;
+            background: rgba(51, 153, 255, 0.3);
+            border-color: #3399ff;
         }
         
         .tie {
-            background: linear-gradient(135deg, #33cc33, #009933);
-            border: 1px solid #33cc33;
+            background: rgba(51, 204, 51, 0.3);
+            border-color: #33cc33;
         }
         
         .bet-amount {
@@ -225,21 +291,41 @@
             white-space: nowrap;
         }
         
+        /* Chips */
         .chip {
             position: absolute;
-            width: 25px;
-            height: 25px;
-            background: #ffcc00;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
             color: #000;
-            top: -5px;
-            right: -5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-            font-size: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            font-size: 12px;
+            z-index: 2;
+            transition: transform 0.3s;
+        }
+        
+        .chip-100 {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            border: 2px solid #ffcc00;
+        }
+        
+        .chip-500 {
+            background: linear-gradient(135deg, #00ccff, #0099ff);
+            border: 2px solid #00ccff;
+        }
+        
+        .chip-1000 {
+            background: linear-gradient(135deg, #ff00cc, #cc0099);
+            border: 2px solid #ff00cc;
+        }
+        
+        .chip-5000 {
+            background: linear-gradient(135deg, #00ffcc, #00cc99);
+            border: 2px solid #00ffcc;
         }
         
         /* Bet Controls */
@@ -249,30 +335,42 @@
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
-            max-width: 400px;
             display: flex;
             justify-content: space-between;
             background: rgba(0, 0, 0, 0.7);
             border-radius: 10px;
             padding: 5px;
-            border: 1px solid #ff3366;
+            border: 1px solid #ffcc00;
+            z-index: 10;
         }
         
         .bet-button {
-            width: 50px;
-            height: 30px;
+            width: 60px;
+            height: 40px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #ff3366;
+            border: 1px solid #ffcc00;
             border-radius: 5px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 12px;
+            font-size: 10px;
             color: #fff;
         }
         
         .bet-button:active {
-            background: rgba(255, 51, 102, 0.5);
+            background: rgba(255, 204, 0, 0.3);
+        }
+        
+        .chip-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            margin-bottom: 3px;
         }
         
         .current-bet {
@@ -297,6 +395,7 @@
             padding: 8px 15px;
             border-radius: 15px;
             display: none;
+            z-index: 20;
         }
         
         /* History */
@@ -310,6 +409,9 @@
             max-width: 90%;
             overflow-x: auto;
             padding: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            z-index: 5;
         }
         
         .history-item {
@@ -335,20 +437,26 @@
             background: #33cc33;
         }
         
-        /* Auto Play */
-        .auto-play {
+        /* Labels */
+        .banker-label, .player-label {
             position: absolute;
-            top: 60px;
-            right: 10px;
-            background: rgba(255, 51, 102, 0.3);
-            border: 1px solid #ff3366;
-            color: #fff;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 3px;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 10px;
+            z-index: 5;
+        }
+        
+        .banker-label {
+            top: 30%;
+            left: 20%;
+            background: rgba(255, 51, 102, 0.7);
+        }
+        
+        .player-label {
+            bottom: 30%;
+            right: 20%;
+            background: rgba(51, 153, 255, 0.7);
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
@@ -356,64 +464,83 @@
 </head>
 <body>
     <div class="game-container">
-        <div class="table-overlay">
-            <div class="header">
-                <div class="logo">BACCARAT</div>
-                <div class="balance" id="balance">10,000</div>
-            </div>
-            
-            <div class="timer-container">
-                <div class="timer-bar" id="timer-bar"></div>
-                <div class="timer-text" id="timer-text">วางเดิมพัน 15 วินาที</div>
-            </div>
-            
-            <div class="auto-play">
-                <i class="fas fa-play"></i> AUTO
-            </div>
-            
-            <div class="game-area">
-                <div class="cards-area">
-                    <div class="history" id="history"></div>
-                    
-                    <div class="cards-row" id="banker-cards">
-                        <!-- Banker cards will be here -->
-                    </div>
-                    
-                    <div class="cards-row" id="player-cards">
-                        <!-- Player cards will be here -->
-                    </div>
-                    
-                    <div class="result-display" id="result"></div>
+        <div class="baccarat-table">
+            <div class="table-overlay">
+                <div class="header">
+                    <div class="logo">BACCARAT</div>
+                    <div class="balance" id="balance">10,000</div>
                 </div>
                 
-                <div class="bet-controls">
-                    <div class="bet-button" id="bet-100">+100</div>
-                    <div class="bet-button" id="bet-500">+500</div>
-                    <div class="current-bet" id="current-bet">100</div>
-                    <div class="bet-button" id="bet-1000">+1000</div>
-                    <div class="bet-button" id="bet-5000">+5000</div>
+                <div class="timer-container">
+                    <div class="timer-bar" id="timer-bar"></div>
+                    <div class="timer-text" id="timer-text">วางเดิมพัน 15 วินาที</div>
                 </div>
                 
-                <div class="betting-area">
-                    <div class="bet-option banker" id="bet-banker">
-                        <div>BANKER</div>
-                        <div class="bet-amount">1.95x</div>
-                        <div class="chip" id="banker-chip" style="display: none;">100</div>
+                <div class="dealer">
+                    <div class="dealer-character">
+                        <div class="dealer-hand" id="dealer-hand"></div>
+                    </div>
+                </div>
+                
+                <div class="banker-label">BANKER 1.95x</div>
+                <div class="player-label">PLAYER 2x</div>
+                
+                <div class="game-area">
+                    <div class="cards-area">
+                        <div class="history" id="history"></div>
+                        
+                        <div class="cards-row" id="banker-cards">
+                            <!-- Banker cards will be here -->
+                        </div>
+                        
+                        <div class="cards-row" id="player-cards">
+                            <!-- Player cards will be here -->
+                        </div>
+                        
+                        <div class="result-display" id="result"></div>
                     </div>
                     
-                    <div class="bet-option tie" id="bet-tie">
-                        <div>TIE</div>
-                        <div class="bet-amount">8x</div>
-                        <div class="chip" id="tie-chip" style="display: none;">100</div>
+                    <div class="bet-controls">
+                        <div class="bet-button" id="bet-100">
+                            <div class="chip-icon chip-100">100</div>
+                            <div>+100</div>
+                        </div>
+                        <div class="bet-button" id="bet-500">
+                            <div class="chip-icon chip-500">500</div>
+                            <div>+500</div>
+                        </div>
+                        <div class="current-bet" id="current-bet">100</div>
+                        <div class="bet-button" id="bet-1000">
+                            <div class="chip-icon chip-1000">1K</div>
+                            <div>+1000</div>
+                        </div>
+                        <div class="bet-button" id="bet-5000">
+                            <div class="chip-icon chip-5000">5K</div>
+                            <div>+5000</div>
+                        </div>
                     </div>
                     
-                    <div class="bet-option player" id="bet-player">
-                        <div>PLAYER</div>
-                        <div class="bet-amount">2x</div>
-                        <div class="chip" id="player-chip" style="display: none;">100</div>
+                    <div class="betting-area">
+                        <div class="bet-option banker" id="bet-banker">
+                            <div>BANKER</div>
+                            <div class="bet-amount">1.95x</div>
+                        </div>
+                        
+                        <div class="bet-option tie" id="bet-tie">
+                            <div>TIE</div>
+                            <div class="bet-amount">8x</div>
+                        </div>
+                        
+                        <div class="bet-option player" id="bet-player">
+                            <div>PLAYER</div>
+                            <div class="bet-amount">2x</div>
+                        </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Chips will be placed here dynamically -->
+            <div id="chips-container"></div>
         </div>
     </div>
 
@@ -436,7 +563,8 @@
             bettingPhase: true,
             history: [],
             timer: null,
-            timeLeft: config.bettingTime
+            timeLeft: config.bettingTime,
+            placedChips: []
         };
         
         // DOM elements
@@ -448,14 +576,13 @@
         const timerBar = document.getElementById('timer-bar');
         const timerText = document.getElementById('timer-text');
         const currentBetElement = document.getElementById('current-bet');
+        const dealerHand = document.getElementById('dealer-hand');
+        const chipsContainer = document.getElementById('chips-container');
         
         // Betting elements
         const betBanker = document.getElementById('bet-banker');
         const betPlayer = document.getElementById('bet-player');
         const betTie = document.getElementById('bet-tie');
-        const bankerChip = document.getElementById('banker-chip');
-        const playerChip = document.getElementById('player-chip');
-        const tieChip = document.getElementById('tie-chip');
         
         // Bet amount controls
         const bet100 = document.getElementById('bet-100');
@@ -557,7 +684,59 @@
             
             // Update UI
             updateBalance();
-            showBetChip(type);
+            createChipOnTable(type);
+        }
+        
+        function createChipOnTable(type) {
+            // Remove existing chips
+            clearChips();
+            
+            // Create new chip
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            
+            // Determine chip color based on bet amount
+            if (state.currentBetAmount >= 5000) {
+                chip.classList.add('chip-5000');
+                chip.textContent = '5K';
+            } else if (state.currentBetAmount >= 1000) {
+                chip.classList.add('chip-1000');
+                chip.textContent = '1K';
+            } else if (state.currentBetAmount >= 500) {
+                chip.classList.add('chip-500');
+                chip.textContent = '500';
+            } else {
+                chip.classList.add('chip-100');
+                chip.textContent = '100';
+            }
+            
+            // Position chip on table
+            const tableRect = document.querySelector('.baccarat-table').getBoundingClientRect();
+            
+            if (type === 'banker') {
+                chip.style.left = `${tableRect.width * 0.3}px`;
+                chip.style.top = `${tableRect.height * 0.4}px`;
+            } else if (type === 'player') {
+                chip.style.left = `${tableRect.width * 0.6}px`;
+                chip.style.top = `${tableRect.height * 0.6}px`;
+            } else {
+                chip.style.left = `${tableRect.width * 0.45}px`;
+                chip.style.top = `${tableRect.height * 0.5}px`;
+            }
+            
+            // Add slight random offset for realism
+            chip.style.left = `${parseInt(chip.style.left) + (Math.random() * 20 - 10)}px`;
+            chip.style.top = `${parseInt(chip.style.top) + (Math.random() * 20 - 10)}px`;
+            
+            chipsContainer.appendChild(chip);
+            state.placedChips.push(chip);
+        }
+        
+        function clearChips() {
+            state.placedChips.forEach(chip => {
+                chipsContainer.removeChild(chip);
+            });
+            state.placedChips = [];
         }
         
         function adjustBet(amount) {
@@ -586,6 +765,11 @@
             // Clear previous cards
             bankerCardsElement.innerHTML = '';
             playerCardsElement.innerHTML = '';
+            
+            // Animate dealer hand
+            dealerHand.style.animation = 'none';
+            void dealerHand.offsetWidth; // Trigger reflow
+            dealerHand.style.animation = 'dealCard 0.5s ease-out';
             
             // Generate and shuffle deck
             let deck = generateDeck();
@@ -687,8 +871,15 @@
         }
         
         function dealThirdCard(card, type, callback) {
-            createCardElement(card, type);
-            if (callback) setTimeout(callback, 500);
+            // Animate dealer hand again
+            dealerHand.style.animation = 'none';
+            void dealerHand.offsetWidth; // Trigger reflow
+            dealerHand.style.animation = 'dealCard 0.5s ease-out';
+            
+            setTimeout(() => {
+                createCardElement(card, type);
+                if (callback) callback();
+            }, 300);
         }
         
         function createCardElement(card, type, isFaceDown = false) {
@@ -796,7 +987,7 @@
             state.currentBetType = null;
             state.gameInProgress = false;
             updateBalance();
-            resetBetsUI();
+            clearChips();
         }
         
         function showResult(message) {
@@ -829,22 +1020,7 @@
         }
         
         function resetBetsUI() {
-            bankerChip.style.display = 'none';
-            playerChip.style.display = 'none';
-            tieChip.style.display = 'none';
-        }
-        
-        function showBetChip(type) {
-            if (type === 'banker') {
-                bankerChip.style.display = 'flex';
-                bankerChip.textContent = state.currentBetAmount;
-            } else if (type === 'player') {
-                playerChip.style.display = 'flex';
-                playerChip.textContent = state.currentBetAmount;
-            } else {
-                tieChip.style.display = 'flex';
-                tieChip.textContent = state.currentBetAmount;
-            }
+            // No need for this in current implementation
         }
         
         function generateDeck() {
