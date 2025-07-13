@@ -3,58 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>รักอุ้มอุ้มไหม?</title>
+  <title>รักเบสไหม?</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      padding: 0;
       font-family: 'Mitr', sans-serif;
+      background: #ffe4e1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background-color: #ffe4e1;
       overflow: hidden;
+      text-align: center;
       transition: background 1s ease;
     }
 
     h1 {
-      color: #ff69b4;
       font-size: 2.5em;
+      color: #ff1493;
       margin-bottom: 20px;
-      text-align: center;
     }
 
     .cartoon {
-      width: 150px;
-      height: 150px;
-      margin: 20px auto;
+      width: 160px;
+      height: 160px;
+      margin: 20px;
       animation: bounce 2s infinite ease-in-out;
-      transition: 0.5s ease;
+      transition: all 0.5s;
+    }
+
+    .angryFace circle {
+      fill: #f99;
     }
 
     @keyframes bounce {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-15px);
-      }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
     }
 
     .buttons-container {
       position: relative;
-      width: 100%;
       max-width: 400px;
       height: 100px;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: 30px;
     }
 
     button {
@@ -63,20 +65,13 @@
       border: none;
       border-radius: 25px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      white-space: nowrap;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin: 10px;
+      transition: 0.3s;
     }
 
     #yesBtn {
       background-color: #4CAF50;
       color: white;
-      margin-right: 20px;
-    }
-
-    #yesBtn:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
     }
 
     #noBtn {
@@ -88,85 +83,78 @@
     }
 
     #noBtn:hover {
-      background-color: #da190b;
-    }
-
-    #finalScene {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: url('https://i.imgur.com/Zz6W8Vh.jpg') center/cover no-repeat;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 999;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #finalScene h1 {
-      font-size: 3em;
-      text-shadow: 2px 2px 8px #000;
-    }
-
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 998;
-      pointer-events: none;
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-5px); }
-      100% { transform: translateX(0); }
+      background-color: #c62828;
     }
 
     .angry {
       animation: shake 0.5s infinite;
     }
 
+    #finalScene {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(to top, #ff9a9e, #fad0c4);
+      background-size: cover;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+      color: white;
+      text-shadow: 2px 2px 6px #000;
+    }
+
+    #finalScene h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5;
+      pointer-events: none;
+    }
+
     @media (max-width: 600px) {
       h1 { font-size: 2em; }
-      .cartoon { width: 120px; height: 120px; }
       button { font-size: 1em; padding: 12px 25px; }
-      .buttons-container {
-        flex-direction: column;
-        height: auto;
-      }
-      #yesBtn { margin-right: 0; margin-bottom: 20px; }
+      .cartoon { width: 120px; height: 120px; }
+      .buttons-container { flex-direction: column; height: auto; }
       #noBtn { position: relative; transform: none; left: auto; }
     }
   </style>
 </head>
 <body>
-  <h1 id="question">รักเบสไหม?</h1>
-  <img src="https://i.imgur.com/8Y2Z1Zq.png" class="cartoon" id="cartoonImg" alt="cartoon">
+  <h1 id="question">อุ้ม รักเบสไหม?</h1>
+
+  <!-- การ์ตูนน่ารัก SVG -->
+  <svg id="cartoon" class="cartoon" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="45" fill="#ffd1dc"/>
+    <circle cx="35" cy="40" r="6" fill="#333"/>
+    <circle cx="65" cy="40" r="6" fill="#333"/>
+    <path d="M35,65 Q50,80 65,65" stroke="#333" stroke-width="3" fill="none"/>
+  </svg>
+
   <div class="buttons-container" id="buttonBox">
     <button id="yesBtn">รักสิ!</button>
     <button id="noBtn">ไม่รัก</button>
   </div>
 
-  <!-- Final scene -->
+  <!-- ฉากสุดท้าย -->
   <div id="finalScene">
-    <h1>เอี่ยน้ำเน่า</h1>
-    <p>อีเน่าน้ำไม่อาบ</p>
+    <h1>ก่อนอื่นอาบน้ำก่อน</h1>
+    <p>ไปๆเหม็นเน่า</p>
   </div>
-
   <canvas id="fireworksCanvas"></canvas>
 
   <script>
     const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
-    const cartoon = document.getElementById('cartoonImg');
+    const cartoon = document.getElementById('cartoon');
     const question = document.getElementById('question');
     const buttonBox = document.getElementById('buttonBox');
     const finalScene = document.getElementById('finalScene');
@@ -190,7 +178,15 @@
         noMoved = true;
       }
 
-      cartoon.src = "https://i.imgur.com/VguZ9D4.png"; // การ์ตูนโกรธ
+      // การ์ตูนโกรธ
+      cartoon.innerHTML = `
+        <circle cx="50" cy="50" r="45" fill="#f99"/>
+        <line x1="30" y1="35" x2="40" y2="45" stroke="#000" stroke-width="3"/>
+        <line x1="40" y1="35" x2="30" y2="45" stroke="#000" stroke-width="3"/>
+        <line x1="60" y1="35" x2="70" y2="45" stroke="#000" stroke-width="3"/>
+        <line x1="70" y1="35" x2="60" y2="45" stroke="#000" stroke-width="3"/>
+        <path d="M35,70 Q50,55 65,70" stroke="#000" stroke-width="3" fill="none"/>
+      `;
       cartoon.classList.add("angry");
     });
 
@@ -224,11 +220,10 @@
             speed: Math.random() * 5 + 2,
             radius: 2,
             alpha: 1,
-            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+            color: `hsl(${Math.random() * 360}, 100%, 70%)`
           });
         }
       }, 800);
-
       animateFireworks();
     }
 
