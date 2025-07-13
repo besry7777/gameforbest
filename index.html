@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือคำนวณตรีโกณมิติ</title>
+    <title>เครื่องมือคำนวณแรงในแนวแกน X และ Y</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,6 +24,8 @@
         h1 {
             color: #2c3e50;
             text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
         }
         .input-area {
             margin-bottom: 20px;
@@ -31,13 +33,11 @@
             background: #f9f9f9;
             border-radius: 5px;
         }
-        textarea {
-            width: 100%;
-            padding: 10px;
+        input, select {
+            padding: 8px;
+            margin: 5px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 100px;
-            font-size: 16px;
         }
         button {
             background: #3498db;
@@ -47,6 +47,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-top: 10px;
         }
         button:hover {
             background: #2980b9;
@@ -56,121 +57,159 @@
             padding: 15px;
             background: #e8f4fc;
             border-radius: 5px;
-            white-space: pre-wrap;
         }
-        .examples {
-            margin-top: 30px;
+        .solution {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #3498db;
+            white-space: pre-line;
         }
-        .example {
+        .symbols {
+            margin-top: 20px;
             background: #f0f0f0;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 15px;
+            border-radius: 5px;
         }
-        .example:hover {
-            background: #e0e0e0;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>เครื่องมือคำนวณตรีโกณมิติ</h1>
+        <h1>เครื่องมือคำนวณแรงในแนวแกน X และ Y</h1>
         
         <div class="input-area">
-            <h2>ป้อนโจทย์ของคุณ</h2>
-            <textarea id="problemInput" placeholder="ตัวอย่าง: จงหาปริมาตรของทรงกลมเมื่อมุม x=45° และ F=120"></textarea>
-            <button onclick="solveProblem()">คำนวณ</button>
+            <h2>ป้อนข้อมูลแรง</h2>
+            <div>
+                <label for="forceValue">ขนาดแรง (F):</label>
+                <input type="number" id="forceValue" placeholder="เช่น 120" step="any"> N
+            </div>
+            <div>
+                <label for="angleValue">มุม (θ):</label>
+                <input type="number" id="angleValue" placeholder="เช่น 45" step="any"> องศา
+            </div>
+            <div>
+                <label for="angleType">มุมวัดจาก:</label>
+                <select id="angleType">
+                    <option value="horizontal">แนวราบ (แกน X)</option>
+                    <option value="vertical">แนวดิ่ง (แกน Y)</option>
+                </select>
+            </div>
+            <button onclick="calculateForceComponents()">คำนวณแรง</button>
         </div>
         
         <div class="result" id="result">
-            ผลลัพธ์จะแสดงที่นี่...
+            <h2>ผลลัพธ์</h2>
+            <div id="forceResults"></div>
+            <div class="solution" id="solution"></div>
         </div>
         
-        <div class="examples">
-            <h2>ตัวอย่างโจทย์</h2>
-            <div class="example" onclick="useExample(this)">จงหาค่า sin(45°)</div>
-            <div class="example" onclick="useExample(this)">คำนวณ cos(60°) + tan(30°)</div>
-            <div class="example" onclick="useExample(this)">หาค่า tan(x) เมื่อ x=30°</div>
-            <div class="example" onclick="useExample(this)">จงหาปริมาตรของทรงกลมเมื่อมุม x=45° และ F=120</div>
-            <div class="example" onclick="useExample(this)">คำนวณ sin²(45°) + cos²(45°)</div>
+        <div class="symbols">
+            <h2>สัญลักษณ์ทางฟิสิกส์</h2>
+            <table>
+                <tr>
+                    <th>สัญลักษณ์</th>
+                    <th>ความหมาย</th>
+                    <th>หน่วย</th>
+                </tr>
+                <tr>
+                    <td>F, F₁, F₂</td>
+                    <td>แรง</td>
+                    <td>นิวตัน (N)</td>
+                </tr>
+                <tr>
+                    <td>Fₓ, Fₓ₁, Fₓ₂</td>
+                    <td>แรงในแนวแกน X</td>
+                    <td>นิวตัน (N)</td>
+                </tr>
+                <tr>
+                    <td>Fᵧ, Fᵧ₁, Fᵧ₂</td>
+                    <td>แรงในแนวแกน Y</td>
+                    <td>นิวตัน (N)</td>
+                </tr>
+                <tr>
+                    <td>θ, θ₁, θ₂</td>
+                    <td>มุม</td>
+                    <td>องศา (°)</td>
+                </tr>
+                <tr>
+                    <td>sin(θ)</td>
+                    <td>ไซน์ของมุม θ</td>
+                    <td>ไม่มีหน่วย</td>
+                </tr>
+                <tr>
+                    <td>cos(θ)</td>
+                    <td>โคไซน์ของมุม θ</td>
+                    <td>ไม่มีหน่วย</td>
+                </tr>
+            </table>
         </div>
     </div>
 
     <script>
-        function solveProblem() {
-            const problem = document.getElementById('problemInput').value;
-            let result = "ผลลัพธ์: \n";
+        function calculateForceComponents() {
+            const force = parseFloat(document.getElementById('forceValue').value);
+            const angle = parseFloat(document.getElementById('angleValue').value);
+            const angleType = document.getElementById('angleType').value;
             
-            // ตรวจสอบและคำนวณ sin
-            if (problem.includes('sin')) {
-                const angle = extractAngle(problem);
-                if (angle !== null) {
-                    const radians = angle * Math.PI / 180;
-                    const sinValue = Math.sin(radians);
-                    result += `sin(${angle}°) = ${sinValue.toFixed(4)}\n`;
-                }
+            if (isNaN(force) || isNaN(angle)) {
+                alert("กรุณาป้อนค่าที่ถูกต้อง");
+                return;
             }
             
-            // ตรวจสอบและคำนวณ cos
-            if (problem.includes('cos')) {
-                const angle = extractAngle(problem);
-                if (angle !== null) {
-                    const radians = angle * Math.PI / 180;
-                    const cosValue = Math.cos(radians);
-                    result += `cos(${angle}°) = ${cosValue.toFixed(4)}\n`;
-                }
-            }
+            const radians = angle * Math.PI / 180;
+            let fx, fy;
+            let solution = "วิธีทำ:\n";
             
-            // ตรวจสอบและคำนวณ tan
-            if (problem.includes('tan')) {
-                const angle = extractAngle(problem);
-                if (angle !== null) {
-                    const radians = angle * Math.PI / 180;
-                    const tanValue = Math.tan(radians);
-                    result += `tan(${angle}°) = ${tanValue.toFixed(4)}\n`;
-                }
-            }
-            
-            // ตรวจสอบโจทย์ตัวอย่างเกี่ยวกับปริมาตร
-            if (problem.includes('ปริมาตร') && problem.includes('มุม x=45°') && problem.includes('F=120')) {
-                const angle = 45;
-                const force = 120;
+            if (angleType === "horizontal") {
+                // มุมวัดจากแนวราบ (แกน X)
+                fx = force * Math.cos(radians);
+                fy = force * Math.sin(radians);
                 
-                // สมมติการคำนวณปริมาตร (ตัวอย่างเท่านั้น)
-                const volume = Math.pow(force, 3) * Math.cos(angle * Math.PI / 180) / 1000;
-                result += `ปริมาตรของทรงกลมเมื่อมุม x=${angle}° และ F=${force} คือ ${volume.toFixed(2)} หน่วย³\n`;
+                solution += `1. แรงในแนวแกน X (Fₓ) = F × cos(θ)\n`;
+                solution += `   Fₓ = ${force} × cos(${angle}°)\n`;
+                solution += `   Fₓ = ${force} × ${Math.cos(radians).toFixed(4)}\n`;
+                solution += `   Fₓ = ${fx.toFixed(2)} N\n\n`;
+                
+                solution += `2. แรงในแนวแกน Y (Fᵧ) = F × sin(θ)\n`;
+                solution += `   Fᵧ = ${force} × sin(${angle}°)\n`;
+                solution += `   Fᵧ = ${force} × ${Math.sin(radians).toFixed(4)}\n`;
+                solution += `   Fᵧ = ${fy.toFixed(2)} N`;
+            } else {
+                // มุมวัดจากแนวดิ่ง (แกน Y)
+                fx = force * Math.sin(radians);
+                fy = force * Math.cos(radians);
+                
+                solution += `1. แรงในแนวแกน X (Fₓ) = F × sin(θ)\n`;
+                solution += `   Fₓ = ${force} × sin(${angle}°)\n`;
+                solution += `   Fₓ = ${force} × ${Math.sin(radians).toFixed(4)}\n`;
+                solution += `   Fₓ = ${fx.toFixed(2)} N\n\n`;
+                
+                solution += `2. แรงในแนวแกน Y (Fᵧ) = F × cos(θ)\n`;
+                solution += `   Fᵧ = ${force} × cos(${angle}°)\n`;
+                solution += `   Fᵧ = ${force} × ${Math.cos(radians).toFixed(4)}\n`;
+                solution += `   Fᵧ = ${fy.toFixed(2)} N`;
             }
             
-            // ถ้าไม่พบฟังก์ชันตรีโกณมิติ
-            if (!problem.includes('sin') && !problem.includes('cos') && !problem.includes('tan')) {
-                result += "ไม่พบฟังก์ชันตรีโกณมิติในโจทย์ (sin, cos, tan)\n";
-                result += "กรุณาป้อนโจทย์ที่เกี่ยวข้องกับ sin, cos หรือ tan";
-            }
+            document.getElementById('forceResults').innerHTML = `
+                <p><strong>แรงในแนวแกน X (Fₓ):</strong> ${fx.toFixed(2)} N</p>
+                <p><strong>แรงในแนวแกน Y (Fᵧ):</strong> ${fy.toFixed(2)} N</p>
+            `;
             
-            document.getElementById('result').textContent = result;
-        }
-        
-        function extractAngle(text) {
-            // หามุมจากรูปแบบต่างๆ เช่น sin(45°), sin(30), sin x=45°
-            const angleRegex = /(sin|cos|tan)[\( ]*(\d+)/;
-            const match = text.match(angleRegex);
-            if (match && match[2]) {
-                return parseFloat(match[2]);
-            }
-            
-            // หามุมจากรูปแบบ x=45°
-            const xAngleRegex = /x\s*=\s*(\d+)/;
-            const xMatch = text.match(xAngleRegex);
-            if (xMatch && xMatch[1]) {
-                return parseFloat(xMatch[1]);
-            }
-            
-            return null;
-        }
-        
-        function useExample(element) {
-            document.getElementById('problemInput').value = element.textContent;
+            document.getElementById('solution').textContent = solution;
         }
     </script>
 </body>
