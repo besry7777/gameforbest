@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องมือคำนวณแรงในแนวแกน X และ Y</title>
+    <title>เครื่องมือวิเคราะห์แรงเข้าหามุมและแรงหนีมุม</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Kanit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
@@ -24,7 +24,7 @@
         h1 {
             color: #2c3e50;
             text-align: center;
-            border-bottom: 2px solid #3498db;
+            border-bottom: 2px solid #e74c3c;
             padding-bottom: 10px;
         }
         .input-area {
@@ -33,14 +33,33 @@
             background: #f9f9f9;
             border-radius: 5px;
         }
-        input, select {
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .force-direction {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+        .direction-option {
+            text-align: center;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .direction-option:hover {
+            border-color: #3498db;
+        }
+        .direction-option.selected {
+            border-color: #e74c3c;
+            background-color: #ffeeee;
+        }
+        .direction-option img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
         }
         button {
-            background: #3498db;
+            background: #e74c3c;
             color: white;
             border: none;
             padding: 10px 15px;
@@ -48,33 +67,37 @@
             cursor: pointer;
             font-size: 16px;
             margin-top: 10px;
+            display: block;
+            width: 100%;
         }
         button:hover {
-            background: #2980b9;
+            background: #c0392b;
         }
         .result {
             margin-top: 20px;
             padding: 15px;
-            background: #e8f4fc;
+            background: #fdeaea;
             border-radius: 5px;
+            border-left: 4px solid #e74c3c;
         }
-        .solution {
-            background: #f9f9f9;
-            padding: 15px;
-            margin-top: 15px;
-            border-left: 4px solid #3498db;
-            white-space: pre-line;
+        .diagram {
+            text-align: center;
+            margin: 20px 0;
         }
-        .symbols {
-            margin-top: 20px;
-            background: #f0f0f0;
+        .diagram img {
+            max-width: 100%;
+            height: auto;
+        }
+        .theory {
+            margin-top: 30px;
             padding: 15px;
+            background: #eaf2f8;
             border-radius: 5px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         th, td {
             border: 1px solid #ddd;
@@ -82,17 +105,18 @@
             text-align: left;
         }
         th {
-            background-color: #3498db;
+            background-color: #e74c3c;
             color: white;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>เครื่องมือคำนวณแรงในแนวแกน X และ Y</h1>
+        <h1>เครื่องมือวิเคราะห์แรงเข้าหามุมและแรงหนีมุม</h1>
         
         <div class="input-area">
-            <h2>ป้อนข้อมูลแรง</h2>
+            <h2>กำหนดลักษณะแรง</h2>
             <div>
                 <label for="forceValue">ขนาดแรง (F):</label>
                 <input type="number" id="forceValue" placeholder="เช่น 120" step="any"> N
@@ -101,115 +125,124 @@
                 <label for="angleValue">มุม (θ):</label>
                 <input type="number" id="angleValue" placeholder="เช่น 45" step="any"> องศา
             </div>
-            <div>
-                <label for="angleType">มุมวัดจาก:</label>
-                <select id="angleType">
-                    <option value="horizontal">แนวราบ (แกน X)</option>
-                    <option value="vertical">แนวดิ่ง (แกน Y)</option>
-                </select>
+            
+            <h3>ทิศทางแรงสัมพันธ์กับมุม:</h3>
+            <div class="force-direction">
+                <div class="direction-option" onclick="selectDirection(this, 'toward')">
+                    <img src="https://i.imgur.com/JQ6y8xG.png" alt="แรงเข้าหามุม">
+                    <p>แรงเข้าหามุม</p>
+                </div>
+                <div class="direction-option" onclick="selectDirection(this, 'away')">
+                    <img src="https://i.imgur.com/5X9vz7k.png" alt="แรงหนีมุม">
+                    <p>แรงหนีมุม</p>
+                </div>
             </div>
-            <button onclick="calculateForceComponents()">คำนวณแรง</button>
+            
+            <button onclick="analyzeForce()">วิเคราะห์แรง</button>
         </div>
         
         <div class="result" id="result">
-            <h2>ผลลัพธ์</h2>
-            <div id="forceResults"></div>
-            <div class="solution" id="solution"></div>
+            <h2>ผลการวิเคราะห์</h2>
+            <div id="analysisResult"></div>
+            <div class="diagram" id="diagram"></div>
         </div>
         
-        <div class="symbols">
-            <h2>สัญลักษณ์ทางฟิสิกส์</h2>
+        <div class="theory">
+            <h2>ทฤษฎีเกี่ยวกับแรงเข้าหามุมและแรงหนีมุม</h2>
+            <p><strong>แรงเข้าหามุม</strong> คือแรงที่มีทิศทางเข้าสู่จุดยอดของมุม มักใช้ในกรณี:</p>
+            <ul>
+                <li>แรงดึงวัตถุเข้าหาจุดศูนย์กลาง</li>
+                <li>แรงกดวัตถุให้เคลื่อนที่เข้าหามุม</li>
+                <li>แรงปฏิกิริยาที่พยายามลดขนาดมุม</li>
+            </ul>
+            
+            <p><strong>แรงหนีมุม</strong> คือแรงที่มีทิศทางออกจากจุดยอดของมุม มักใช้ในกรณี:</p>
+            <ul>
+                <li>แรงผลักวัตถุออกจากจุดศูนย์กลาง</li>
+                <li>แรงที่พยายามเพิ่มขนาดมุม</li>
+                <li>แรงต้านที่วัตถุกระทำต่อจุดยึด</li>
+            </ul>
+            
             <table>
                 <tr>
-                    <th>สัญลักษณ์</th>
-                    <th>ความหมาย</th>
-                    <th>หน่วย</th>
+                    <th>ลักษณะแรง</th>
+                    <th>สัญลักษณ์ทั่วไป</th>
+                    <th>ผลต่อมุม</th>
                 </tr>
                 <tr>
-                    <td>F, F₁, F₂</td>
-                    <td>แรง</td>
-                    <td>นิวตัน (N)</td>
+                    <td>แรงเข้าหามุม</td>
+                    <td>F<sub>in</sub>, F<sub>toward</sub></td>
+                    <td>ลดขนาดมุม (มุมแคบลง)</td>
                 </tr>
                 <tr>
-                    <td>Fₓ, Fₓ₁, Fₓ₂</td>
-                    <td>แรงในแนวแกน X</td>
-                    <td>นิวตัน (N)</td>
-                </tr>
-                <tr>
-                    <td>Fᵧ, Fᵧ₁, Fᵧ₂</td>
-                    <td>แรงในแนวแกน Y</td>
-                    <td>นิวตัน (N)</td>
-                </tr>
-                <tr>
-                    <td>θ, θ₁, θ₂</td>
-                    <td>มุม</td>
-                    <td>องศา (°)</td>
-                </tr>
-                <tr>
-                    <td>sin(θ)</td>
-                    <td>ไซน์ของมุม θ</td>
-                    <td>ไม่มีหน่วย</td>
-                </tr>
-                <tr>
-                    <td>cos(θ)</td>
-                    <td>โคไซน์ของมุม θ</td>
-                    <td>ไม่มีหน่วย</td>
+                    <td>แรงหนีมุม</td>
+                    <td>F<sub>out</sub>, F<sub>away</sub></td>
+                    <td>เพิ่มขนาดมุม (มุมกว้างขึ้น)</td>
                 </tr>
             </table>
         </div>
     </div>
 
     <script>
-        function calculateForceComponents() {
+        let selectedDirection = null;
+        
+        function selectDirection(element, direction) {
+            // ล้างการเลือกทั้งหมด
+            document.querySelectorAll('.direction-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // เลือกอันปัจจุบัน
+            element.classList.add('selected');
+            selectedDirection = direction;
+        }
+        
+        function analyzeForce() {
             const force = parseFloat(document.getElementById('forceValue').value);
             const angle = parseFloat(document.getElementById('angleValue').value);
-            const angleType = document.getElementById('angleType').value;
             
             if (isNaN(force) || isNaN(angle)) {
                 alert("กรุณาป้อนค่าที่ถูกต้อง");
                 return;
             }
             
-            const radians = angle * Math.PI / 180;
-            let fx, fy;
-            let solution = "วิธีทำ:\n";
-            
-            if (angleType === "horizontal") {
-                // มุมวัดจากแนวราบ (แกน X)
-                fx = force * Math.cos(radians);
-                fy = force * Math.sin(radians);
-                
-                solution += `1. แรงในแนวแกน X (Fₓ) = F × cos(θ)\n`;
-                solution += `   Fₓ = ${force} × cos(${angle}°)\n`;
-                solution += `   Fₓ = ${force} × ${Math.cos(radians).toFixed(4)}\n`;
-                solution += `   Fₓ = ${fx.toFixed(2)} N\n\n`;
-                
-                solution += `2. แรงในแนวแกน Y (Fᵧ) = F × sin(θ)\n`;
-                solution += `   Fᵧ = ${force} × sin(${angle}°)\n`;
-                solution += `   Fᵧ = ${force} × ${Math.sin(radians).toFixed(4)}\n`;
-                solution += `   Fᵧ = ${fy.toFixed(2)} N`;
-            } else {
-                // มุมวัดจากแนวดิ่ง (แกน Y)
-                fx = force * Math.sin(radians);
-                fy = force * Math.cos(radians);
-                
-                solution += `1. แรงในแนวแกน X (Fₓ) = F × sin(θ)\n`;
-                solution += `   Fₓ = ${force} × sin(${angle}°)\n`;
-                solution += `   Fₓ = ${force} × ${Math.sin(radians).toFixed(4)}\n`;
-                solution += `   Fₓ = ${fx.toFixed(2)} N\n\n`;
-                
-                solution += `2. แรงในแนวแกน Y (Fᵧ) = F × cos(θ)\n`;
-                solution += `   Fᵧ = ${force} × cos(${angle}°)\n`;
-                solution += `   Fᵧ = ${force} × ${Math.cos(radians).toFixed(4)}\n`;
-                solution += `   Fᵧ = ${fy.toFixed(2)} N`;
+            if (!selectedDirection) {
+                alert("กรุณาเลือกทิศทางแรง");
+                return;
             }
             
-            document.getElementById('forceResults').innerHTML = `
-                <p><strong>แรงในแนวแกน X (Fₓ):</strong> ${fx.toFixed(2)} N</p>
-                <p><strong>แรงในแนวแกน Y (Fᵧ):</strong> ${fy.toFixed(2)} N</p>
-            `;
+            const radians = angle * Math.PI / 180;
+            let analysis = "";
+            let diagram = "";
             
-            document.getElementById('solution').textContent = solution;
+            if (selectedDirection === "toward") {
+                analysis = `
+                    <p><strong>แรงเข้าหามุม</strong> (Toward Angle Force)</p>
+                    <p>แรงขนาด ${force} N ที่ทำมุม ${angle}° เข้าหามุม</p>
+                    <p>ลักษณะแรง: แรงนี้พยายามลดขนาดมุมให้แคบลง</p>
+                    <p>การคำนวณองค์ประกอบแรง:</p>
+                    <ul>
+                        <li>F<sub>x</sub> = F × cos(θ) = ${force} × ${Math.cos(radians).toFixed(4)} = ${(force * Math.cos(radians)).toFixed(2)} N</li>
+                        <li>F<sub>y</sub> = F × sin(θ) = ${force} × ${Math.sin(radians).toFixed(4)} = ${(force * Math.sin(radians)).toFixed(2)} N</li>
+                    </ul>
+                `;
+                diagram = `<img src="https://i.imgur.com/JQ6y8xG.png" alt="แผนภาพแรงเข้าหามุม">`;
+            } else {
+                analysis = `
+                    <p><strong>แรงหนีมุม</strong> (Away from Angle Force)</p>
+                    <p>แรงขนาด ${force} N ที่ทำมุม ${angle}° ออกจากมุม</p>
+                    <p>ลักษณะแรง: แรงนี้พยายามเพิ่มขนาดมุมให้กว้างขึ้น</p>
+                    <p>การคำนวณองค์ประกอบแรง:</p>
+                    <ul>
+                        <li>F<sub>x</sub> = F × cos(θ) = ${force} × ${Math.cos(radians).toFixed(4)} = ${(force * Math.cos(radians)).toFixed(2)} N</li>
+                        <li>F<sub>y</sub> = F × sin(θ) = ${force} × ${Math.sin(radians).toFixed(4)} = ${(force * Math.sin(radians)).toFixed(2)} N</li>
+                    </ul>
+                `;
+                diagram = `<img src="https://i.imgur.com/5X9vz7k.png" alt="แผนภาพแรงหนีมุม">`;
+            }
+            
+            document.getElementById('analysisResult').innerHTML = analysis;
+            document.getElementById('diagram').innerHTML = diagram;
         }
     </script>
 </body>
