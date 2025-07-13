@@ -2,219 +2,150 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บาคาร่าสากล - สำหรับการศึกษา</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บาคาร่า Premium</title>
     <style>
-        :root {
-            --primary-color: #005f73;
-            --secondary-color: #0a9396;
-            --accent-color: #ee9b00;
-            --dark-color: #001219;
-            --light-color: #e9d8a6;
-            --player-color: #94d2bd;
-            --banker-color: #ca6702;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
         }
         
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: var(--dark-color);
-            color: white;
-            margin: 0;
-            padding: 0;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1607513746994-51f730a44832?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background: #000;
+            color: #fff;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: url('https://images.unsplash.com/photo-1518895949257-7621c3c786d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1480&q=80') no-repeat center center;
             background-size: cover;
-            background-attachment: fixed;
         }
         
-        .container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(238, 155, 0, 0.2);
-            border: 2px solid var(--accent-color);
+        .table-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
         }
         
-        h1 {
-            color: var(--accent-color);
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        .header {
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid #ff0077;
         }
         
-        .subtitle {
-            text-align: center;
-            color: var(--light-color);
-            margin-bottom: 30px;
-            font-size: 1.1em;
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0077;
+            text-shadow: 0 0 10px rgba(255, 0, 119, 0.7);
+        }
+        
+        .balance {
+            font-size: 18px;
+            color: #fff;
+            background: rgba(255, 0, 119, 0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #ff0077;
         }
         
         .game-area {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-        }
-        
-        .table {
-            background-color: var(--primary-color);
-            border-radius: 10px;
             padding: 20px;
-            position: relative;
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--secondary-color);
         }
         
-        .dealer-area, .player-area {
+        .cards-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .cards-row {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        
-        .dealer-area {
-            background-color: rgba(202, 103, 2, 0.2);
-            border: 1px solid var(--banker-color);
-        }
-        
-        .player-area {
-            background-color: rgba(148, 210, 189, 0.2);
-            border: 1px solid var(--player-color);
+            margin: 10px 0;
+            position: relative;
         }
         
         .card {
             width: 80px;
-            height: 120px;
-            background-color: white;
-            border-radius: 8px;
+            height: 110px;
+            background: #fff;
+            border-radius: 5px;
+            margin: 0 5px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 30px;
-            color: black;
-            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+            color: #000;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
             position: relative;
             transition: transform 0.3s;
         }
         
         .card.red {
-            color: red;
+            color: #ff0000;
         }
         
         .card-back {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-size: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .card-back::before {
-            content: "BACCARAT";
-            transform: rotate(90deg);
-            font-size: 12px;
-            letter-spacing: 2px;
-        }
-        
-        .labels {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .label {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        
-        .banker-label {
-            background-color: var(--banker-color);
+            background: linear-gradient(135deg, #ff0077, #ff00cc);
             color: white;
         }
         
-        .player-label {
-            background-color: var(--player-color);
-            color: var(--dark-color);
+        .card-value {
+            position: absolute;
+            font-size: 14px;
         }
         
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
+        .top-left {
+            top: 5px;
+            left: 5px;
         }
         
-        button {
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .bet-btn {
-            background-color: var(--accent-color);
-            color: var(--dark-color);
-        }
-        
-        .bet-btn:hover {
-            background-color: #ffaa00;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(238, 155, 0, 0.4);
-        }
-        
-        .bet-btn:disabled {
-            background-color: #666;
-            color: #999;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .reset-btn {
-            background-color: #ae2012;
-            color: white;
-        }
-        
-        .reset-btn:hover {
-            background-color: #ca6702;
-            transform: translateY(-3px);
-        }
-        
-        .result-display {
-            text-align: center;
-            font-size: 1.5em;
-            margin: 20px 0;
-            min-height: 40px;
-            color: var(--accent-color);
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        .bottom-right {
+            bottom: 5px;
+            right: 5px;
+            transform: rotate(180deg);
         }
         
         .betting-area {
+            height: 150px;
             display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin: 30px 0;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid #ff0077;
         }
         
         .bet-option {
-            width: 150px;
-            height: 150px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -223,233 +154,194 @@
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
         
-        .bet-option:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        .bet-option:active {
+            transform: scale(0.95);
         }
         
-        .banker-bet {
-            background-color: var(--banker-color);
-            color: white;
+        .banker {
+            background: linear-gradient(135deg, #ff0077, #cc0066);
+            border: 2px solid #ff0077;
         }
         
-        .player-bet {
-            background-color: var(--player-color);
-            color: var(--dark-color);
+        .player {
+            background: linear-gradient(135deg, #00aaff, #0077cc);
+            border: 2px solid #00aaff;
         }
         
-        .tie-bet {
-            background-color: var(--accent-color);
-            color: var(--dark-color);
+        .tie {
+            background: linear-gradient(135deg, #00ff77, #00cc66);
+            border: 2px solid #00ff77;
         }
         
         .bet-amount {
-            font-size: 2em;
-            font-weight: bold;
-            margin-top: 10px;
+            position: absolute;
+            bottom: -20px;
+            font-size: 14px;
+            color: #fff;
+            white-space: nowrap;
         }
         
         .chip {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
             position: absolute;
-            top: -10px;
-            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: #ffcc00;
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            color: white;
-            background-color: var(--accent-color);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            color: #000;
+            top: -10px;
+            right: -10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            font-size: 12px;
         }
         
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 10px;
-        }
-        
-        .balance {
-            font-size: 1.2em;
-            color: var(--light-color);
-        }
-        
-        .balance-amount {
-            color: var(--accent-color);
+        .result-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
             font-weight: bold;
-            font-size: 1.3em;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: none;
         }
         
         .history {
+            position: absolute;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 5px;
         }
         
         .history-item {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
+            font-size: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            font-size: 0.8em;
         }
         
         .history-banker {
-            background-color: var(--banker-color);
+            background: #ff0077;
         }
         
         .history-player {
-            background-color: var(--player-color);
+            background: #00aaff;
         }
         
         .history-tie {
-            background-color: var(--accent-color);
+            background: #00ff77;
         }
         
-        .rules {
-            margin-top: 30px;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid var(--accent-color);
-        }
-        
-        .rules h3 {
-            color: var(--accent-color);
-            margin-top: 0;
-        }
-        
-        .rules ul {
-            padding-left: 20px;
-        }
-        
-        .rules li {
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        
-        @media (max-width: 768px) {
-            .betting-area {
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            .card {
-                width: 60px;
-                height: 90px;
-                font-size: 24px;
-            }
+        .auto-play {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: rgba(255, 0, 119, 0.3);
+            border: 1px solid #ff0077;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>บาคาร่าสากล</h1>
-        <p class="subtitle">เกมไพ่ระดับสูงสำหรับการศึกษาเท่านั้น</p>
-        
-        <div class="game-info">
-            <div class="balance">
-                <i class="fas fa-coins"></i> ยอดคงเหลือ: <span class="balance-amount" id="balance">1000</span> หน่วย
-            </div>
-            <div class="history" id="history">
-                <!-- History will be added here dynamically -->
-            </div>
-        </div>
-        
-        <div class="game-area">
-            <div class="table">
-                <div class="labels">
-                    <div class="label banker-label">เจ้ามือ (Banker)</div>
-                    <div class="label player-label">ผู้เล่น (Player)</div>
-                </div>
-                
-                <div class="dealer-area" id="banker-cards">
-                    <!-- Banker cards will be added here -->
-                </div>
-                
-                <div class="result-display" id="result">
-                    กรุณาเลือกเดิมพัน
-                </div>
-                
-                <div class="player-area" id="player-cards">
-                    <!-- Player cards will be added here -->
-                </div>
+    <div class="game-container">
+        <div class="table-overlay">
+            <div class="header">
+                <div class="logo">BACCARAT</div>
+                <div class="balance" id="balance">10,000</div>
             </div>
             
-            <div class="betting-area">
-                <div class="bet-option banker-bet" id="bet-banker">
-                    <div>เจ้ามือ</div>
-                    <div class="bet-amount">1.95x</div>
-                    <div class="chip" id="banker-chip" style="display: none;">0</div>
+            <div class="game-area">
+                <div class="auto-play">
+                    <i class="fas fa-play"></i> AUTO
                 </div>
                 
-                <div class="bet-option tie-bet" id="bet-tie">
-                    <div>เสมอ</div>
-                    <div class="bet-amount">8x</div>
-                    <div class="chip" id="tie-chip" style="display: none;">0</div>
+                <div class="cards-area">
+                    <div class="history" id="history"></div>
+                    
+                    <div class="cards-row" id="banker-cards">
+                        <!-- Banker cards will be here -->
+                    </div>
+                    
+                    <div class="cards-row" id="player-cards">
+                        <!-- Player cards will be here -->
+                    </div>
+                    
+                    <div class="result-display" id="result"></div>
                 </div>
                 
-                <div class="bet-option player-bet" id="bet-player">
-                    <div>ผู้เล่น</div>
-                    <div class="bet-amount">2x</div>
-                    <div class="chip" id="player-chip" style="display: none;">0</div>
+                <div class="betting-area">
+                    <div class="bet-option banker" id="bet-banker">
+                        <div>BANKER</div>
+                        <div class="bet-amount">1.95x</div>
+                        <div class="chip" id="banker-chip" style="display: none;">100</div>
+                    </div>
+                    
+                    <div class="bet-option tie" id="bet-tie">
+                        <div>TIE</div>
+                        <div class="bet-amount">8x</div>
+                        <div class="chip" id="tie-chip" style="display: none;">100</div>
+                    </div>
+                    
+                    <div class="bet-option player" id="bet-player">
+                        <div>PLAYER</div>
+                        <div class="bet-amount">2x</div>
+                        <div class="chip" id="player-chip" style="display: none;">100</div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="controls">
-                <button class="bet-btn" id="deal-btn" disabled>แจกไพ่</button>
-                <button class="reset-btn" id="reset-btn">เริ่มใหม่</button>
-            </div>
-        </div>
-        
-        <div class="rules">
-            <h3><i class="fas fa-info-circle"></i> กฎกติกาและวิธีการเล่น</h3>
-            <ul>
-                <li>บาคาร่าเป็นเกมไพ่ที่เปรียบเทียบระหว่าง "เจ้ามือ" และ "ผู้เล่น"</li>
-                <li>ผู้เล่นสามารถเลือกเดิมพันได้ 3 ทาง: เจ้ามือ (จ่าย 1.95 เท่า), ผู้เล่น (จ่าย 2 เท่า), หรือ เสมอ (จ่าย 8 เท่า)</li>
-                <li>ไพ่จะมีค่าดังนี้: A = 1, 2-9 = ตามหน้าไพ่, 10/J/Q/K = 0</li>
-                <li>หากผลรวมเกิน 9 จะนับเฉพาะหลักหน่วย (เช่น 7+8=15 นับเป็น 5)</li>
-                <li>ฝ่ายที่มีผลรวมใกล้ 9 มากที่สุดจะเป็นผู้ชนะ</li>
-                <li>เกมนี้เป็นแบบจำลองเพื่อการศึกษาเท่านั้น ไม่มีการใช้เงินจริง</li>
-            </ul>
         </div>
     </div>
 
     <script>
-        // Game variables
-        let balance = 1000;
-        let currentBet = { banker: 0, player: 0, tie: 0 };
-        let selectedBet = null;
-        let gameInProgress = false;
-        let gameHistory = [];
+        // Game configuration
+        const config = {
+            initialBalance: 10000,
+            betAmount: 100,
+            autoPlayDelay: 3000,
+            cardDealSpeed: 300
+        };
+        
+        // Game state
+        let state = {
+            balance: config.initialBalance,
+            currentBet: null,
+            gameInProgress: false,
+            history: [],
+            autoPlay: false
+        };
         
         // DOM elements
         const balanceElement = document.getElementById('balance');
-        const dealBtn = document.getElementById('deal-btn');
-        const resetBtn = document.getElementById('reset-btn');
         const resultElement = document.getElementById('result');
         const historyElement = document.getElementById('history');
+        const bankerCardsElement = document.getElementById('banker-cards');
+        const playerCardsElement = document.getElementById('player-cards');
         
-        // Betting options
+        // Betting elements
         const betBanker = document.getElementById('bet-banker');
         const betPlayer = document.getElementById('bet-player');
         const betTie = document.getElementById('bet-tie');
@@ -457,93 +349,68 @@
         const playerChip = document.getElementById('player-chip');
         const tieChip = document.getElementById('tie-chip');
         
-        // Card areas
-        const bankerCardsElement = document.getElementById('banker-cards');
-        const playerCardsElement = document.getElementById('player-cards');
+        // Card data
+        const cardValues = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const cardSuits = ['♥', '♦', '♣', '♠'];
         
-        // Card values and suits
-        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-        const suits = ['♥', '♦', '♣', '♠'];
+        // Initialize game
+        initGame();
         
         // Event listeners
         betBanker.addEventListener('click', () => placeBet('banker'));
         betPlayer.addEventListener('click', () => placeBet('player'));
         betTie.addEventListener('click', () => placeBet('tie'));
-        dealBtn.addEventListener('click', dealCards);
-        resetBtn.addEventListener('click', resetGame);
         
-        // Initialize game
-        updateBalance();
+        // Game functions
+        function initGame() {
+            updateBalance();
+            startAutoPlay();
+        }
         
-        // Functions
         function placeBet(type) {
-            if (gameInProgress) return;
+            if (state.gameInProgress || state.autoPlay) return;
             
-            // Reset all bets
-            currentBet = { banker: 0, player: 0, tie: 0 };
-            hideAllChips();
+            // Reset current bet
+            resetBetsUI();
             
             // Place new bet
-            const betAmount = 100;
-            if (balance >= betAmount) {
-                currentBet[type] = betAmount;
-                balance -= betAmount;
-                selectedBet = type;
+            if (state.balance >= config.betAmount) {
+                state.currentBet = type;
+                state.balance -= config.betAmount;
                 
-                // Show chip
-                if (type === 'banker') {
-                    bankerChip.style.display = 'flex';
-                    bankerChip.textContent = betAmount;
-                } else if (type === 'player') {
-                    playerChip.style.display = 'flex';
-                    playerChip.textContent = betAmount;
-                } else {
-                    tieChip.style.display = 'flex';
-                    tieChip.textContent = betAmount;
-                }
-                
-                dealBtn.disabled = false;
+                // Update UI
                 updateBalance();
-                resultElement.textContent = `เดิมพัน ${type === 'banker' ? 'เจ้ามือ' : type === 'player' ? 'ผู้เล่น' : 'เสมอ'} ${betAmount} หน่วย`;
-            } else {
-                resultElement.textContent = 'ยอดเงินไม่เพียงพอ';
+                showBetChip(type);
+                
+                // Start game automatically
+                setTimeout(() => {
+                    if (!state.gameInProgress && state.currentBet) {
+                        playGame();
+                    }
+                }, 500);
             }
         }
         
-        function hideAllChips() {
-            bankerChip.style.display = 'none';
-            playerChip.style.display = 'none';
-            tieChip.style.display = 'none';
-        }
-        
-        function dealCards() {
-            if (gameInProgress || !selectedBet) return;
+        function playGame() {
+            if (state.gameInProgress || !state.currentBet) return;
             
-            gameInProgress = true;
-            dealBtn.disabled = true;
+            state.gameInProgress = true;
             
             // Clear previous cards
             bankerCardsElement.innerHTML = '';
             playerCardsElement.innerHTML = '';
             
-            // Generate deck
-            let deck = [];
-            for (let suit of suits) {
-                for (let value of values) {
-                    deck.push({ suit, value });
-                }
-            }
-            
-            // Shuffle deck
+            // Generate and shuffle deck
+            let deck = generateDeck();
             deck = shuffleDeck(deck);
             
-            // Deal initial cards (2 each)
+            // Deal initial cards
             const bankerCards = [deck.pop(), deck.pop()];
             const playerCards = [deck.pop(), deck.pop()];
             
             // Display cards with animation
-            displayCards(bankerCards, playerCards, () => {
-                // After animation completes, determine if third card is needed
+            dealCards(bankerCards, playerCards, () => {
+                // Calculate initial scores
                 const bankerScore = calculateScore(bankerCards);
                 const playerScore = calculateScore(playerCards);
                 
@@ -558,40 +425,49 @@
                 if (playerScore <= 5) {
                     playerCards.push(deck.pop());
                     playerDrewThirdCard = true;
+                    
                     setTimeout(() => {
-                        displayThirdCard(playerCards[2], 'player', () => {
+                        dealThirdCard(playerCards[2], 'player', () => {
                             // Banker drawing rules
-                            let bankerDrewThirdCard = false;
-                            const shouldBankerDraw = shouldBankerDrawThirdCard(bankerScore, playerScore, playerCards[2]?.value);
+                            const shouldBankerDraw = shouldBankerDrawThirdCard(
+                                bankerScore, 
+                                playerScore, 
+                                playerCards[2]?.value
+                            );
                             
                             if (shouldBankerDraw) {
                                 bankerCards.push(deck.pop());
-                                bankerDrewThirdCard = true;
+                                
                                 setTimeout(() => {
-                                    displayThirdCard(bankerCards[2], 'banker', () => {
-                                        const finalBankerScore = calculateScore(bankerCards);
-                                        const finalPlayerScore = calculateScore(playerCards);
-                                        finishGame(bankerCards, playerCards, finalBankerScore, finalPlayerScore);
+                                    dealThirdCard(bankerCards[2], 'banker', () => {
+                                        finishGame(
+                                            bankerCards, 
+                                            playerCards, 
+                                            calculateScore(bankerCards), 
+                                            calculateScore(playerCards)
+                                        );
                                     });
-                                }, 500);
+                                }, config.cardDealSpeed);
                             } else {
                                 finishGame(bankerCards, playerCards, bankerScore, calculateScore(playerCards));
                             }
                         });
-                    }, 500);
+                    }, config.cardDealSpeed);
                 } else {
                     // Banker drawing rules when player stands
-                    let bankerDrewThirdCard = false;
                     if (bankerScore <= 5) {
                         bankerCards.push(deck.pop());
-                        bankerDrewThirdCard = true;
+                        
                         setTimeout(() => {
-                            displayThirdCard(bankerCards[2], 'banker', () => {
-                                const finalBankerScore = calculateScore(bankerCards);
-                                const finalPlayerScore = calculateScore(playerCards);
-                                finishGame(bankerCards, playerCards, finalBankerScore, finalPlayerScore);
+                            dealThirdCard(bankerCards[2], 'banker', () => {
+                                finishGame(
+                                    bankerCards, 
+                                    playerCards, 
+                                    calculateScore(bankerCards), 
+                                    playerScore
+                                );
                             });
-                        }, 500);
+                        }, config.cardDealSpeed);
                     } else {
                         finishGame(bankerCards, playerCards, bankerScore, playerScore);
                     }
@@ -599,84 +475,67 @@
             });
         }
         
-        function displayCards(bankerCards, playerCards, callback) {
-            // Display first two cards for both
-            for (let i = 0; i < 2; i++) {
+        function dealCards(bankerCards, playerCards, callback) {
+            // Deal first card to player and banker
+            setTimeout(() => {
+                createCardElement(playerCards[0], 'player');
+                createCardElement(bankerCards[0], 'banker');
+                
+                // Deal second card (face down)
                 setTimeout(() => {
-                    if (i === 0) {
-                        // First card face up for both
-                        createCardElement(bankerCards[i], 'banker', i === 1);
-                        createCardElement(playerCards[i], 'player', i === 1);
-                    } else {
-                        // Second card face down initially
-                        createCardElement(null, 'banker', true);
-                        createCardElement(null, 'player', true);
+                    const playerCard = createCardElement(null, 'player', true);
+                    const bankerCard = createCardElement(null, 'banker', true);
+                    
+                    // Reveal cards after a delay
+                    setTimeout(() => {
+                        playerCard.innerHTML = '';
+                        bankerCard.innerHTML = '';
+                        createCardFace(playerCards[1], playerCard);
+                        createCardFace(bankerCards[1], bankerCard);
                         
-                        // After a delay, reveal the cards
-                        setTimeout(() => {
-                            bankerCardsElement.lastChild.classList.add('flipped');
-                            playerCardsElement.lastChild.classList.add('flipped');
-                            
-                            setTimeout(() => {
-                                bankerCardsElement.lastChild.innerHTML = '';
-                                playerCardsElement.lastChild.innerHTML = '';
-                                createCardFace(bankerCards[i], bankerCardsElement.lastChild);
-                                createCardFace(playerCards[i], playerCardsElement.lastChild);
-                                
-                                if (callback) callback();
-                            }, 300);
-                        }, 500);
-                    }
-                }, i * 500);
-            }
+                        if (callback) callback();
+                    }, config.cardDealSpeed);
+                }, config.cardDealSpeed);
+            }, config.cardDealSpeed);
         }
         
-        function displayThirdCard(card, type, callback) {
-            const element = type === 'banker' ? bankerCardsElement : playerCardsElement;
-            createCardElement(card, type, false);
-            
-            if (callback) setTimeout(callback, 500);
+        function dealThirdCard(card, type, callback) {
+            createCardElement(card, type);
+            if (callback) setTimeout(callback, config.cardDealSpeed);
         }
         
-        function createCardElement(card, type, isFaceDown) {
+        function createCardElement(card, type, isFaceDown = false) {
             const cardElement = document.createElement('div');
             cardElement.className = 'card';
             
             if (isFaceDown) {
                 cardElement.classList.add('card-back');
-                cardElement.dataset.value = card ? card.value : '';
-                cardElement.dataset.suit = card ? card.suit : '';
             } else if (card) {
                 createCardFace(card, cardElement);
             }
             
-            if (type === 'banker') {
-                bankerCardsElement.appendChild(cardElement);
-            } else {
-                playerCardsElement.appendChild(cardElement);
-            }
+            const parentElement = type === 'banker' ? bankerCardsElement : playerCardsElement;
+            parentElement.appendChild(cardElement);
             
             return cardElement;
         }
         
         function createCardFace(card, element) {
-            element.className = 'card';
             if (card.suit === '♥' || card.suit === '♦') {
                 element.classList.add('red');
             }
             
             element.innerHTML = `
-                <div style="position: absolute; top: 5px; left: 5px;">${card.value}</div>
-                <div style="font-size: 40px;">${card.suit}</div>
-                <div style="position: absolute; bottom: 5px; right: 5px; transform: rotate(180deg);">${card.value}</div>
+                <div class="card-value top-left">${card.value}</div>
+                <div style="font-size: 30px;">${card.suit}</div>
+                <div class="card-value bottom-right">${card.value}</div>
             `;
         }
         
         function calculateScore(cards) {
-            if (!cards || cards.length === 0) return 0;
-            
             let score = 0;
-            for (let card of cards) {
+            
+            for (const card of cards) {
                 if (!card) continue;
                 
                 if (['10', 'J', 'Q', 'K'].includes(card.value)) {
@@ -692,12 +551,10 @@
         }
         
         function shouldBankerDrawThirdCard(bankerScore, playerScore, playerThirdCardValue) {
-            // If player didn't draw third card, banker draws on 0-5
             if (!playerThirdCardValue) {
                 return bankerScore <= 5;
             }
             
-            // Complex banker drawing rules when player drew third card
             const playerThirdCardNumeric = ['10', 'J', 'Q', 'K'].includes(playerThirdCardValue) ? 0 : 
                                          playerThirdCardValue === 'A' ? 1 : parseInt(playerThirdCardValue);
             
@@ -710,8 +567,6 @@
         }
         
         function finishGame(bankerCards, playerCards, bankerScore, playerScore) {
-            gameInProgress = false;
-            
             // Determine winner
             let winner;
             let payoutMultiplier = 0;
@@ -719,44 +574,62 @@
             if (bankerScore > playerScore) {
                 winner = 'banker';
                 payoutMultiplier = 1.95;
-                resultElement.textContent = `เจ้ามือชนะ ${bankerScore}-${playerScore}`;
+                showResult(`BANKER WINS ${bankerScore}-${playerScore}`);
             } else if (playerScore > bankerScore) {
                 winner = 'player';
                 payoutMultiplier = 2;
-                resultElement.textContent = `ผู้เล่นชนะ ${playerScore}-${bankerScore}`;
+                showResult(`PLAYER WINS ${playerScore}-${bankerScore}`);
             } else {
                 winner = 'tie';
                 payoutMultiplier = 8;
-                resultElement.textContent = `เสมอ ${playerScore}-${bankerScore}`;
+                showResult(`TIE ${playerScore}-${playerScore}`);
             }
             
-            // Add to history
-            gameHistory.push(winner);
+            // Update history
+            state.history.push(winner);
             updateHistory();
             
             // Calculate winnings
-            if (currentBet[winner] > 0) {
-                const winnings = Math.floor(currentBet[winner] * payoutMultiplier);
-                balance += winnings;
-                resultElement.textContent += ` - ชนะ ${winnings} หน่วย!`;
+            if (state.currentBet === winner) {
+                const winnings = Math.floor(config.betAmount * payoutMultiplier);
+                state.balance += winnings;
+                showResult(`${winner.toUpperCase()} WINS! +${winnings}`);
             }
             
+            // Reset for next round
+            state.currentBet = null;
+            state.gameInProgress = false;
             updateBalance();
-            selectedBet = null;
-            currentBet = { banker: 0, player: 0, tie: 0 };
-            hideAllChips();
+            resetBetsUI();
+            
+            // Continue auto-play
+            if (state.autoPlay) {
+                setTimeout(() => {
+                    if (!state.gameInProgress) {
+                        placeBet(getRandomBet());
+                    }
+                }, config.autoPlayDelay);
+            }
+        }
+        
+        function showResult(message) {
+            resultElement.textContent = message;
+            resultElement.style.display = 'block';
+            
+            setTimeout(() => {
+                resultElement.style.display = 'none';
+            }, 2000);
         }
         
         function updateBalance() {
-            balanceElement.textContent = balance;
+            balanceElement.textContent = state.balance.toLocaleString();
         }
         
         function updateHistory() {
             historyElement.innerHTML = '';
             
-            // Show last 10 results
-            const recentHistory = gameHistory.slice(-10);
-            for (let result of recentHistory) {
+            const recentHistory = state.history.slice(-10);
+            for (const result of recentHistory) {
                 const item = document.createElement('div');
                 item.className = `history-item history-${result}`;
                 item.textContent = result === 'banker' ? 'B' : result === 'player' ? 'P' : 'T';
@@ -764,22 +637,43 @@
             }
         }
         
-        function resetGame() {
-            if (gameInProgress) return;
-            
-            balance = 1000;
-            currentBet = { banker: 0, player: 0, tie: 0 };
-            selectedBet = null;
-            gameHistory = [];
-            
-            bankerCardsElement.innerHTML = '';
-            playerCardsElement.innerHTML = '';
-            resultElement.textContent = 'กรุณาเลือกเดิมพัน';
-            hideAllChips();
-            dealBtn.disabled = true;
-            
-            updateBalance();
-            updateHistory();
+        function resetBetsUI() {
+            bankerChip.style.display = 'none';
+            playerChip.style.display = 'none';
+            tieChip.style.display = 'none';
+        }
+        
+        function showBetChip(type) {
+            if (type === 'banker') {
+                bankerChip.style.display = 'flex';
+                bankerChip.textContent = config.betAmount;
+            } else if (type === 'player') {
+                playerChip.style.display = 'flex';
+                playerChip.textContent = config.betAmount;
+            } else {
+                tieChip.style.display = 'flex';
+                tieChip.textContent = config.betAmount;
+            }
+        }
+        
+        function startAutoPlay() {
+            state.autoPlay = true;
+            placeBet(getRandomBet());
+        }
+        
+        function getRandomBet() {
+            const options = ['banker', 'player', 'tie'];
+            return options[Math.floor(Math.random() * options.length)];
+        }
+        
+        function generateDeck() {
+            const deck = [];
+            for (const suit of cardSuits) {
+                for (const value of cardValues) {
+                    deck.push({ suit, value });
+                }
+            }
+            return deck;
         }
         
         function shuffleDeck(deck) {
