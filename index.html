@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>หมากฮอส - เกมกระดานไทย</title>
     <style>
         body {
@@ -12,19 +12,25 @@
             align-items: center;
             background-color: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             color: #333;
+            touch-action: manipulation;
+            overflow: hidden;
+            height: 100vh;
         }
         
         h1 {
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 1.5rem;
         }
         
         .game-container {
             width: 100%;
-            max-width: 500px;
-            margin: 20px auto;
+            max-width: 100vw;
+            max-height: 100vw;
+            margin: 5px auto;
+            position: relative;
         }
         
         .board {
@@ -35,6 +41,7 @@
             aspect-ratio: 1/1;
             border: 2px solid #333;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            touch-action: none;
         }
         
         .cell {
@@ -42,6 +49,8 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
         }
         
         .dark {
@@ -60,9 +69,10 @@
             position: relative;
             z-index: 2;
             transition: transform 0.2s;
+            touch-action: none;
         }
         
-        .piece:hover {
+        .piece:active {
             transform: scale(1.1);
         }
         
@@ -105,32 +115,41 @@
         }
         
         .game-info {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 10px;
+            padding: 10px;
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 500px;
             text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .timer {
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 5px 0;
         }
         
         .controls {
-            margin-top: 15px;
+            margin-top: 10px;
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
         button {
-            padding: 8px 15px;
+            padding: 8px 12px;
             background-color: #3498db;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.8rem;
             transition: background-color 0.2s;
+            touch-action: manipulation;
         }
         
         button:hover {
@@ -138,32 +157,45 @@
         }
         
         .rules {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 10px;
+            padding: 10px;
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 500px;
+            font-size: 0.8rem;
+            overflow-y: auto;
+            max-height: 20vh;
         }
         
         .rules h2 {
             color: #2c3e50;
             margin-top: 0;
+            font-size: 1rem;
         }
         
         .rules ul {
             padding-left: 20px;
+            margin: 5px 0;
         }
         
-        @media (max-width: 500px) {
-            .piece {
-                width: 70%;
-                height: 70%;
+        @media (min-width: 500px) {
+            .game-container {
+                max-width: 500px;
+                max-height: 500px;
+            }
+            
+            h1 {
+                font-size: 2rem;
             }
             
             .game-info, .rules {
-                font-size: 14px;
+                font-size: 1rem;
+            }
+            
+            button {
+                font-size: 1rem;
             }
         }
     </style>
@@ -178,6 +210,7 @@
     
     <div class="game-info">
         <div id="status">ตาคุณ (แดง) เล่นก่อน</div>
+        <div class="timer" id="timer">เวลาเหลือ: 10 วินาที</div>
         <div class="controls">
             <button id="new-game">เกมใหม่</button>
             <button id="hint">คำแนะนำ</button>
@@ -193,6 +226,7 @@
             <li>หากกินได้หลายทาง ต้องกินให้มากที่สุด</li>
             <li>เมื่อเดินถึงแถวสุดท้ายจะกลายเป็น "King" ที่เดินถอยหลังได้</li>
             <li>ชนะโดยกินหมากคู่แข่งทั้งหมดหรือทำให้คู่แข่งเดินไม่ได้</li>
+            <li>ต้องเดินภายใน 10 วินาที ไม่เช่นนั้นจะเสียตา</li>
         </ul>
     </div>
 
@@ -200,6 +234,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const board = document.getElementById('board');
             const statusDisplay = document.getElementById('status');
+            const timerDisplay = document.getElementById('timer');
             const newGameBtn = document.getElementById('new-game');
             const hintBtn = document.getElementById('hint');
             
@@ -209,6 +244,8 @@
             let currentPlayer = 1; // 1 for human (red), 2 for AI (black)
             let gameOver = false;
             let hintActive = false;
+            let timer = 10;
+            let timerInterval = null;
             
             // Initialize the game board
             function initializeGame() {
@@ -233,6 +270,53 @@
                 }
                 
                 return state;
+            }
+            
+            // Start or reset timer
+            function startTimer() {
+                clearInterval(timerInterval);
+                timer = 10;
+                updateTimerDisplay();
+                
+                timerInterval = setInterval(() => {
+                    timer--;
+                    updateTimerDisplay();
+                    
+                    if (timer <= 0) {
+                        clearInterval(timerInterval);
+                        timeOut();
+                    }
+                }, 1000);
+            }
+            
+            // Update timer display
+            function updateTimerDisplay() {
+                timerDisplay.textContent = `เวลาเหลือ: ${timer} วินาที`;
+                
+                // Change color when time is running out
+                if (timer <= 3) {
+                    timerDisplay.style.color = '#e74c3c';
+                } else {
+                    timerDisplay.style.color = '#2c3e50';
+                }
+            }
+            
+            // Handle time out
+            function timeOut() {
+                if (gameOver || currentPlayer !== 1) return;
+                
+                statusDisplay.textContent = "เวลาเกิน! ตาของ AI (ดำ)...";
+                currentPlayer = 2;
+                selectedPiece = null;
+                possibleMoves = [];
+                renderBoard();
+                
+                // AI move after a short delay
+                setTimeout(() => {
+                    if (!gameOver) {
+                        makeAIMove();
+                    }
+                }, 800);
             }
             
             // Render the game board
@@ -302,6 +386,9 @@
                 
                 const move = possibleMoves.find(m => m.endRow === row && m.endCol === col);
                 if (!move) return;
+                
+                // Reset timer when player makes a move
+                startTimer();
                 
                 // Make the move
                 makeMove(move);
@@ -466,51 +553,59 @@
             }
             
             // AI move using minimax algorithm with alpha-beta pruning
-    function makeAIMove() {
-    // ตรวจสอบก่อนว่าเกมยังไม่จบ
-    checkGameOver();
-    if (gameOver) return;
-
-    const depth = 5;
-    let validMoves = getAllValidMoves(gameState, 2);
-    
-    // ตรวจสอบว่ามีตาเดินที่ถูกต้องหรือไม่
-    if (validMoves.length === 0) {
-        currentPlayer = 1;
-        statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
-        renderBoard();
-        return;
-    }
-
-    const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
-    
-    if (bestMove) {
-        makeMove(bestMove);
-        
-        // ตรวจสอบการกินต่อ
-        if (bestMove.captures.length > 0) {
-            const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
-            if (nextCaptures.length > 0) {
-                setTimeout(() => {
-                    makeAIMove();
-                }, 800);
-                return;
+            function makeAIMove() {
+                const depth = 6; // Increased depth for stronger AI
+                
+                // First check if game is already over
+                checkGameOver();
+                if (gameOver) return;
+                
+                // Get all valid moves for AI
+                const validMoves = getAllValidMoves(gameState, 2);
+                
+                if (validMoves.length === 0) {
+                    // No valid moves for AI
+                    currentPlayer = 1;
+                    statusDisplay.textContent = "AI ไม่สามารถเดินได้! ตาคุณ (แดง)";
+                    startTimer();
+                    renderBoard();
+                    checkGameOver();
+                    return;
+                }
+                
+                // Use minimax to find best move
+                const { bestMove, value } = minimax(gameState, depth, -Infinity, Infinity, true);
+                
+                if (bestMove) {
+                    makeMove(bestMove);
+                    
+                    // Check for consecutive captures
+                    if (bestMove.captures.length > 0) {
+                        const nextCaptures = getCaptures(bestMove.endRow, bestMove.endCol);
+                        if (nextCaptures.length > 0) {
+                            // AI must continue capturing
+                            setTimeout(() => {
+                                makeAIMove();
+                            }, 800);
+                            return;
+                        }
+                    }
+                    
+                    currentPlayer = 1;
+                    statusDisplay.textContent = "ตาคุณ (แดง)";
+                    startTimer();
+                } else {
+                    // Shouldn't happen since we checked validMoves
+                    currentPlayer = 1;
+                    statusDisplay.textContent = "AI ส่งตาให้คุณ (แดง)";
+                    startTimer();
+                }
+                
+                selectedPiece = null;
+                possibleMoves = [];
+                renderBoard();
+                checkGameOver();
             }
-        }
-        
-        currentPlayer = 1;
-        statusDisplay.textContent = "ตาคุณ (แดง)";
-    } else {
-        // กรณีไม่มีตาเดินที่ดี (ควรไม่เกิดขึ้นถ้ามี validMoves)
-        currentPlayer = 1;
-        statusDisplay.textContent = "AI ส่งตาให้คุณ (แดง)";
-    }
-    
-    selectedPiece = null;
-    possibleMoves = [];
-    renderBoard();
-    checkGameOver();
-}
             
             // Minimax algorithm with alpha-beta pruning
             function minimax(state, depth, alpha, beta, maximizingPlayer) {
@@ -795,7 +890,47 @@
                     }
                 }
                 
+                // Prefer moves that don't leave pieces vulnerable
+                const originalPiece = gameState[move.startRow][move.startCol];
+                gameState[move.startRow][move.startCol] = null;
+                gameState[move.endRow][move.endCol] = originalPiece;
+                
+                if (isPieceVulnerable(move.endRow, move.endCol)) {
+                    score -= 3;
+                }
+                
+                // Restore the board
+                gameState[move.startRow][move.startCol] = originalPiece;
+                gameState[move.endRow][move.endCol] = null;
+                
                 return score;
+            }
+            
+            // Check if a piece is vulnerable to capture
+            function isPieceVulnerable(row, col) {
+                const piece = gameState[row][col];
+                if (!piece) return false;
+                
+                const directions = [
+                    { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
+                    { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+                ];
+                
+                for (const { dr, dc } of directions) {
+                    const attackRow = row + dr;
+                    const attackCol = col + dc;
+                    const landRow = row - dr;
+                    const landCol = col - dc;
+                    
+                    if (landRow >= 0 && landRow < 8 && landCol >= 0 && landCol < 8 &&
+                        gameState[attackRow] && gameState[attackRow][attackCol] &&
+                        gameState[attackRow][attackCol].player !== piece.player &&
+                        !gameState[landRow][landCol]) {
+                        return true;
+                    }
+                }
+                
+                return false;
             }
             
             // Evaluate the game state
@@ -817,6 +952,8 @@
                                 score += piece.king ? 10 : 5;
                                 // Encourage central control
                                 score += (3.5 - Math.abs(col - 3.5)) * 0.2;
+                                // Penalize vulnerable pieces
+                                if (isPieceVulnerable(row, col)) score -= 3;
                             } else {
                                 p2Pieces++;
                                 if (piece.king) p2Kings++;
@@ -824,6 +961,8 @@
                                 score -= piece.king ? 10 : 5;
                                 // Discourage opponent's central control
                                 score -= (3.5 - Math.abs(col - 3.5)) * 0.2;
+                                // Reward threatening opponent's pieces
+                                if (isPieceVulnerable(row, col)) score += 3;
                             }
                         }
                     }
@@ -841,6 +980,11 @@
                 
                 // Mobility bonus
                 score += (p1Moves - p2Moves) * 0.5;
+                
+                // King ratio bonus
+                if (p1Pieces > 0 && p2Pieces > 0) {
+                    score += (p1Kings / p1Pieces - p2Kings / p2Pieces) * 5;
+                }
                 
                 return score;
             }
@@ -873,9 +1017,11 @@
                 
                 if (p1Pieces === 0 || !p1HasMoves) {
                     gameOver = true;
+                    clearInterval(timerInterval);
                     statusDisplay.textContent = "คุณแพ้! AI ชนะ!";
                 } else if (p2Pieces === 0 || !p2HasMoves) {
                     gameOver = true;
+                    clearInterval(timerInterval);
                     statusDisplay.textContent = "คุณชนะ!";
                 }
             }
@@ -961,21 +1107,30 @@
             
             // Start a new game
             function newGame() {
+                clearInterval(timerInterval);
                 gameState = initializeGame();
                 selectedPiece = null;
                 possibleMoves = [];
                 currentPlayer = 1;
                 gameOver = false;
                 statusDisplay.textContent = "ตาคุณ (แดง) เล่นก่อน";
+                startTimer();
                 renderBoard();
             }
+            
+            // Prevent zooming and scrolling on mobile
+            document.addEventListener('touchmove', function(e) {
+                if (e.target.className.includes('piece') || e.target.className.includes('cell')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
             
             // Event listeners
             newGameBtn.addEventListener('click', newGame);
             hintBtn.addEventListener('click', showHint);
             
             // Initial render
-            renderBoard();
+            newGame();
         });
     </script>
 </body>
