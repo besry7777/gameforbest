@@ -1,308 +1,255 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รักอุ้มอุ้มไหม?</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #ffe4e1; /* สีชมพูอ่อนๆ */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            text-align: center;
-            overflow: hidden; /* ป้องกัน scrollbar เมื่อปุ่มหนี */
-            padding: 20px; /* เพิ่ม padding เพื่อให้มีที่ว่างรอบๆ */
-            box-sizing: border-box; /* ทำให้ padding ไม่เพิ่มขนาดรวม */
-        }
-        h1 {
-            color: #ff69b4; /* สีชมพูเข้ม */
-            font-size: 2.5em;
-            margin-bottom: 20px;
-        }
-        .cartoon {
-            width: 150px;
-            height: 150px;
-            margin: 20px auto;
-            animation: bounce 2s infinite ease-in-out; /* แอนิเมชั่นเด้งๆ */
-        }
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-15px);
-            }
-        }
-        .cartoon.angry {
-            content: url('https://i.imgur.com/your-angry-cartoon-image.png'); /* เปลี่ยนเป็น URL รูปการ์ตูนโกรธของคุณ */
-            animation: shake 0.5s infinite; /* แอนิเมชั่นสั่นเมื่อโกรธ */
-        }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>รักอุ้มอุ้มไหม?</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Mitr', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #ffe4e1;
+      overflow: hidden;
+      transition: background 1s ease;
+    }
 
-        .buttons-container {
-            position: relative; /* สำหรับให้ปุ่มไม่รักสามารถหนีได้ */
-            width: 100%;
-            max-width: 400px;
-            height: 100px; /* กำหนดความสูงเพื่อให้ปุ่มไม่รักมีพื้นที่เคลื่อนที่ */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 30px;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 1.2em;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap; /* ป้องกันข้อความในปุ่มขึ้นบรรทัดใหม่ */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        #yesBtn {
-            background-color: #4CAF50; /* สีเขียว */
-            color: white;
-            margin-right: 20px;
-        }
-        #yesBtn:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
-        }
-        #noBtn {
-            background-color: #f44336; /* สีแดง */
-            color: white;
-            position: absolute; /* ทำให้ปุ่มสามารถเคลื่อนที่ได้อิสระ */
-            transition: all 0.1s ease-out; /* เคลื่อนที่เร็วขึ้น */
-            left: 50%; /* เริ่มต้นที่กึ่งกลาง */
-            transform: translateX(-50%); /* จัดกึ่งกลางจริงๆ */
-        }
-        #noBtn.moved {
-            /* เมื่อปุ่มถูกคลิกและหนีไปแล้ว */
-            pointer-events: none; /* ทำให้คลิกไม่ได้อีก */
-            opacity: 0; /* ซ่อนปุ่ม */
-        }
-        #noBtn:hover {
-            background-color: #da190b;
-        }
-        .message {
-            margin-top: 40px;
-            font-size: 1.8em;
-            color: #ff69b4;
-            font-weight: bold;
-            display: none; /* ซ่อนไว้ตอนแรก */
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+    h1 {
+      color: #ff69b4;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        /* Fireworks and Flowers */
-        .fireworks-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* ทำให้คลิกทะลุได้ */
-            z-index: 9999;
-        }
-        .firework {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #fff;
-            border-radius: 50%;
-            opacity: 0;
-            animation: firework 1s forwards;
-        }
-        @keyframes firework {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        .flower {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #ffc0cb; /* Pink */
-            border-radius: 50%;
-            opacity: 0;
-            animation: flowerBloom 2s forwards;
-        }
-        @keyframes flowerBloom {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
-            100% { transform: scale(0.8) rotate(360deg); opacity: 0; }
-        }
+    .cartoon {
+      width: 150px;
+      height: 150px;
+      margin: 20px auto;
+      animation: bounce 2s infinite ease-in-out;
+      transition: 0.5s ease;
+    }
 
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
 
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2em;
-            }
-            .cartoon {
-                width: 120px;
-                height: 120px;
-            }
-            button {
-                padding: 12px 25px;
-                font-size: 1em;
-            }
-            .message {
-                font-size: 1.5em;
-            }
-            .buttons-container {
-                flex-direction: column; /* วางปุ่มในแนวตั้งบนมือถือ */
-                height: auto; /* ไม่ต้องจำกัดความสูงมากนัก */
-            }
-            #yesBtn {
-                margin-right: 0;
-                margin-bottom: 20px; /* เพิ่มระยะห่างด้านล่าง */
-            }
-            #noBtn {
-                position: relative; /* ทำให้ปุ่มไม่หนีบนมือถือ เพราะพื้นที่จะจำกัด */
-                left: auto;
-                transform: none;
-            }
-        }
-    </style>
+    .buttons-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    #yesBtn {
+      background-color: #4CAF50;
+      color: white;
+      margin-right: 20px;
+    }
+
+    #yesBtn:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    #noBtn {
+      background-color: #f44336;
+      color: white;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #noBtn:hover {
+      background-color: #da190b;
+    }
+
+    #finalScene {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://i.imgur.com/Zz6W8Vh.jpg') center/cover no-repeat;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 999;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #finalScene h1 {
+      font-size: 3em;
+      text-shadow: 2px 2px 8px #000;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 998;
+      pointer-events: none;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+
+    .angry {
+      animation: shake 0.5s infinite;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2em; }
+      .cartoon { width: 120px; height: 120px; }
+      button { font-size: 1em; padding: 12px 25px; }
+      .buttons-container {
+        flex-direction: column;
+        height: auto;
+      }
+      #yesBtn { margin-right: 0; margin-bottom: 20px; }
+      #noBtn { position: relative; transform: none; left: auto; }
+    }
+  </style>
 </head>
 <body>
-    <h1>รักอุ้มอุ้ม รักเบสไหม?</h1>
+  <h1 id="question">รักอุ้มอุ้ม รักเบสไหม?</h1>
+  <img src="https://i.imgur.com/8Y2Z1Zq.png" class="cartoon" id="cartoonImg" alt="cartoon">
+  <div class="buttons-container" id="buttonBox">
+    <button id="yesBtn">รักสิ!</button>
+    <button id="noBtn">ไม่รัก</button>
+  </div>
 
-    <img src="https://i.imgur.com/8Y2Z1Zq.png" alt="Cute Cartoon" class="cartoon" id="cartoonImg">
-    <div class="buttons-container">
-        <button id="yesBtn">รักสิ!</button>
-        <button id="noBtn">ไม่รัก</button>
-    </div>
+  <!-- Final scene -->
+  <div id="finalScene">
+    <h1>รักอุ้มอุ้มที่สุดเลย! 💖</h1>
+    <p>ขอบคุณที่รักเบส เบสรักอุ้มอุ้มเหมือนกันนน 🥰</p>
+  </div>
 
-    <div id="loveMessage" class="message">
-        โอ้โห! เบสดีใจที่สุดเลย! รักอุ้มอุ้มเหมือนกันนะ! ❤️
-    </div>
+  <canvas id="fireworksCanvas"></canvas>
 
-    <div class="fireworks-container" id="fireworksContainer"></div>
+  <script>
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const cartoon = document.getElementById('cartoonImg');
+    const question = document.getElementById('question');
+    const buttonBox = document.getElementById('buttonBox');
+    const finalScene = document.getElementById('finalScene');
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
 
-    <script>
-        const noBtn = document.getElementById('noBtn');
-        const yesBtn = document.getElementById('yesBtn');
-        const loveMessage = document.getElementById('loveMessage');
-        const buttonsContainer = document.querySelector('.buttons-container');
-        const cartoonImg = document.getElementById('cartoonImg');
-        const fireworksContainer = document.getElementById('fireworksContainer');
+    let noMoved = false;
 
-        let noBtnClicked = false; // เพิ่มตัวแปรเพื่อเช็คว่าปุ่ม "ไม่รัก" ถูกคลิกแล้วหรือยัง
+    noBtn.addEventListener('click', () => {
+      if (window.innerWidth > 600 && !noMoved) {
+        const container = buttonBox.getBoundingClientRect();
+        const btnWidth = noBtn.offsetWidth;
+        const btnHeight = noBtn.offsetHeight;
 
-        // ฟังก์ชันสำหรับสุ่มตำแหน่งปุ่ม "ไม่รัก"
-        function moveNoButtonOnce() {
-            if (noBtnClicked) return; // ถ้าเคยคลิกแล้ว ไม่ต้องทำอะไร
+        const randX = Math.random() * (container.width - btnWidth);
+        const randY = Math.random() * (container.height - btnHeight);
 
-            // ตรวจสอบขนาดหน้าจอเพื่อปรับการทำงาน
-            if (window.innerWidth <= 600) {
-                // บนมือถือ ให้ปุ่มไม่รักเป็นปุ่มปกติ ไม่ต้องหนี
-                return;
-            }
+        noBtn.style.left = `${randX}px`;
+        noBtn.style.top = `${randY}px`;
 
-            const containerRect = buttonsContainer.getBoundingClientRect();
-            const buttonRect = noBtn.getBoundingClientRect();
+        noMoved = true;
+      }
 
-            // คำนวณขอบเขตที่ปุ่มสามารถเคลื่อนที่ได้ภายใน buttonsContainer
-            const maxX = containerRect.width - buttonRect.width;
-            const maxY = containerRect.height - buttonRect.height;
+      cartoon.src = "https://i.imgur.com/VguZ9D4.png"; // การ์ตูนโกรธ
+      cartoon.classList.add("angry");
+    });
 
-            // สุ่มตำแหน่งใหม่
-            const newX = Math.random() * maxX;
-            const newY = Math.random() * maxY;
+    yesBtn.addEventListener('click', () => {
+      question.style.display = "none";
+      cartoon.style.display = "none";
+      buttonBox.style.display = "none";
+      finalScene.style.display = "flex";
+      canvas.style.display = "block";
+      launchFireworks();
+    });
 
-            // กำหนดตำแหน่งใหม่ให้ปุ่ม
-            noBtn.style.left = `${newX}px`;
-            noBtn.style.top = `${newY}px`;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-            noBtnClicked = true; // ตั้งค่าว่าปุ่มถูกคลิกแล้ว
-            noBtn.classList.add('moved'); // เพิ่ม class เพื่อซ่อนปุ่ม
+    let particles = [];
+
+    function launchFireworks() {
+      setInterval(() => {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height / 2;
+        for (let i = 0; i < 100; i++) {
+          particles.push({
+            x: x,
+            y: y,
+            angle: Math.random() * 2 * Math.PI,
+            speed: Math.random() * 5 + 2,
+            radius: 2,
+            alpha: 1,
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+          });
         }
+      }, 800);
 
-        // เมื่อคลิกปุ่ม "ไม่รัก" ให้ปุ่มหนีไปครั้งเดียวและตัวการ์ตูนโกรธ
-        noBtn.addEventListener('click', () => {
-            moveNoButtonOnce();
-            cartoonImg.classList.add('angry'); // เพิ่ม class angry ให้การ์ตูน
-            // สามารถเพิ่มข้อความแสดงความผิดหวังตรงนี้ได้
-            // alert('โอ้โห! ทำไมไม่รักกันนะ? 😠');
-        });
+      animateFireworks();
+    }
 
-
-        // ฟังก์ชันสร้างดอกไม้
-        function createFlower(x, y) {
-            const flower = document.createElement('div');
-            flower.classList.add('flower');
-            flower.style.left = `${x}px`;
-            flower.style.top = `${y}px`;
-            fireworksContainer.appendChild(flower);
-
-            // ลบดอกไม้หลังจากแอนิเมชั่นจบ
-            flower.addEventListener('animationend', () => {
-                flower.remove();
-            });
+    function animateFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, i) => {
+        p.x += Math.cos(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed;
+        p.alpha -= 0.01;
+        if (p.alpha <= 0) particles.splice(i, 1);
+        else {
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
         }
-
-        // ฟังก์ชันสร้างพลุ
-        function createFirework(x, y) {
-            const firework = document.createElement('div');
-            firework.classList.add('firework');
-            firework.style.left = `${x}px`;
-            firework.style.top = `${y}px`;
-            fireworksContainer.appendChild(firework);
-
-            // ลบพลุหลังจากแอนิเมชั่นจบ
-            firework.addEventListener('animationend', () => {
-                firework.remove();
-            });
-        }
-
-        // เมื่อคลิกปุ่ม "รักสิ!"
-        yesBtn.addEventListener('click', () => {
-            // ซ่อนปุ่มทั้งหมด
-            buttonsContainer.style.display = 'none';
-            // แสดงข้อความบอกรัก
-            loveMessage.style.display = 'block';
-            cartoonImg.classList.remove('angry'); // ลบ class angry ออกถ้ามี
-
-            // สร้างพลุและดอกไม้
-            const numEffects = 30; // จำนวนพลุและดอกไม้ที่ต้องการ
-            for (let i = 0; i < numEffects; i++) {
-                const randomX = Math.random() * window.innerWidth;
-                const randomY = Math.random() * window.innerHeight;
-                if (Math.random() > 0.5) {
-                    createFirework(randomX, randomY);
-                } else {
-                    createFlower(randomX, randomY);
-                }
-            }
-        });
-
-        // เมื่อหน้าจอถูกปรับขนาด ให้เรียก moveNoButton เพื่อปรับการทำงานบนมือถือ
-        window.addEventListener('resize', () => {
-            // รีเซ็ตสถานะการคลิกปุ่ม "ไม่รัก" เมื่อปรับขนาดหน้าจอ (ถ้าต้องการให้ปุ่มหนีได้อีก)
-            // noBtnClicked = false;
-            // noBtn.classList.remove('moved');
-            // noBtn.style.left = '50%';
-            // noBtn.style.top = 'auto';
-            // noBtn.style.transform = 'translateX(-50%)';
-        });
-        // เรียกครั้งแรกเผื่อเปิดบนมือถือตั้งแต่แรก
-        // moveNoButton(); // ไม่ต้องเรียกแล้ว เพราะจะหนีแค่ตอนคลิก
-    </script>
+      });
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animateFireworks);
+    }
+  </script>
 </body>
 </html>
