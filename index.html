@@ -26,10 +26,16 @@
       text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
 
-    .cartoon {
-      width: 200px;
-      height: 200px;
+    .cartoon-container {
+      position: relative;
+      width: 300px;
+      height: 400px;
       margin: 20px;
+    }
+
+    .cartoon {
+      width: 100%;
+      height: 100%;
       animation: bounce 2s infinite ease-in-out;
       transition: all 0.5s;
     }
@@ -56,6 +62,19 @@
       50% { opacity: 0.8; }
     }
 
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.1); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
     .buttons-container {
       position: relative;
       max-width: 400px;
@@ -63,6 +82,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-top: 20px;
     }
 
     button {
@@ -102,38 +122,66 @@
       animation: shake 0.5s infinite;
     }
 
+    /* ฉากสุดท้าย */
     #finalScene {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      background: linear-gradient(to top, #ff9a9e, #fad0c4);
-      background-size: cover;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
       display: none;
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      z-index: 10;
-      color: white;
-      text-shadow: 2px 2px 6px #000;
+      z-index: 100;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      overflow: hidden;
     }
 
-    #finalScene h1 {
-      font-size: 3em;
-      margin-bottom: 10px;
-      animation: heartbeat 1.5s infinite;
-    }
-
-    #finalScene p {
-      font-size: 1.5em;
+    .couple-container {
+      position: relative;
+      width: 500px;
+      height: 400px;
       margin-bottom: 30px;
     }
 
-    @keyframes heartbeat {
-      0% { transform: scale(1); }
-      25% { transform: scale(1.1); }
-      50% { transform: scale(1); }
-      75% { transform: scale(1.1); }
-      100% { transform: scale(1); }
+    .final-text {
+      text-align: center;
+    }
+
+    .final-text h1 {
+      font-size: 3em;
+      margin-bottom: 15px;
+      color: #fff;
+      animation: heartbeat 1.5s infinite;
+    }
+
+    .final-text p {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+
+    .hearts {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .heart {
+      position: absolute;
+      pointer-events: none;
+      animation: float 4s ease-in-out infinite;
+      font-size: 24px;
+    }
+
+    .bg-hearts {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0.3;
+      z-index: -1;
     }
 
     canvas {
@@ -145,76 +193,71 @@
       pointer-events: none;
     }
 
-    .blush {
-      opacity: 0.3;
-      animation: blush 2s infinite;
-    }
-
-    .hearts {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    .heart {
-      position: absolute;
-      pointer-events: none;
-      animation: float 4s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
-    }
-
     @media (max-width: 600px) {
       h1 { font-size: 2em; }
+      .cartoon-container { width: 200px; height: 300px; }
+      .couple-container { width: 300px; height: 250px; }
       button { font-size: 1em; padding: 12px 25px; }
-      .cartoon { width: 150px; height: 150px; }
       .buttons-container { flex-direction: column; height: auto; }
       #noBtn { position: relative; transform: none; left: auto; }
-      #finalScene h1 { font-size: 2em; }
-      #finalScene p { font-size: 1.2em; }
+      .final-text h1 { font-size: 2em; }
+      .final-text p { font-size: 1.2em; }
     }
   </style>
 </head>
 <body>
   <h1 id="question">อุ้ม รักเบสไหม?</h1>
 
-  <!-- การ์ตูนน่ารัก SVG -->
-  <svg id="cartoon" class="cartoon" viewBox="0 0 100 100">
-    <!-- ใบหน้า -->
-    <circle cx="50" cy="50" r="45" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
-    
-    <!-- ตาขวา -->
-    <circle cx="65" cy="40" r="5" fill="#333"/>
-    <circle cx="65" cy="40" r="2" fill="#fff"/>
-    
-    <!-- ตาซ้าย -->
-    <circle cx="35" cy="40" r="5" fill="#333"/>
-    <circle cx="35" cy="40" r="2" fill="#fff"/>
-    
-    <!-- ปากยิ้ม -->
-    <path d="M35,65 Q50,80 65,65" stroke="#FF69B4" stroke-width="3" fill="none" stroke-linecap="round"/>
-    
-    <!-- แก้มแดงซ้าย -->
-    <circle cx="30" cy="55" r="8" fill="#FF9999" class="blush"/>
-    
-    <!-- แก้มแดงขวา -->
-    <circle cx="70" cy="55" r="8" fill="#FF9999" class="blush"/>
-    
-    <!-- หัวใจบนหัว -->
-    <path d="M50,20 Q55,10 60,20 Q65,25 50,30 Q35,25 40,20 Q45,10 50,20" fill="#FF69B4"/>
-    
-    <!-- ขนตาขวา -->
-    <path d="M65,35 Q67,30 69,35" stroke="#333" stroke-width="1" fill="none"/>
-    <path d="M63,33 Q65,28 67,33" stroke="#333" stroke-width="1" fill="none"/>
-    
-    <!-- ขนตาซ้าย -->
-    <path d="M35,35 Q33,30 31,35" stroke="#333" stroke-width="1" fill="none"/>
-    <path d="M37,33 Q35,28 33,33" stroke="#333" stroke-width="1" fill="none"/>
-  </svg>
+  <!-- การ์ตูนน่ารัก SVG แบบเต็มตัว -->
+  <div class="cartoon-container">
+    <svg id="cartoon" class="cartoon" viewBox="0 0 200 300">
+      <!-- ร่างกาย -->
+      <ellipse cx="100" cy="220" rx="60" ry="80" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+      
+      <!-- ใบหน้า -->
+      <circle cx="100" cy="100" r="60" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+      
+      <!-- ตาขวา -->
+      <circle cx="125" cy="90" r="8" fill="#333"/>
+      <circle cx="125" cy="90" r="3" fill="#fff"/>
+      
+      <!-- ตาซ้าย -->
+      <circle cx="75" cy="90" r="8" fill="#333"/>
+      <circle cx="75" cy="90" r="3" fill="#fff"/>
+      
+      <!-- ปากยิ้ม -->
+      <path d="M80,130 Q100,150 120,130" stroke="#FF69B4" stroke-width="3" fill="none" stroke-linecap="round"/>
+      
+      <!-- แก้มแดงซ้าย -->
+      <circle cx="70" cy="110" r="10" fill="#FF9999" class="blush"/>
+      
+      <!-- แก้มแดงขวา -->
+      <circle cx="130" cy="110" r="10" fill="#FF9999" class="blush"/>
+      
+      <!-- หัวใจบนหัว -->
+      <path d="M100,40 Q110,20 120,40 Q130,50 100,60 Q70,50 80,40 Q90,20 100,40" fill="#FF69B4"/>
+      
+      <!-- ขนตาขวา -->
+      <path d="M125,80 Q128,70 131,80" stroke="#333" stroke-width="1.5" fill="none"/>
+      <path d="M123,77 Q126,67 129,77" stroke="#333" stroke-width="1.5" fill="none"/>
+      
+      <!-- ขนตาซ้าย -->
+      <path d="M75,80 Q72,70 69,80" stroke="#333" stroke-width="1.5" fill="none"/>
+      <path d="M77,77 Q74,67 71,77" stroke="#333" stroke-width="1.5" fill="none"/>
+      
+      <!-- มือซ้าย -->
+      <circle cx="50" cy="180" r="15" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+      
+      <!-- มือขวา -->
+      <circle cx="150" cy="180" r="15" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+      
+      <!-- ขาซ้าย -->
+      <rect x="70" y="280" width="25" height="40" rx="10" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+      
+      <!-- ขาขวา -->
+      <rect x="105" y="280" width="25" height="40" rx="10" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+    </svg>
+  </div>
 
   <div class="buttons-container" id="buttonBox">
     <button id="yesBtn">รักสุดหัวใจ! 💖</button>
@@ -223,10 +266,70 @@
 
   <!-- ฉากสุดท้าย -->
   <div id="finalScene">
-    <h1>รู้แล้วว่าต้องรักเบส! 💕</h1>
-    <p>เบสรักอุ้มมากๆนะ~ 🥰</p>
+    <div class="bg-hearts" id="bgHearts"></div>
+    
+    <div class="couple-container">
+      <svg viewBox="0 0 500 400">
+        <!-- เบส (ผู้ชาย) -->
+        <!-- ร่างกาย -->
+        <ellipse cx="150" cy="250" rx="50" ry="70" fill="#A2D2FF" stroke="#457B9D" stroke-width="2"/>
+        
+        <!-- ใบหน้า -->
+        <circle cx="150" cy="150" r="50" fill="#FFD1DC" stroke="#457B9D" stroke-width="2"/>
+        
+        <!-- ตา -->
+        <circle cx="130" cy="140" r="6" fill="#333"/>
+        <circle cx="170" cy="140" r="6" fill="#333"/>
+        
+        <!-- ปากยิ้ม -->
+        <path d="M130,170 Q150,190 170,170" stroke="#457B9D" stroke-width="2" fill="none"/>
+        
+        <!-- แก้มแดง -->
+        <circle cx="120" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
+        <circle cx="180" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
+        
+        <!-- ผม -->
+        <path d="M100,100 Q150,70 200,100" fill="#333" stroke="#333" stroke-width="2"/>
+        
+        <!-- อุ้ม (ผู้หญิง) -->
+        <!-- ร่างกาย -->
+        <ellipse cx="350" cy="250" rx="50" ry="70" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+        
+        <!-- ใบหน้า -->
+        <circle cx="350" cy="150" r="50" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+        
+        <!-- ตา -->
+        <circle cx="330" cy="140" r="6" fill="#333"/>
+        <circle cx="370" cy="140" r="6" fill="#333"/>
+        
+        <!-- ปากยิ้ม -->
+        <path d="M330,170 Q350,190 370,170" stroke="#FF69B4" stroke-width="2" fill="none"/>
+        
+        <!-- แก้มแดง -->
+        <circle cx="320" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
+        <circle cx="380" cy="160" r="8" fill="#FF9999" opacity="0.5"/>
+        
+        <!-- ผม -->
+        <path d="M300,100 Q350,70 400,100" fill="#FF69B4" stroke="#FF69B4" stroke-width="2"/>
+        
+        <!-- หัวใจระหว่างคู่ -->
+        <path d="M250,200 Q275,150 300,200 Q325,250 250,250 Q175,250 200,200 Q225,150 250,200" 
+              fill="#FF69B4" opacity="0.8" stroke="#FF1493" stroke-width="2"
+              style="animation: heartbeat 1s infinite; transform-origin: center;"/>
+        
+        <!-- มือจับกัน -->
+        <path d="M200,220 Q225,200 250,220" stroke="#FFD1DC" stroke-width="10" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    
+    <div class="final-text">
+      <h1>อุ้มกับเบสคู่กันตลอดไป! 💕</h1>
+      <p>รักกันมากๆ นะคะ~ 🥰</p>
+    </div>
+    
     <div class="hearts" id="heartsContainer"></div>
   </div>
+  
   <canvas id="fireworksCanvas"></canvas>
 
   <script>
@@ -239,9 +342,28 @@
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
     const heartsContainer = document.getElementById('heartsContainer');
+    const bgHearts = document.getElementById('bgHearts');
 
     let noMoved = false;
     let clickCount = 0;
+
+    // สร้างหัวใจพื้นหลัง
+    function createBackgroundHearts() {
+      const colors = ['#ff9a9e', '#fad0c4', '#ffb7b2', '#ffd3b6', '#ffaaa5'];
+      for (let i = 0; i < 30; i++) {
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.style.position = 'absolute';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.top = Math.random() * 100 + 'vh';
+        heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
+        heart.style.opacity = Math.random() * 0.3 + 0.1;
+        heart.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+        heart.style.animationDelay = Math.random() * 5 + 's';
+        heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+        bgHearts.appendChild(heart);
+      }
+    }
 
     noBtn.addEventListener('mouseover', () => {
       if (window.innerWidth > 600) {
@@ -260,13 +382,37 @@
         
         if (clickCount > 3) {
           cartoon.innerHTML = `
-            <circle cx="50" cy="50" r="45" fill="#f99"/>
-            <line x1="30" y1="35" x2="40" y2="45" stroke="#000" stroke-width="3"/>
-            <line x1="40" y1="35" x2="30" y2="45" stroke="#000" stroke-width="3"/>
-            <line x1="60" y1="35" x2="70" y2="45" stroke="#000" stroke-width="3"/>
-            <line x1="70" y1="35" x2="60" y2="45" stroke="#000" stroke-width="3"/>
-            <path d="M35,70 Q50,55 65,70" stroke="#000" stroke-width="3" fill="none"/>
-            <text x="50" y="20" text-anchor="middle" fill="#000" font-size="10">โกรธแล้วนะ!</text>
+            <!-- ร่างกายโกรธ -->
+            <ellipse cx="100" cy="220" rx="60" ry="80" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            
+            <!-- ใบหน้าโกรธ -->
+            <circle cx="100" cy="100" r="60" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            
+            <!-- ตาขวาโกรธ -->
+            <line x1="115" y1="85" x2="125" y2="95" stroke="#000" stroke-width="3"/>
+            <line x1="125" y1="85" x2="115" y2="95" stroke="#000" stroke-width="3"/>
+            
+            <!-- ตาซ้ายโกรธ -->
+            <line x1="75" y1="85" x2="85" y2="95" stroke="#000" stroke-width="3"/>
+            <line x1="85" y1="85" x2="75" y2="95" stroke="#000" stroke-width="3"/>
+            
+            <!-- ปากโกรธ -->
+            <path d="M80,140 Q100,120 120,140" stroke="#000" stroke-width="3" fill="none"/>
+            
+            <!-- ข้อความโกรธ -->
+            <text x="100" y="50" text-anchor="middle" fill="#000" font-size="12" font-weight="bold">โกรธแล้วนะ!</text>
+            
+            <!-- มือซ้าย -->
+            <circle cx="50" cy="180" r="15" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            
+            <!-- มือขวา -->
+            <circle cx="150" cy="180" r="15" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            
+            <!-- ขาซ้าย -->
+            <rect x="70" y="280" width="25" height="40" rx="10" fill="#f99" stroke="#c62828" stroke-width="2"/>
+            
+            <!-- ขาขวา -->
+            <rect x="105" y="280" width="25" height="40" rx="10" fill="#f99" stroke="#c62828" stroke-width="2"/>
           `;
           cartoon.classList.add("angry");
           question.textContent = "อุ้ม! บอกความจริงสิ รักเบสไหม?";
@@ -276,28 +422,41 @@
 
     yesBtn.addEventListener('click', () => {
       question.style.display = "none";
-      cartoon.style.display = "none";
+      document.querySelector('.cartoon-container').style.display = "none";
       buttonBox.style.display = "none";
       finalScene.style.display = "flex";
       canvas.style.display = "block";
+      createBackgroundHearts();
       launchFireworks();
       createHearts();
+      playLoveSound();
     });
+
+    function playLoveSound() {
+      const sounds = [
+        'https://assets.mixkit.co/sfx/preview/mixkit-romantic-heart-beat-1490.mp3',
+        'https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3'
+      ];
+      const audio = new Audio(sounds[Math.floor(Math.random() * sounds.length)]);
+      audio.volume = 0.3;
+      audio.play().catch(e => console.log("Audio play failed:", e));
+    }
 
     function createHearts() {
       setInterval(() => {
         const heart = document.createElement('div');
-        heart.innerHTML = '❤️';
+        heart.innerHTML = ['❤️', '💖', '💗', '💓', '💞'][Math.floor(Math.random() * 5)];
         heart.classList.add('heart');
         heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
         heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        heart.style.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
         heartsContainer.appendChild(heart);
         
         setTimeout(() => {
           heart.remove();
         }, 4000);
-      }, 300);
+      }, 200);
     }
 
     function resizeCanvas() {
@@ -314,8 +473,9 @@
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height / 2;
         const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+        const particleCount = Math.floor(Math.random() * 50) + 50;
         
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < particleCount; i++) {
           particles.push({
             x: x,
             y: y,
@@ -323,10 +483,11 @@
             speed: Math.random() * 5 + 2,
             radius: Math.random() * 3 + 1,
             alpha: 1,
-            color: color
+            color: color,
+            gravity: Math.random() * 0.1 + 0.05
           });
         }
-      }, 800);
+      }, 500);
       animateFireworks();
     }
 
@@ -334,12 +495,13 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // วาดพื้นหลังโปร่งใส
-      ctx.fillStyle = 'rgba(255, 228, 225, 0.2)';
+      ctx.fillStyle = 'rgba(255, 228, 225, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       particles.forEach((p, i) => {
         p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed + 0.5; // เพิ่มแรงโน้มถ่วงเล็กน้อย
+        p.y += Math.sin(p.angle) * p.speed + p.gravity;
+        p.speed *= 0.98;
         p.alpha -= 0.01;
         if (p.alpha <= 0) particles.splice(i, 1);
         else {
@@ -352,10 +514,13 @@
       });
       
       // วาดหัวใจลอยบ้าง
-      if (Math.random() > 0.95) {
-        ctx.fillStyle = `rgba(255, 105, 180, ${Math.random() * 0.5 + 0.3})`;
-        ctx.font = `${Math.random() * 20 + 10}px Arial`;
-        ctx.fillText('❤', Math.random() * canvas.width, Math.random() * canvas.height);
+      if (Math.random() > 0.9) {
+        const size = Math.random() * 30 + 20;
+        ctx.font = `${size}px Arial`;
+        ctx.fillStyle = `hsla(${Math.random() * 360}, 100%, 70%, ${Math.random() * 0.5 + 0.3})`;
+        ctx.fillText(['❤','💖','💗','💓','💞'][Math.floor(Math.random() * 5)], 
+                     Math.random() * canvas.width, 
+                     Math.random() * canvas.height);
       }
       
       ctx.globalAlpha = 1;
