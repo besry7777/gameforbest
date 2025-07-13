@@ -23,11 +23,12 @@
       font-size: 2.5em;
       color: #ff1493;
       margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
 
     .cartoon {
-      width: 160px;
-      height: 160px;
+      width: 200px;
+      height: 200px;
       margin: 20px;
       animation: bounce 2s infinite ease-in-out;
       transition: all 0.5s;
@@ -50,6 +51,11 @@
       100% { transform: translateX(0); }
     }
 
+    @keyframes blush {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.8; }
+    }
+
     .buttons-container {
       position: relative;
       max-width: 400px;
@@ -67,11 +73,17 @@
       cursor: pointer;
       margin: 10px;
       transition: 0.3s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     #yesBtn {
       background-color: #4CAF50;
       color: white;
+    }
+
+    #yesBtn:hover {
+      background-color: #3e8e41;
+      transform: scale(1.05);
     }
 
     #noBtn {
@@ -108,6 +120,20 @@
     #finalScene h1 {
       font-size: 3em;
       margin-bottom: 10px;
+      animation: heartbeat 1.5s infinite;
+    }
+
+    #finalScene p {
+      font-size: 1.5em;
+      margin-bottom: 30px;
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.1); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
 
     canvas {
@@ -119,12 +145,37 @@
       pointer-events: none;
     }
 
+    .blush {
+      opacity: 0.3;
+      animation: blush 2s infinite;
+    }
+
+    .hearts {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .heart {
+      position: absolute;
+      pointer-events: none;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
+    }
+
     @media (max-width: 600px) {
       h1 { font-size: 2em; }
       button { font-size: 1em; padding: 12px 25px; }
-      .cartoon { width: 120px; height: 120px; }
+      .cartoon { width: 150px; height: 150px; }
       .buttons-container { flex-direction: column; height: auto; }
       #noBtn { position: relative; transform: none; left: auto; }
+      #finalScene h1 { font-size: 2em; }
+      #finalScene p { font-size: 1.2em; }
     }
   </style>
 </head>
@@ -133,21 +184,48 @@
 
   <!-- การ์ตูนน่ารัก SVG -->
   <svg id="cartoon" class="cartoon" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="45" fill="#ffd1dc"/>
-    <circle cx="35" cy="40" r="6" fill="#333"/>
-    <circle cx="65" cy="40" r="6" fill="#333"/>
-    <path d="M35,65 Q50,80 65,65" stroke="#333" stroke-width="3" fill="none"/>
+    <!-- ใบหน้า -->
+    <circle cx="50" cy="50" r="45" fill="#FFD1DC" stroke="#FF69B4" stroke-width="2"/>
+    
+    <!-- ตาขวา -->
+    <circle cx="65" cy="40" r="5" fill="#333"/>
+    <circle cx="65" cy="40" r="2" fill="#fff"/>
+    
+    <!-- ตาซ้าย -->
+    <circle cx="35" cy="40" r="5" fill="#333"/>
+    <circle cx="35" cy="40" r="2" fill="#fff"/>
+    
+    <!-- ปากยิ้ม -->
+    <path d="M35,65 Q50,80 65,65" stroke="#FF69B4" stroke-width="3" fill="none" stroke-linecap="round"/>
+    
+    <!-- แก้มแดงซ้าย -->
+    <circle cx="30" cy="55" r="8" fill="#FF9999" class="blush"/>
+    
+    <!-- แก้มแดงขวา -->
+    <circle cx="70" cy="55" r="8" fill="#FF9999" class="blush"/>
+    
+    <!-- หัวใจบนหัว -->
+    <path d="M50,20 Q55,10 60,20 Q65,25 50,30 Q35,25 40,20 Q45,10 50,20" fill="#FF69B4"/>
+    
+    <!-- ขนตาขวา -->
+    <path d="M65,35 Q67,30 69,35" stroke="#333" stroke-width="1" fill="none"/>
+    <path d="M63,33 Q65,28 67,33" stroke="#333" stroke-width="1" fill="none"/>
+    
+    <!-- ขนตาซ้าย -->
+    <path d="M35,35 Q33,30 31,35" stroke="#333" stroke-width="1" fill="none"/>
+    <path d="M37,33 Q35,28 33,33" stroke="#333" stroke-width="1" fill="none"/>
   </svg>
 
   <div class="buttons-container" id="buttonBox">
-    <button id="yesBtn">รักสิ!</button>
-    <button id="noBtn">ไม่รัก</button>
+    <button id="yesBtn">รักสุดหัวใจ! 💖</button>
+    <button id="noBtn">ไม่รัก... 😒</button>
   </div>
 
   <!-- ฉากสุดท้าย -->
   <div id="finalScene">
-    <h1>ก่อนอื่นอาบน้ำก่อน</h1>
-    <p>ไปๆเหม็นเน่า</p>
+    <h1>รู้แล้วว่าต้องรักเบส! 💕</h1>
+    <p>เบสรักอุ้มมากๆนะ~ 🥰</p>
+    <div class="hearts" id="heartsContainer"></div>
   </div>
   <canvas id="fireworksCanvas"></canvas>
 
@@ -160,11 +238,13 @@
     const finalScene = document.getElementById('finalScene');
     const canvas = document.getElementById('fireworksCanvas');
     const ctx = canvas.getContext('2d');
+    const heartsContainer = document.getElementById('heartsContainer');
 
     let noMoved = false;
+    let clickCount = 0;
 
-    noBtn.addEventListener('click', () => {
-      if (window.innerWidth > 600 && !noMoved) {
+    noBtn.addEventListener('mouseover', () => {
+      if (window.innerWidth > 600) {
         const container = buttonBox.getBoundingClientRect();
         const btnWidth = noBtn.offsetWidth;
         const btnHeight = noBtn.offsetHeight;
@@ -174,20 +254,24 @@
 
         noBtn.style.left = `${randX}px`;
         noBtn.style.top = `${randY}px`;
-
-        noMoved = true;
+        noBtn.textContent = ['ไม่จริงๆ', 'อย่ากดนะ!', 'หยุดเลย!', 'พอได้แล้ว'][Math.floor(Math.random() * 4)];
+        
+        clickCount++;
+        
+        if (clickCount > 3) {
+          cartoon.innerHTML = `
+            <circle cx="50" cy="50" r="45" fill="#f99"/>
+            <line x1="30" y1="35" x2="40" y2="45" stroke="#000" stroke-width="3"/>
+            <line x1="40" y1="35" x2="30" y2="45" stroke="#000" stroke-width="3"/>
+            <line x1="60" y1="35" x2="70" y2="45" stroke="#000" stroke-width="3"/>
+            <line x1="70" y1="35" x2="60" y2="45" stroke="#000" stroke-width="3"/>
+            <path d="M35,70 Q50,55 65,70" stroke="#000" stroke-width="3" fill="none"/>
+            <text x="50" y="20" text-anchor="middle" fill="#000" font-size="10">โกรธแล้วนะ!</text>
+          `;
+          cartoon.classList.add("angry");
+          question.textContent = "อุ้ม! บอกความจริงสิ รักเบสไหม?";
+        }
       }
-
-      // การ์ตูนโกรธ
-      cartoon.innerHTML = `
-        <circle cx="50" cy="50" r="45" fill="#f99"/>
-        <line x1="30" y1="35" x2="40" y2="45" stroke="#000" stroke-width="3"/>
-        <line x1="40" y1="35" x2="30" y2="45" stroke="#000" stroke-width="3"/>
-        <line x1="60" y1="35" x2="70" y2="45" stroke="#000" stroke-width="3"/>
-        <line x1="70" y1="35" x2="60" y2="45" stroke="#000" stroke-width="3"/>
-        <path d="M35,70 Q50,55 65,70" stroke="#000" stroke-width="3" fill="none"/>
-      `;
-      cartoon.classList.add("angry");
     });
 
     yesBtn.addEventListener('click', () => {
@@ -197,7 +281,24 @@
       finalScene.style.display = "flex";
       canvas.style.display = "block";
       launchFireworks();
+      createHearts();
     });
+
+    function createHearts() {
+      setInterval(() => {
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.classList.add('heart');
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        heartsContainer.appendChild(heart);
+        
+        setTimeout(() => {
+          heart.remove();
+        }, 4000);
+      }, 300);
+    }
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -212,15 +313,17 @@
       setInterval(() => {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height / 2;
+        const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+        
         for (let i = 0; i < 100; i++) {
           particles.push({
             x: x,
             y: y,
             angle: Math.random() * 2 * Math.PI,
             speed: Math.random() * 5 + 2,
-            radius: 2,
+            radius: Math.random() * 3 + 1,
             alpha: 1,
-            color: `hsl(${Math.random() * 360}, 100%, 70%)`
+            color: color
           });
         }
       }, 800);
@@ -229,9 +332,14 @@
 
     function animateFireworks() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // วาดพื้นหลังโปร่งใส
+      ctx.fillStyle = 'rgba(255, 228, 225, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       particles.forEach((p, i) => {
         p.x += Math.cos(p.angle) * p.speed;
-        p.y += Math.sin(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed + 0.5; // เพิ่มแรงโน้มถ่วงเล็กน้อย
         p.alpha -= 0.01;
         if (p.alpha <= 0) particles.splice(i, 1);
         else {
@@ -242,6 +350,14 @@
           ctx.fill();
         }
       });
+      
+      // วาดหัวใจลอยบ้าง
+      if (Math.random() > 0.95) {
+        ctx.fillStyle = `rgba(255, 105, 180, ${Math.random() * 0.5 + 0.3})`;
+        ctx.font = `${Math.random() * 20 + 10}px Arial`;
+        ctx.fillText('❤', Math.random() * canvas.width, Math.random() * canvas.height);
+      }
+      
       ctx.globalAlpha = 1;
       requestAnimationFrame(animateFireworks);
     }
