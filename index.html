@@ -3,39 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <title>Co-op Game (Vertical)</title>
+    <title>เกม Co-op แนวตั้ง</title>
     <style>
-        /* --- การตั้งค่าพื้นฐานและล็อคการเลื่อน --- */
-        html, body {
+        /* การตั้งค่าพื้นฐาน */
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* ซ่อน scrollbar และป้องกันการเลื่อน */
-            background-color: #1a1a1a; /* สีพื้นหลัง */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- ตั้งค่า iframe ของเกมให้เต็มจอ --- */
-        #game-frame {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+            touch-action: manipulation;
+        }
+
+        /* คอนเทนเนอร์หลัก */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* พื้นที่เกม */
+        #game-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: #2d2d2d;
+        }
+
+        /* ตัวละครผู้เล่น */
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #3498db;
+            transition: transform 0.1s ease-out;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .player-1 {
+            background-color: #3498db;
+            bottom: 20%;
+            left: 30%;
+        }
+
+        .player-2 {
+            background-color: #e74c3c;
+            bottom: 20%;
+            left: 60%;
+        }
+
+        /* วัตถุในเกม */
+        .obstacle {
+            position: absolute;
+            background-color: #f39c12;
+            border-radius: 5px;
+        }
+
+        .collectible {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            z-index: 5;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* การควบคุม */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #333;
+        }
+
+        .control-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 120px;
+            height: 120px;
+        }
+
+        .control-btn {
+            background-color: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .control-btn:active {
+            background-color: rgba(255,255,255,0.4);
+        }
+
+        .action-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(46, 204, 113, 0.7);
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px;
+            touch-action: manipulation;
+        }
+
+        .action-btn:active {
+            background-color: rgba(46, 204, 113, 1);
+        }
+
+        /* สถานะเกม */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+        }
+
+        /* เมนู */
+        #menu {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw; /* 100% ของความกว้างหน้าจอ */
-            height: 100vh; /* 100% ของความสูงหน้าจอ */
-            border: none; /* เอาเส้นขอบออก */
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .menu-title {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .menu-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 200px;
+            text-align: center;
+        }
+
+        /* การแจ้งเตือน */
+        .alert {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 200;
+            text-align: center;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <iframe 
-        id="game-frame" 
-        src="ใส่ URL ของเกมบน GITHUB PAGES ตรงนี้" 
-        allowfullscreen>
-    </iframe>
+    <div id="game-container">
+        <div class="game-info">
+            <div id="score">คะแนน: 0</div>
+            <div id="time">เวลา: 60</div>
+        </div>
+        
+        <div id="game-area">
+            <!-- ตัวละครจะถูกเพิ่มโดย JavaScript -->
+            <div id="player-1" class="player player-1">P1</div>
+            <div id="player-2" class="player player-2">P2</div>
+            
+            <!-- วัตถุและอุปสรรคจะถูกเพิ่มโดย JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <div class="control-pad">
+                <div class="control-btn" data-action="up-left">↖</div>
+                <div class="control-btn" data-action="up">↑</div>
+                <div class="control-btn" data-action="up-right">↗</div>
+                <div class="control-btn" data-action="left">←</div>
+                <div class="control-btn"></div>
+                <div class="control-btn" data-action="right">→</div>
+                <div class="control-btn" data-action="down-left">↙</div>
+                <div class="control-btn" data-action="down">↓</div>
+                <div class="control-btn" data-action="down-right">↘</div>
+            </div>
+            
+            <button class="action-btn" id="action-btn">กระทำ</button>
+        </div>
+        
+        <div id="menu">
+            <h1 class="menu-title">เกม Co-op แนวตั้ง</h1>
+            <button class="menu-btn" id="start-btn">เริ่มเกม</button>
+            <button class="menu-btn" id="multiplayer-btn">เล่นกับเพื่อน</button>
+            <button class="menu-btn" id="how-to-play-btn">วิธีเล่น</button>
+        </div>
+        
+        <div class="alert" id="alert">
+            <h2 id="alert-title">แจ้งเตือน</h2>
+            <p id="alert-message">ข้อความแจ้งเตือน</p>
+            <button id="alert-close">ตกลง</button>
+        </div>
+    </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ตัวแปรเกม
+            let gameRunning = false;
+            let gameTime = 60;
+            let gameScore = 0;
+            let isMultiplayer = false;
+            let players = [];
+            let obstacles = [];
+            let collectibles = [];
+            let gameInterval;
+            let timeInterval;
+            
+            // องค์ประกอบ DOM
+            const gameArea = document.getElementById('game-area');
+            const player1 = document.getElementById('player-1');
+            const player2 = document.getElementById('player-2');
+            const scoreDisplay = document.getElementById('score');
+            const timeDisplay = document.getElementById('time');
+            const menu = document.getElementById('menu');
+            const startBtn = document.getElementById('start-btn');
+            const multiplayerBtn = document.getElementById('multiplayer-btn');
+            const howToPlayBtn = document.getElementById('how-to-play-btn');
+            const alertBox = document.getElementById('alert');
+            const alertClose = document.getElementById('alert-close');
+            const controlBtns = document.querySelectorAll('.control-btn');
+            const actionBtn = document.getElementById('action-btn');
+            
+            // ขนาดพื้นที่เกม
+            const gameWidth = window.innerWidth;
+            const gameHeight = window.innerHeight - 180; // ลบส่วนควบคุมและข้อมูล
+            
+            // ตำแหน่งเริ่มต้นผู้เล่น
+            const player1Start = { x: gameWidth * 0.3, y: gameHeight * 0.8 };
+            const player2Start = { x: gameWidth * 0.7, y: gameHeight * 0.8 };
+            
+            // ความเร็วผู้เล่น
+            const playerSpeed = 5;
+            
+            // เริ่มเกม
+            function startGame() {
+                gameRunning = true;
+                gameTime = 60;
+                gameScore = 0;
+                
+                // ซ่อนเมนู
+                menu.style.display = 'none';
+                
+                // รีเซ็ตผู้เล่น
+                resetPlayers();
+                
+                // สร้างวัตถุ
+                createObstacles();
+                createCollectibles();
+                
+                // อัพเดทการแสดงผล
+                updateScore();
+                updateTime();
+                
+                // เริ่มนับเวลา
+                timeInterval = setInterval(updateGameTime, 1000);
+                
+                // เริ่มเกมลูป
+                gameInterval = setInterval(gameLoop, 16); // ~60 FPS
+            }
+            
+            // รีเซ็ตผู้เล่น
+            function resetPlayers() {
+                players = [
+                    { id: 1, element: player1, x: player1Start.x, y: player1Start.y, dx: 0, dy: 0, score: 0 },
+                    { id: 2, element: player2, x: player2Start.x, y: player2Start.y, dx: 0, dy: 0, score: 0 }
+                ];
+                
+                if (!isMultiplayer) {
+                    player2.style.display = 'none';
+                } else {
+                    player2.style.display = 'flex';
+                }
+                
+                updatePlayerPositions();
+            }
+            
+            // อัพเดทตำแหน่งผู้เล่น
+            function updatePlayerPositions() {
+                players.forEach(player => {
+                    player.element.style.transform = `translate(${player.x - 25}px, ${player.y - 25}px)`;
+                });
+            }
+            
+            // สร้างอุปสรรค
+            function createObstacles() {
+                // ล้างอุปสรรคเก่า
+                obstacles.forEach(obs => {
+                    if (obs.element && obs.element.parentNode) {
+                        obs.element.parentNode.removeChild(obs.element);
+                    }
+                });
+                obstacles = [];
+                
+                // สร้างอุปสรรคใหม่
+                const obstacleCount = 10 + Math.floor(Math.random() * 5);
+                
+                for (let i = 0; i < obstacleCount; i++) {
+                    const width = 50 + Math.floor(Math.random() * 100);
+                    const height = 50 + Math.floor(Math.random() * 100);
+                    const x = Math.floor(Math.random() * (gameWidth - width));
+                    const y = Math.floor(Math.random() * (gameHeight - height));
+                    
+                    const obstacle = document.createElement('div');
+                    obstacle.className = 'obstacle';
+                    obstacle.style.width = `${width}px`;
+                    obstacle.style.height = `${height}px`;
+                    obstacle.style.left = `${x}px`;
+                    obstacle.style.top = `${y}px`;
+                    
+                    gameArea.appendChild(obstacle);
+                    
+                    obstacles.push({
+                        element: obstacle,
+                        x, y, width, height
+                    });
+                }
+            }
+            
+            // สร้างวัตถุที่เก็บได้
+            function createCollectibles() {
+                // ล้างวัตถุเก่า
+                collectibles.forEach(col => {
+                    if (col.element && col.element.parentNode) {
+                        col.element.parentNode.removeChild(col.element);
+                    }
+                });
+                collectibles = [];
+                
+                // สร้างวัตถุใหม่
+                const collectibleCount = 15;
+                
+                for (let i = 0; i < collectibleCount; i++) {
+                    const x = 30 + Math.floor(Math.random() * (gameWidth - 60));
+                    const y = 30 + Math.floor(Math.random() * (gameHeight - 60));
+                    
+                    const collectible = document.createElement('div');
+                    collectible.className = 'collectible';
+                    collectible.style.left = `${x}px`;
+                    collectible.style.top = `${y}px`;
+                    
+                    gameArea.appendChild(collectible);
+                    
+                    collectibles.push({
+                        element: collectible,
+                        x, y, collected: false
+                    });
+                }
+            }
+            
+            // ตรวจสอบการชน
+            function checkCollisions() {
+                players.forEach(player => {
+                    // ตรวจสอบขอบเขต
+                    if (player.x < 25) player.x = 25;
+                    if (player.x > gameWidth - 25) player.x = gameWidth - 25;
+                    if (player.y < 25) player.y = 25;
+                    if (player.y > gameHeight - 25) player.y = gameHeight - 25;
+                    
+                    // ตรวจสอบอุปสรรค
+                    obstacles.forEach(obs => {
+                        if (
+                            player.x + 25 > obs.x &&
+                            player.x - 25 < obs.x + obs.width &&
+                            player.y + 25 > obs.y &&
+                            player.y - 25 < obs.y + obs.height
+                        ) {
+                            // ชนอุปสรรค - ย้อนกลับการเคลื่อนที่
+                            player.x -= player.dx;
+                            player.y -= player.dy;
+                            player.dx = 0;
+                            player.dy = 0;
+                        }
+                    });
+                    
+                    // ตรวจสอบวัตถุที่เก็บได้
+                    collectibles.forEach(col => {
+                        if (!col.collected) {
+                            const dx = player.x - col.x;
+                            const dy = player.y - col.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < 40) { // ระยะเก็บ
+                                col.collected = true;
+                                col.element.style.display = 'none';
+                                player.score += 10;
+                                gameScore += 10;
+                                updateScore();
+                                
+                                // ตรวจสอบว่าจบเกมหรือยัง
+                                if (collectibles.every(c => c.collected)) {
+                                    showAlert('ยินดีด้วย!', 'คุณเก็บวัตถุทั้งหมดแล้ว!');
+                                    endGame();
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // เกมลูป
+            function gameLoop() {
+                if (!gameRunning) return;
+                
+                // เคลื่อนที่ผู้เล่น
+                players.forEach(player => {
+                    player.x += player.dx;
+                    player.y += player.dy;
+                });
+                
+                // ตรวจสอบการชน
+                checkCollisions();
+                
+                // อัพเดทตำแหน่ง
+                updatePlayerPositions();
+            }
+            
+            // อัพเดทคะแนน
+            function updateScore() {
+                scoreDisplay.textContent = `คะแนน: ${gameScore}`;
+            }
+            
+            // อัพเดทเวลา
+            function updateGameTime() {
+                gameTime--;
+                timeDisplay.textContent = `เวลา: ${gameTime}`;
+                
+                if (gameTime <= 0) {
+                    showAlert('เวลาเหลือศูนย์!', `คะแนนสุดท้าย: ${gameScore}`);
+                    endGame();
+                }
+            }
+            
+            // จบเกม
+            function endGame() {
+                gameRunning = false;
+                clearInterval(gameInterval);
+                clearInterval(timeInterval);
+                
+                // แสดงเมนูหลังจากจบเกม
+                setTimeout(() => {
+                    menu.style.display = 'flex';
+                }, 2000);
+            }
+            
+            // แสดงการแจ้งเตือน
+            function showAlert(title, message) {
+                document.getElementById('alert-title').textContent = title;
+                document.getElementById('alert-message').textContent = message;
+                alertBox.style.display = 'block';
+            }
+            
+            // ซ่อนการแจ้งเตือน
+            function hideAlert() {
+                alertBox.style.display = 'none';
+            }
+            
+            // ควบคุมผู้เล่น
+            function handleControl(action) {
+                if (!gameRunning) return;
+                
+                const player = players[0]; // ควบคุมผู้เล่น 1
+                
+                switch (action) {
+                    case 'up':
+                        player.dy = -playerSpeed;
+                        player.dx = 0;
+                        break;
+                    case 'down':
+                        player.dy = playerSpeed;
+                        player.dx = 0;
+                        break;
+                    case 'left':
+                        player.dx = -playerSpeed;
+                        player.dy = 0;
+                        break;
+                    case 'right':
+                        player.dx = playerSpeed;
+                        player.dy = 0;
+                        break;
+                    case 'up-left':
+                        player.dx = -playerSpeed * 0.7;
+                        player.dy = -playerSpeed * 0.7;
+                        break;
+                    case 'up-right':
+                        player.dx = playerSpeed * 0.7;
+                        player.dy = -playerSpeed * 0.7;
+                        break;
+                    case 'down-left':
+                        player.dx = -playerSpeed * 0.7;
+                        player.dy = playerSpeed * 0.7;
+                        break;
+                    case 'down-right':
+                        player.dx = playerSpeed * 0.7;
+                        player.dy = playerSpeed * 0.7;
+                        break;
+                    default:
+                        player.dx = 0;
+                        player.dy = 0;
+                }
+            }
+            
+            // การกระทำพิเศษ
+            function handleAction() {
+                if (!gameRunning) return;
+                
+                // ในตัวอย่างนี้คือการกระโดด
+                players[0].dy = -10;
+                
+                // สามารถเพิ่มการทำงานอื่นๆ ตามต้องการ
+            }
+            
+            // Event listeners
+            startBtn.addEventListener('click', () => {
+                isMultiplayer = false;
+                startGame();
+            });
+            
+            multiplayerBtn.addEventListener('click', () => {
+                isMultiplayer = true;
+                startGame();
+            });
+            
+            howToPlayBtn.addEventListener('click', () => {
+                showAlert('วิธีเล่น', 'ใช้ปุ่มควบคุมเพื่อเคลื่อนที่\nเก็บวัตถุสีเขียวให้ได้มากที่สุด\nเล่นร่วมกับเพื่อนในโหมด Multiplayer');
+            });
+            
+            alertClose.addEventListener('click', hideAlert);
+            
+            controlBtns.forEach(btn => {
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleControl(btn.dataset.action);
+                });
+                
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleControl('');
+                });
+                
+                btn.addEventListener('mousedown', () => {
+                    handleControl(btn.dataset.action);
+                });
+                
+                btn.addEventListener('mouseup', () => {
+                    handleControl('');
+                });
+                
+                btn.addEventListener('mouseleave', () => {
+                    handleControl('');
+                });
+            });
+            
+            actionBtn.addEventListener('click', handleAction);
+            actionBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleAction();
+            });
+            
+            // ป้องกันการเลื่อนหน้าจอเมื่อสัมผัส
+            document.addEventListener('touchmove', (e) => {
+                if (gameRunning) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // ปรับขนาดเมื่อเปลี่ยน orientation
+            window.addEventListener('resize', () => {
+                // สามารถเพิ่มโค้ดปรับขนาดตามต้องการ
+            });
+        });
+    </script>
 </body>
 </html>
