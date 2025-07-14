@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Co-op Game</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Co-op Game (Vertical)</title>
     <style>
         /* --- การตั้งค่าพื้นฐานและล็อคการเลื่อน --- */
         html, body {
@@ -12,7 +16,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden; /* ซ่อน scrollbar และป้องกันการเลื่อน */
-            background-color: #000; /* สีพื้นหลังเผื่อกรณีที่โหลดช้า */
+            background-color: #1a1a1a; /* สีพื้นหลัง */
         }
 
         /* --- ตั้งค่า iframe ของเกมให้เต็มจอ --- */
@@ -24,45 +28,6 @@
             height: 100vh; /* 100% ของความสูงหน้าจอ */
             border: none; /* เอาเส้นขอบออก */
         }
-
-        /* --- กล่องข้อความแจ้งให้หมุนจอ (ซ่อนไว้เป็นค่าเริ่มต้น) --- */
-        #rotate-device-prompt {
-            display: none; /* ซ่อนไว้ก่อน */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #111;
-            color: #fff;
-            font-family: sans-serif;
-            font-size: 1.2em;
-            text-align: center;
-            /* จัดให้อยู่กึ่งกลาง */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* --- Media Query สำหรับบังคับแนวนอน --- */
-        /* เมื่อหน้าจอเป็นแนวตั้ง (Portrait) */
-        @media (orientation: portrait) {
-            #game-frame {
-                display: none; /* ซ่อนเกม */
-            }
-            #rotate-device-prompt {
-                display: flex; /* แสดงข้อความแจ้งเตือน */
-            }
-        }
-         /* เมื่อหน้าจอเป็นแนวนอน (Landscape) */
-        @media (orientation: landscape) {
-            #game-frame {
-                display: block; /* แสดงเกม */
-            }
-            #rotate-device-prompt {
-                display: none; /* ซ่อนข้อความแจ้งเตือน */
-            }
-        }
     </style>
 </head>
 <body>
@@ -71,10 +36,6 @@
         src="ใส่ URL ของเกมบน GITHUB PAGES ตรงนี้" 
         allowfullscreen>
     </iframe>
-
-    <div id="rotate-device-prompt">
-        <p>🎮<br>กรุณาหมุนหน้าจอเป็นแนวนอนเพื่อเล่นเกม</p>
-    </div>
 
 </body>
 </html>
