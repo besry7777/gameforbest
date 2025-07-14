@@ -3,664 +3,587 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>หมากฮอตมาตรฐานสากล</title>
+    <title>หมากฮอส 8x8 - เล่นกับบอทโหด</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Noto Sans Thai', sans-serif;
-        }
-        
         body {
-            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            background-color: #f5f5f5;
+            margin: 0;
             padding: 20px;
         }
         
         h1 {
-            color: #2c3e50;
-            margin: 20px 0;
-            text-align: center;
-            font-size: 2.5rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            color: #333;
+            margin-bottom: 10px;
         }
         
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 800px;
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 20px;
+        .game-info {
             margin-bottom: 20px;
-        }
-        
-        .mode-selector {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            width: 100%;
-        }
-        
-        .mode-btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            background-color: #3498db;
-            color: white;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        
-        .mode-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .mode-btn.active {
-            background-color: #2ecc71;
-        }
-        
-        .mode-btn.bot-hard {
-            background-color: #e74c3c;
+            font-size: 18px;
+            color: #555;
         }
         
         .board {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(7, 1fr);
-            gap: 5px;
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 1/1;
-            margin: 20px 0;
-            background-color: #27ae60;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 2px;
+            margin-bottom: 20px;
         }
         
         .cell {
-            background-color: #f0f0f0;
-            border-radius: 50%;
+            width: 60px;
+            height: 60px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.3s;
             position: relative;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
         }
         
-        .cell:hover {
-            transform: scale(1.05);
+        .dark {
+            background-color: #8B4513; /* สีน้ำตาลเข้ม */
         }
         
-        .cell::after {
-            content: '';
-            position: absolute;
-            width: 80%;
-            height: 80%;
+        .light {
+            background-color: #F5DEB3; /* สีน้ำตาลอ่อน */
+        }
+        
+        .piece {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: transparent;
-            border: 2px dashed rgba(0,0,0,0.1);
-        }
-        
-        .cell.red {
-            background-color: #e74c3c;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-        }
-        
-        .cell.blue {
-            background-color: #3498db;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-        }
-        
-        .status {
-            font-size: 1.5rem;
-            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-weight: bold;
-            color: #2c3e50;
-            text-align: center;
-            min-height: 40px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .player {
+            background-color: #FF0000; /* สีแดงสำหรับผู้เล่น */
+            color: white;
+        }
+        
+        .bot {
+            background-color: #000000; /* สีดำสำหรับบอท */
+            color: white;
+        }
+        
+        .king {
+            border: 3px solid gold;
+            box-sizing: border-box;
+        }
+        
+        .selected {
+            box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7);
+        }
+        
+        .possible-move {
+            box-shadow: 0 0 10px 5px rgba(0, 255, 0, 0.5);
         }
         
         .controls {
-            display: flex;
-            gap: 15px;
             margin-top: 20px;
         }
         
-        .control-btn {
+        button {
             padding: 10px 20px;
-            font-size: 1rem;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .status {
+            font-size: 20px;
             font-weight: bold;
-            transition: all 0.3s;
-            background-color: #2c3e50;
-            color: white;
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        
-        .control-btn:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .difficulty-selector {
-            display: none;
-            margin-top: 20px;
-            text-align: center;
-        }
-        
-        .difficulty-selector.active {
-            display: block;
-        }
-        
-        .difficulty-btn {
-            padding: 8px 15px;
-            margin: 0 5px;
-            font-size: 0.9rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: #bdc3c7;
-            transition: all 0.2s;
-        }
-        
-        .difficulty-btn.active {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        @media (max-width: 600px) {
-            .board {
-                max-width: 90vw;
-            }
-            
-            .mode-selector {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .mode-btn {
-                width: 100%;
-                max-width: 300px;
-            }
+            margin: 10px 0;
+            color: #333;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>หมากฮอตมาตรฐานสากล</h1>
-    
-    <div class="game-container">
-        <div class="mode-selector">
-            <button class="mode-btn" id="pvp-btn">ผู้เล่น vs ผู้เล่น</button>
-            <button class="mode-btn bot-hard" id="pve-btn">ผู้เล่น vs บอท</button>
-        </div>
-        
-        <div class="difficulty-selector" id="difficulty-selector">
-            <p>เลือกระดับความยาก:</p>
-            <button class="difficulty-btn active" data-difficulty="hard">โหด</button>
-            <button class="difficulty-btn" data-difficulty="medium">ปานกลาง</button>
-            <button class="difficulty-btn" data-difficulty="easy">ง่าย</button>
-        </div>
-        
-        <div class="board" id="board">
-            <!-- Cells will be generated by JavaScript -->
-        </div>
-        
-        <div class="status" id="status">เลือกโหมดการเล่น</div>
-        
-        <div class="controls">
-            <button class="control-btn" id="restart-btn">เริ่มเกมใหม่</button>
-            <button class="control-btn" id="undo-btn" disabled>ย้อนกลับ</button>
-        </div>
+    <h1>หมากฮอส 8x8</h1>
+    <div class="game-info">เล่นกับบอทโหด - คุณเป็นสีแดง</div>
+    <div class="status" id="status">ตาคุณ: เลือกเบี้ยของคุณ</div>
+    <div class="board" id="board"></div>
+    <div class="controls">
+        <button id="newGame">เกมใหม่</button>
+        <button id="hint">คำแนะนำ</button>
     </div>
 
     <script>
-        // Game constants
-        const ROWS = 7;
-        const COLS = 7;
-        const PLAYER_RED = 'red';
-        const PLAYER_BLUE = 'blue';
-        
-        // Game state
-        let gameState = {
-            board: Array(ROWS).fill().map(() => Array(COLS).fill(null)),
-            currentPlayer: PLAYER_RED,
-            gameMode: null, // 'pvp' or 'pve'
-            gameActive: false,
-            difficulty: 'hard', // 'easy', 'medium', 'hard'
-            moveHistory: []
-        };
-        
-        // DOM elements
-        const boardElement = document.getElementById('board');
-        const statusElement = document.getElementById('status');
-        const pvpBtn = document.getElementById('pvp-btn');
-        const pveBtn = document.getElementById('pve-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        const undoBtn = document.getElementById('undo-btn');
-        const difficultySelector = document.getElementById('difficulty-selector');
-        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
-        
-        // Initialize the game
-        function initGame() {
-            // Create board cells
-            boardElement.innerHTML = '';
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    cell.addEventListener('click', () => handleCellClick(row, col));
-                    boardElement.appendChild(cell);
-                }
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const statusDisplay = document.getElementById('status');
+            const newGameBtn = document.getElementById('newGame');
+            const hintBtn = document.getElementById('hint');
             
-            // Reset game state
-            gameState.board = Array(ROWS).fill().map(() => Array(COLS).fill(null));
-            gameState.currentPlayer = PLAYER_RED;
-            gameState.gameActive = false;
-            gameState.moveHistory = [];
+            let gameState = initializeGame();
+            let selectedPiece = null;
+            let possibleMoves = [];
+            let isPlayerTurn = true;
+            let gameOver = false;
             
-            updateStatus();
-            updateBoard();
-        }
-        
-        // Start a new game
-        function startGame(mode) {
-            gameState.gameMode = mode;
-            gameState.gameActive = true;
-            gameState.currentPlayer = PLAYER_RED;
-            
-            if (mode === 'pve') {
-                difficultySelector.classList.add('active');
-            } else {
-                difficultySelector.classList.remove('active');
-            }
-            
-            updateStatus();
-        }
-        
-        // Handle cell click
-        function handleCellClick(row, col) {
-            if (!gameState.gameActive || gameState.board[row][col] !== null) return;
-            
-            // Make move
-            makeMove(row, col);
-            
-            // If in PvE mode and game is still active, let bot make a move
-            if (gameState.gameMode === 'pve' && gameState.gameActive) {
-                setTimeout(() => {
-                    makeBotMove();
-                }, 500);
-            }
-        }
-        
-        // Make a move
-        function makeMove(row, col) {
-            gameState.board[row][col] = gameState.currentPlayer;
-            gameState.moveHistory.push({row, col, player: gameState.currentPlayer});
-            
-            // Check for winner
-            if (checkWin(row, col)) {
-                gameState.gameActive = false;
-                statusElement.textContent = `ผู้เล่น ${gameState.currentPlayer === PLAYER_RED ? 'แดง' : 'น้ำเงิน'} ชนะ!`;
-                return;
-            }
-            
-            // Check for draw
-            if (checkDraw()) {
-                gameState.gameActive = false;
-                statusElement.textContent = 'เกมเสมอ!';
-                return;
-            }
-            
-            // Switch player
-            gameState.currentPlayer = gameState.currentPlayer === PLAYER_RED ? PLAYER_BLUE : PLAYER_RED;
-            
-            updateStatus();
-            updateBoard();
-            undoBtn.disabled = gameState.moveHistory.length === 0;
-        }
-        
-        // Bot makes a move
-        function makeBotMove() {
-            if (!gameState.gameActive || gameState.currentPlayer !== PLAYER_BLUE) return;
-            
-            let move;
-            
-            switch (gameState.difficulty) {
-                case 'easy':
-                    move = getRandomMove();
-                    break;
-                case 'medium':
-                    move = getMediumMove();
-                    break;
-                case 'hard':
-                    move = getBestMove();
-                    break;
-                default:
-                    move = getBestMove();
-            }
-            
-            if (move) {
-                makeMove(move.row, move.col);
-            }
-        }
-        
-        // Get a random valid move (easy bot)
-        function getRandomMove() {
-            const emptyCells = [];
-            
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        emptyCells.push({row, col});
-                    }
-                }
-            }
-            
-            if (emptyCells.length > 0) {
-                return emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            }
-            
-            return null;
-        }
-        
-        // Get a medium difficulty move (tries to win or block)
-        function getMediumMove() {
-            // First check if bot can win
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        gameState.board[row][col] = PLAYER_BLUE;
-                        if (checkWin(row, col)) {
-                            gameState.board[row][col] = null;
-                            return {row, col};
-                        }
-                        gameState.board[row][col] = null;
-                    }
-                }
-            }
-            
-            // Then check if need to block player
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        gameState.board[row][col] = PLAYER_RED;
-                        if (checkWin(row, col)) {
-                            gameState.board[row][col] = null;
-                            return {row, col};
-                        }
-                        gameState.board[row][col] = null;
-                    }
-                }
-            }
-            
-            // Otherwise make a random move
-            return getRandomMove();
-        }
-        
-        // Get the best move (hard bot - uses minimax algorithm)
-        function getBestMove() {
-            // First check if bot can win immediately
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        gameState.board[row][col] = PLAYER_BLUE;
-                        if (checkWin(row, col)) {
-                            gameState.board[row][col] = null;
-                            return {row, col};
-                        }
-                        gameState.board[row][col] = null;
-                    }
-                }
-            }
-            
-            // Then check if need to block player from winning
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        gameState.board[row][col] = PLAYER_RED;
-                        if (checkWin(row, col)) {
-                            gameState.board[row][col] = null;
-                            return {row, col};
-                        }
-                        gameState.board[row][col] = null;
-                    }
-                }
-            }
-            
-            // Try to create a fork (multiple winning opportunities)
-            const forkMoves = [];
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        gameState.board[row][col] = PLAYER_BLUE;
-                        let winningMoves = 0;
+            // สร้างกระดาน
+            function renderBoard() {
+                board.innerHTML = '';
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
                         
-                        // Check how many winning moves this creates
-                        for (let r = 0; r < ROWS; r++) {
-                            for (let c = 0; c < COLS; c++) {
-                                if (gameState.board[r][c] === null) {
-                                    gameState.board[r][c] = PLAYER_BLUE;
-                                    if (checkWin(r, c)) winningMoves++;
-                                    gameState.board[r][c] = null;
+                        if ((row + col) % 2 !== 0) { // เฉพาะช่องสีเข้ม
+                            const piece = gameState.board[row][col];
+                            if (piece) {
+                                const pieceElement = document.createElement('div');
+                                pieceElement.className = `piece ${piece.player === 'human' ? 'player' : 'bot'} ${piece.isKing ? 'king' : ''}`;
+                                cell.appendChild(pieceElement);
+                            }
+                            
+                            // เน้นช่องที่เลือก
+                            if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
+                                cell.classList.add('selected');
+                            }
+                            
+                            // แสดงการเดินที่เป็นไปได้
+                            if (possibleMoves.some(move => move.row === row && move.col === col)) {
+                                cell.classList.add('possible-move');
+                            }
+                        }
+                        
+                        cell.addEventListener('click', () => handleCellClick(row, col));
+                        board.appendChild(cell);
+                    }
+                }
+                
+                updateStatus();
+            }
+            
+            // เริ่มเกมใหม่
+            function initializeGame() {
+                const board = Array(8).fill().map(() => Array(8).fill(null));
+                
+                // วางเบี้ยผู้เล่น (แดง)
+                for (let row = 5; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if ((row + col) % 2 !== 0) {
+                            board[row][col] = { player: 'human', isKing: false };
+                        }
+                    }
+                }
+                
+                // วางเบี้ยบอท (ดำ)
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if ((row + col) % 2 !== 0) {
+                            board[row][col] = { player: 'bot', isKing: false };
+                        }
+                    }
+                }
+                
+                return {
+                    board,
+                    humanPieces: 12,
+                    botPieces: 12
+                };
+            }
+            
+            // จัดการการคลิกที่กระดาน
+            function handleCellClick(row, col) {
+                if (gameOver || !isPlayerTurn || (row + col) % 2 === 0) return;
+                
+                const piece = gameState.board[row][col];
+                
+                // ถ้าเลือกเบี้ยของผู้เล่น
+                if (piece && piece.player === 'human') {
+                    selectedPiece = { row, col };
+                    possibleMoves = getPossibleMoves(row, col);
+                    renderBoard();
+                } 
+                // ถ้าเลือกช่องว่างที่เป็นการเดินที่เป็นไปได้
+                else if (selectedPiece && possibleMoves.some(move => move.row === row && move.col === col)) {
+                    const move = possibleMoves.find(m => m.row === row && m.col === col);
+                    makeMove(selectedPiece.row, selectedPiece.col, row, col, move.captures);
+                    
+                    // ถ้ายังมีการกินต่อได้
+                    if (move.captures.length > 0) {
+                        const newPossibleMoves = getPossibleMoves(row, col).filter(m => m.captures.length > 0);
+                        if (newPossibleMoves.length > 0) {
+                            selectedPiece = { row, col };
+                            possibleMoves = newPossibleMoves;
+                            renderBoard();
+                            return;
+                        }
+                    }
+                    
+                    selectedPiece = null;
+                    possibleMoves = [];
+                    isPlayerTurn = false;
+                    renderBoard();
+                    
+                    // ให้บอทเดินหลังจากหน่วงเวลาเล็กน้อย
+                    setTimeout(botMove, 1000);
+                }
+            }
+            
+            // หาการเดินที่เป็นไปได้
+            function getPossibleMoves(row, col) {
+                const piece = gameState.board[row][col];
+                if (!piece) return [];
+                
+                const moves = [];
+                const directions = [];
+                
+                // กำหนดทิศทางที่เดินได้
+                if (piece.player === 'human' || piece.isKing) {
+                    directions.push({ dr: -1, dc: -1 });
+                    directions.push({ dr: -1, dc: 1 });
+                }
+                if (piece.player === 'bot' || piece.isKing) {
+                    directions.push({ dr: 1, dc: -1 });
+                    directions.push({ dr: 1, dc: 1 });
+                }
+                
+                // ตรวจสอบการเดินปกติและการกิน
+                for (const dir of directions) {
+                    const newRow = row + dir.dr;
+                    const newCol = col + dir.dc;
+                    
+                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                        if (!gameState.board[newRow][newCol]) {
+                            // การเดินปกติ
+                            if (!hasCaptureMove(piece.player)) {
+                                moves.push({ row: newRow, col: newCol, captures: [] });
+                            }
+                        } 
+                        // การกินเบี้ย
+                        else if (gameState.board[newRow][newCol].player !== piece.player) {
+                            const jumpRow = newRow + dir.dr;
+                            const jumpCol = newCol + dir.dc;
+                            
+                            if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8 && !gameState.board[jumpRow][jumpCol]) {
+                                moves.push({ 
+                                    row: jumpRow, 
+                                    col: jumpCol, 
+                                    captures: [{ row: newRow, col: newCol }]
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // ตรวจสอบว่ามีการกินเบี้ยที่เป็นไปได้หรือไม่
+                const captureMoves = moves.filter(move => move.captures.length > 0);
+                return captureMoves.length > 0 ? captureMoves : moves;
+            }
+            
+            // ตรวจสอบว่ามีการกินเบี้ยที่เป็นไปได้สำหรับผู้เล่นนี้หรือไม่
+            function hasCaptureMove(player) {
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState.board[row][col];
+                        if (piece && piece.player === player) {
+                            const moves = getPossibleMoves(row, col);
+                            if (moves.some(move => move.captures.length > 0)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            // ทำการเดิน
+            function makeMove(fromRow, fromCol, toRow, toCol, captures) {
+                const piece = gameState.board[fromRow][fromCol];
+                gameState.board[fromRow][fromCol] = null;
+                gameState.board[toRow][toCol] = piece;
+                
+                // ทำการกินเบี้ย
+                for (const capture of captures) {
+                    if (gameState.board[capture.row][capture.col].player === 'human') {
+                        gameState.humanPieces--;
+                    } else {
+                        gameState.botPieces--;
+                    }
+                    gameState.board[capture.row][capture.col] = null;
+                }
+                
+                // ตรวจสอบการเป็น King
+                if ((piece.player === 'human' && toRow === 0) || (piece.player === 'bot' && toRow === 7)) {
+                    piece.isKing = true;
+                }
+                
+                // ตรวจสอบการจบเกม
+                if (gameState.humanPieces === 0 || gameState.botPieces === 0 || 
+                    (isPlayerTurn && !hasValidMove('human')) || (!isPlayerTurn && !hasValidMove('bot'))) {
+                    gameOver = true;
+                }
+            }
+            
+            // ตรวจสอบว่ามีการเดินที่ถูกต้องหรือไม่
+            function hasValidMove(player) {
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState.board[row][col];
+                        if (piece && piece.player === player) {
+                            const moves = getPossibleMoves(row, col);
+                            if (moves.length > 0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            // การเดินของบอท (โหด)
+            function botMove() {
+                if (gameOver) return;
+                
+                // หาการเดินที่เป็นไปได้ทั้งหมด
+                const allMoves = [];
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState.board[row][col];
+                        if (piece && piece.player === 'bot') {
+                            const moves = getPossibleMoves(row, col);
+                            for (const move of moves) {
+                                allMoves.push({
+                                    from: { row, col },
+                                    to: { row: move.row, col: move.col },
+                                    captures: move.captures,
+                                    piece: piece
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // ถ้าไม่มีทางเดิน
+                if (allMoves.length === 0) {
+                    gameOver = true;
+                    renderBoard();
+                    return;
+                }
+                
+                // เลือกการเดินที่ดีที่สุด (บอทโหด)
+                let bestMove = null;
+                let bestScore = -Infinity;
+                
+                for (const move of allMoves) {
+                    let score = 0;
+                    
+                    // ให้คะแนนการกินเบี้ย
+                    score += move.captures.length * 10;
+                    
+                    // ให้คะแนนการป้องกัน King
+                    if (move.piece.isKing) {
+                        score += 1;
+                    }
+                    
+                    // ให้คะแนนการเป็น King
+                    if (!move.piece.isKing && move.to.row === 7) {
+                        score += 5;
+                    }
+                    
+                    // ให้คะแนนการเข้าใกล้เบี้ยของศัตรู
+                    if (!move.piece.isKing) {
+                        const humanPieces = [];
+                        for (let r = 0; r < 8; r++) {
+                            for (let c = 0; c < 8; c++) {
+                                if (gameState.board[r][c] && gameState.board[r][c].player === 'human') {
+                                    humanPieces.push({ row: r, col: c });
                                 }
                             }
                         }
                         
-                        gameState.board[row][col] = null;
+                        if (humanPieces.length > 0) {
+                            let minDistance = Infinity;
+                            for (const hp of humanPieces) {
+                                const dist = Math.abs(move.to.row - hp.row) + Math.abs(move.to.col - hp.col);
+                                if (dist < minDistance) minDistance = dist;
+                            }
+                            score += (10 - minDistance) * 0.5;
+                        }
+                    }
+                    
+                    // ให้คะแนนการป้องกัน
+                    if (isSafePosition(move.to.row, move.to.col)) {
+                        score += 2;
+                    }
+                    
+                    // ถ้าได้คะแนนมากกว่าเลือกการเดินนี้
+                    if (score > bestScore || (score === bestScore && Math.random() > 0.5)) {
+                        bestScore = score;
+                        bestMove = move;
+                    }
+                }
+                
+                // ทำการเดิน
+                makeMove(
+                    bestMove.from.row, 
+                    bestMove.from.col, 
+                    bestMove.to.row, 
+                    bestMove.to.col, 
+                    bestMove.captures
+                );
+                
+                // ถ้ายังมีการกินต่อได้
+                if (bestMove.captures.length > 0) {
+                    const newPossibleMoves = getPossibleMoves(bestMove.to.row, bestMove.to.col)
+                        .filter(m => m.captures.length > 0);
+                    
+                    if (newPossibleMoves.length > 0) {
+                        setTimeout(botMove, 800);
+                        return;
+                    }
+                }
+                
+                isPlayerTurn = true;
+                renderBoard();
+            }
+            
+            // ตรวจสอบว่าตำแหน่งปลอดภัยจากการถูกกินหรือไม่
+            function isSafePosition(row, col) {
+                const directions = [
+                    { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
+                    { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
+                ];
+                
+                for (const dir of directions) {
+                    const enemyRow = row - dir.dr;
+                    const enemyCol = col - dir.dc;
+                    const jumpRow = row + dir.dr;
+                    const jumpCol = col + dir.dc;
+                    
+                    if (enemyRow >= 0 && enemyRow < 8 && enemyCol >= 0 && enemyCol < 8 &&
+                        jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
                         
-                        if (winningMoves >= 2) {
-                            forkMoves.push({row, col});
+                        const enemyPiece = gameState.board[enemyRow][enemyCol];
+                        const jumpPiece = gameState.board[jumpRow][jumpCol];
+                        
+                        if (enemyPiece && enemyPiece.player === 'human' && !jumpPiece) {
+                            return false;
                         }
                     }
                 }
-            }
-            
-            if (forkMoves.length > 0) {
-                return forkMoves[Math.floor(Math.random() * forkMoves.length)];
-            }
-            
-            // Try to take the center if available
-            const centerRow = Math.floor(ROWS / 2);
-            const centerCol = Math.floor(COLS / 2);
-            if (gameState.board[centerRow][centerCol] === null) {
-                return {row: centerRow, col: centerCol};
-            }
-            
-            // Try to take a corner
-            const corners = [
-                {row: 0, col: 0},
-                {row: 0, col: COLS - 1},
-                {row: ROWS - 1, col: 0},
-                {row: ROWS - 1, col: COLS - 1}
-            ];
-            
-            const availableCorners = corners.filter(pos => gameState.board[pos.row][pos.col] === null);
-            if (availableCorners.length > 0) {
-                return availableCorners[Math.floor(Math.random() * availableCorners.length)];
-            }
-            
-            // Otherwise make a random move
-            return getRandomMove();
-        }
-        
-        // Check if the last move resulted in a win
-        function checkWin(row, col) {
-            const player = gameState.board[row][col];
-            const directions = [
-                [0, 1],  // horizontal
-                [1, 0],  // vertical
-                [1, 1],  // diagonal down-right
-                [1, -1]  // diagonal down-left
-            ];
-            
-            for (const [dx, dy] of directions) {
-                let count = 1;
                 
-                // Check in positive direction
-                for (let i = 1; i < 5; i++) {
-                    const newRow = row + i * dx;
-                    const newCol = col + i * dy;
-                    
-                    if (
-                        newRow < 0 || newRow >= ROWS ||
-                        newCol < 0 || newCol >= COLS ||
-                        gameState.board[newRow][newCol] !== player
-                    ) {
-                        break;
-                    }
-                    
-                    count++;
-                }
-                
-                // Check in negative direction
-                for (let i = 1; i < 5; i++) {
-                    const newRow = row - i * dx;
-                    const newCol = col - i * dy;
-                    
-                    if (
-                        newRow < 0 || newRow >= ROWS ||
-                        newCol < 0 || newCol >= COLS ||
-                        gameState.board[newRow][newCol] !== player
-                    ) {
-                        break;
-                    }
-                    
-                    count++;
-                }
-                
-                if (count >= 5) {
-                    return true;
-                }
+                return true;
             }
             
-            return false;
-        }
-        
-        // Check if the game is a draw
-        function checkDraw() {
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    if (gameState.board[row][col] === null) {
-                        return false;
+            // อัพเดทสถานะเกม
+            function updateStatus() {
+                if (gameOver) {
+                    if (gameState.humanPieces === 0 || !hasValidMove('human')) {
+                        statusDisplay.textContent = 'คุณแพ้! บอทชนะ!';
+                    } else {
+                        statusDisplay.textContent = 'คุณชนะ! ยินดีด้วย!';
                     }
-                }
-            }
-            return true;
-        }
-        
-        // Undo the last move
-        function undoMove() {
-            if (gameState.moveHistory.length === 0) return;
-            
-            const lastMove = gameState.moveHistory.pop();
-            gameState.board[lastMove.row][lastMove.col] = null;
-            gameState.currentPlayer = lastMove.player;
-            gameState.gameActive = true;
-            
-            updateStatus();
-            updateBoard();
-            undoBtn.disabled = gameState.moveHistory.length === 0;
-        }
-        
-        // Update the board display
-        function updateBoard() {
-            const cells = document.querySelectorAll('.cell');
-            
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    const index = row * COLS + col;
-                    const cell = cells[index];
-                    
-                    cell.classList.remove('red', 'blue');
-                    if (gameState.board[row][col]) {
-                        cell.classList.add(gameState.board[row][col]);
-                    }
-                }
-            }
-        }
-        
-        // Update the status display
-        function updateStatus() {
-            if (!gameState.gameActive) {
-                if (gameState.gameMode) {
-                    statusElement.textContent = 'กด "เริ่มเกมใหม่" เพื่อเล่นอีกครั้ง';
                 } else {
-                    statusElement.textContent = 'เลือกโหมดการเล่น';
+                    statusDisplay.textContent = isPlayerTurn ? 'ตาคุณ: เลือกเบี้ยของคุณ' : 'ตาบอท: กำลังคิด...';
                 }
-                return;
             }
             
-            if (gameState.gameMode === 'pvp') {
-                statusElement.textContent = `ตาผู้เล่น ${gameState.currentPlayer === PLAYER_RED ? 'แดง' : 'น้ำเงิน'}`;
-            } else {
-                statusElement.textContent = gameState.currentPlayer === PLAYER_RED 
-                    ? 'ตาของคุณ (สีแดง)' 
-                    : 'บอทกำลังคิด...';
-            }
-        }
-        
-        // Event listeners
-        pvpBtn.addEventListener('click', () => {
-            pvpBtn.classList.add('active');
-            pveBtn.classList.remove('active');
-            initGame();
-            startGame('pvp');
-        });
-        
-        pveBtn.addEventListener('click', () => {
-            pveBtn.classList.add('active');
-            pvpBtn.classList.remove('active');
-            initGame();
-            startGame('pve');
-        });
-        
-        restartBtn.addEventListener('click', () => {
-            if (gameState.gameMode) {
-                initGame();
-                startGame(gameState.gameMode);
-            }
-        });
-        
-        undoBtn.addEventListener('click', undoMove);
-        
-        difficultyBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                difficultyBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                gameState.difficulty = btn.dataset.difficulty;
+            // คำแนะนำ
+            hintBtn.addEventListener('click', () => {
+                if (!isPlayerTurn || gameOver) return;
+                
+                // หาการเดินที่ดีที่สุดสำหรับผู้เล่น
+                let bestMove = null;
+                let bestScore = -Infinity;
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const piece = gameState.board[row][col];
+                        if (piece && piece.player === 'human') {
+                            const moves = getPossibleMoves(row, col);
+                            for (const move of moves) {
+                                let score = 0;
+                                
+                                // ให้คะแนนการกินเบี้ย
+                                score += move.captures.length * 10;
+                                
+                                // ให้คะแนนการเป็น King
+                                if (!piece.isKing && move.row === 0) {
+                                    score += 5;
+                                }
+                                
+                                // ให้คะแนนการป้องกัน
+                                if (isSafePosition(move.row, move.col)) {
+                                    score += 2;
+                                }
+                                
+                                // ให้คะแนนการเข้าใกล้เบี้ยของศัตรู
+                                if (!piece.isKing) {
+                                    const botPieces = [];
+                                    for (let r = 0; r < 8; r++) {
+                                        for (let c = 0; c < 8; c++) {
+                                            if (gameState.board[r][c] && gameState.board[r][c].player === 'bot') {
+                                                botPieces.push({ row: r, col: c });
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (botPieces.length > 0) {
+                                        let minDistance = Infinity;
+                                        for (const bp of botPieces) {
+                                            const dist = Math.abs(move.row - bp.row) + Math.abs(move.col - bp.col);
+                                            if (dist < minDistance) minDistance = dist;
+                                        }
+                                        score += (10 - minDistance) * 0.5;
+                                    }
+                                }
+                                
+                                if (score > bestScore) {
+                                    bestScore = score;
+                                    bestMove = { from: { row, col }, to: move };
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (bestMove) {
+                    selectedPiece = bestMove.from;
+                    possibleMoves = [bestMove.to];
+                    renderBoard();
+                    setTimeout(() => {
+                        alert(`คำแนะนำ: ย้ายจาก (${7-bestMove.from.row},${bestMove.from.col}) ไปที่ (${7-bestMove.to.row},${bestMove.to.col})`);
+                    }, 100);
+                } else {
+                    alert('ไม่มีคำแนะนำในตอนนี้');
+                }
             });
+            
+            // เริ่มเกมใหม่
+            newGameBtn.addEventListener('click', () => {
+                gameState = initializeGame();
+                selectedPiece = null;
+                possibleMoves = [];
+                isPlayerTurn = true;
+                gameOver = false;
+                renderBoard();
+            });
+            
+            // เรนเดอร์กระดานครั้งแรก
+            renderBoard();
         });
-        
-        // Initialize the game on load
-        initGame();
     </script>
 </body>
 </html>
