@@ -3,11 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>เกม Co-op แนวตั้ง</title>
+    <title>Jump Together - Co-op Game</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* การตั้งค่าพื้นฐาน */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #e74c3c;
+            --accent-color: #2ecc71;
+            --dark-bg: #1a1a1a;
+            --light-bg: #2d2d2d;
+            --text-color: #ecf0f1;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -19,9 +30,17 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #1a1a1a;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Kanit', sans-serif;
             touch-action: manipulation;
+            background: linear-gradient(-45deg, #16222A, #3A6073, #1a1a1a, #23a6d5);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* คอนเทนเนอร์หลัก */
@@ -38,16 +57,14 @@
             flex: 1;
             position: relative;
             overflow: hidden;
-            background-color: #2d2d2d;
         }
 
         /* ตัวละครผู้เล่น */
         .player {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background-color: #3498db;
             transition: transform 0.1s ease-out;
             z-index: 10;
             display: flex;
@@ -55,151 +72,147 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            border: 2px solid white;
+        }
+        
+        @keyframes jump-squash {
+            0% { transform: scale(1, 1); }
+            50% { transform: scale(1.2, 0.8); }
+            100% { transform: scale(1, 1); }
+        }
+        .jump-effect {
+            animation: jump-squash 0.3s ease-out;
         }
 
-        .player-1 {
-            background-color: #3498db;
-            bottom: 20%;
-            left: 30%;
-        }
 
-        .player-2 {
-            background-color: #e74c3c;
-            bottom: 20%;
-            left: 60%;
-        }
+        .player-1 { background-color: var(--primary-color); }
+        .player-2 { background-color: var(--secondary-color); }
 
         /* วัตถุในเกม */
-        .obstacle {
+        .platform {
             position: absolute;
-            background-color: #f39c12;
-            border-radius: 5px;
+            background-color: #555;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-bottom: 4px solid #333;
         }
 
         .collectible {
             position: absolute;
             width: 30px;
             height: 30px;
+            background-color: var(--accent-color);
             border-radius: 50%;
-            background-color: #2ecc71;
             z-index: 5;
-            animation: pulse 1.5s infinite;
+            animation: pulse-glow 1.5s infinite;
+            box-shadow: 0 0 15px var(--accent-color);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); box-shadow: 0 0 15px var(--accent-color); }
+            50% { transform: scale(1.1); box-shadow: 0 0 25px var(--accent-color); }
+            100% { transform: scale(1); box-shadow: 0 0 15px var(--accent-color); }
         }
 
         /* การควบคุม */
         .controls {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
-            background-color: #333;
-        }
-
-        .control-pad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
-            width: 120px;
-            height: 120px;
-        }
-
-        .control-btn {
-            background-color: rgba(255,255,255,0.2);
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 20px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
             user-select: none;
         }
 
-        .control-btn:active {
-            background-color: rgba(255,255,255,0.4);
-        }
+        .move-controls { display: flex; gap: 20px; }
 
-        .action-btn {
-            width: 80px;
-            height: 80px;
+        .control-btn {
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            background-color: rgba(46, 204, 113, 0.7);
+            background-color: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            font-size: 16px;
-            font-weight: bold;
-            margin: 20px;
-            touch-action: manipulation;
+            font-size: 36px;
         }
+        .control-btn:active { background-color: rgba(255,255,255,0.4); }
 
-        .action-btn:active {
-            background-color: rgba(46, 204, 113, 1);
+        #jump-btn {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background-color: rgba(46, 204, 113, 0.8);
+            border: 2px solid white;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
         }
+        #jump-btn:active { background-color: rgba(46, 204, 113, 1); }
 
         /* สถานะเกม */
         .game-info {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
-            background-color: #333;
-            color: white;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: bold;
         }
 
-        /* เมนู */
-        #menu {
+        /* เมนูและ UI */
+        #menu, #alert {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            padding: 20px;
         }
 
         .menu-title {
             color: white;
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px white;
         }
 
         .menu-btn {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 15px 30px;
             margin: 10px;
-            border-radius: 5px;
+            border-radius: 10px;
             font-size: 18px;
             cursor: pointer;
-            width: 200px;
+            width: 250px;
             text-align: center;
+            font-family: 'Kanit', sans-serif;
+            transition: transform 0.2s, background-color 0.2s;
         }
-
-        /* การแจ้งเตือน */
-        .alert {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0,0,0,0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 200;
-            text-align: center;
-            display: none;
+        .menu-btn:hover {
+            transform: scale(1.05);
+            background-color: #4ea8e1;
+        }
+        
+        #alert { z-index: 200; display: none; }
+        #alert p { margin: 20px 0; font-size: 18px; }
+        #alert-input {
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
@@ -207,423 +220,420 @@
     <div id="game-container">
         <div class="game-info">
             <div id="score">คะแนน: 0</div>
+            <div id="room-info"></div>
             <div id="time">เวลา: 60</div>
         </div>
         
         <div id="game-area">
-            <!-- ตัวละครจะถูกเพิ่มโดย JavaScript -->
             <div id="player-1" class="player player-1">P1</div>
             <div id="player-2" class="player player-2">P2</div>
-            
-            <!-- วัตถุและอุปสรรคจะถูกเพิ่มโดย JavaScript -->
         </div>
         
         <div class="controls">
-            <div class="control-pad">
-                <div class="control-btn" data-action="up-left">↖</div>
-                <div class="control-btn" data-action="up">↑</div>
-                <div class="control-btn" data-action="up-right">↗</div>
-                <div class="control-btn" data-action="left">←</div>
-                <div class="control-btn"></div>
-                <div class="control-btn" data-action="right">→</div>
-                <div class="control-btn" data-action="down-left">↙</div>
-                <div class="control-btn" data-action="down">↓</div>
-                <div class="control-btn" data-action="down-right">↘</div>
+            <div class="move-controls">
+                <button class="control-btn" id="left-btn">←</button>
+                <button class="control-btn" id="right-btn">→</button>
             </div>
-            
-            <button class="action-btn" id="action-btn">กระทำ</button>
+            <button id="jump-btn">กระโดด</button>
         </div>
         
         <div id="menu">
-            <h1 class="menu-title">เกม Co-op แนวตั้ง</h1>
-            <button class="menu-btn" id="start-btn">เริ่มเกม</button>
-            <button class="menu-btn" id="multiplayer-btn">เล่นกับเพื่อน</button>
+            <h1 class="menu-title">Jump Together</h1>
+            <button class="menu-btn" id="create-room-btn">สร้างห้อง (Host)</button>
+            <button class="menu-btn" id="join-room-btn">เข้าร่วมห้อง (Join)</button>
             <button class="menu-btn" id="how-to-play-btn">วิธีเล่น</button>
         </div>
         
         <div class="alert" id="alert">
             <h2 id="alert-title">แจ้งเตือน</h2>
-            <p id="alert-message">ข้อความแจ้งเตือน</p>
-            <button id="alert-close">ตกลง</button>
+            <p id="alert-message">ข้อความ</p>
+            <input type="text" id="alert-input" style="display:none;">
+            <button class="menu-btn" id="alert-ok">ตกลง</button>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // ตัวแปรเกม
-            let gameRunning = false;
-            let gameTime = 60;
-            let gameScore = 0;
-            let isMultiplayer = false;
-            let players = [];
-            let obstacles = [];
-            let collectibles = [];
-            let gameInterval;
-            let timeInterval;
-            
-            // องค์ประกอบ DOM
-            const gameArea = document.getElementById('game-area');
-            const player1 = document.getElementById('player-1');
-            const player2 = document.getElementById('player-2');
-            const scoreDisplay = document.getElementById('score');
-            const timeDisplay = document.getElementById('time');
-            const menu = document.getElementById('menu');
-            const startBtn = document.getElementById('start-btn');
-            const multiplayerBtn = document.getElementById('multiplayer-btn');
-            const howToPlayBtn = document.getElementById('how-to-play-btn');
-            const alertBox = document.getElementById('alert');
-            const alertClose = document.getElementById('alert-close');
-            const controlBtns = document.querySelectorAll('.control-btn');
-            const actionBtn = document.getElementById('action-btn');
-            
-            // ขนาดพื้นที่เกม
-            const gameWidth = window.innerWidth;
-            const gameHeight = window.innerHeight - 180; // ลบส่วนควบคุมและข้อมูล
-            
-            // ตำแหน่งเริ่มต้นผู้เล่น
-            const player1Start = { x: gameWidth * 0.3, y: gameHeight * 0.8 };
-            const player2Start = { x: gameWidth * 0.7, y: gameHeight * 0.8 };
-            
-            // ความเร็วผู้เล่น
-            const playerSpeed = 5;
-            
-            // เริ่มเกม
-            function startGame() {
-                gameRunning = true;
-                gameTime = 60;
-                gameScore = 0;
-                
-                // ซ่อนเมนู
-                menu.style.display = 'none';
-                
-                // รีเซ็ตผู้เล่น
-                resetPlayers();
-                
-                // สร้างวัตถุ
-                createObstacles();
-                createCollectibles();
-                
-                // อัพเดทการแสดงผล
-                updateScore();
-                updateTime();
-                
-                // เริ่มนับเวลา
-                timeInterval = setInterval(updateGameTime, 1000);
-                
-                // เริ่มเกมลูป
-                gameInterval = setInterval(gameLoop, 16); // ~60 FPS
-            }
-            
-            // รีเซ็ตผู้เล่น
-            function resetPlayers() {
-                players = [
-                    { id: 1, element: player1, x: player1Start.x, y: player1Start.y, dx: 0, dy: 0, score: 0 },
-                    { id: 2, element: player2, x: player2Start.x, y: player2Start.y, dx: 0, dy: 0, score: 0 }
-                ];
-                
-                if (!isMultiplayer) {
-                    player2.style.display = 'none';
-                } else {
-                    player2.style.display = 'flex';
-                }
-                
-                updatePlayerPositions();
-            }
-            
-            // อัพเดทตำแหน่งผู้เล่น
-            function updatePlayerPositions() {
-                players.forEach(player => {
-                    player.element.style.transform = `translate(${player.x - 25}px, ${player.y - 25}px)`;
+    document.addEventListener('DOMContentLoaded', () => {
+        // องค์ประกอบ DOM
+        const gameArea = document.getElementById('game-area');
+        const p1Element = document.getElementById('player-1');
+        const p2Element = document.getElementById('player-2');
+        const scoreDisplay = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+        const roomInfoDisplay = document.getElementById('room-info');
+        const menu = document.getElementById('menu');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const joinRoomBtn = document.getElementById('join-room-btn');
+        const howToPlayBtn = document.getElementById('how-to-play-btn');
+        const alertBox = document.getElementById('alert');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertInput = document.getElementById('alert-input');
+        const alertOk = document.getElementById('alert-ok');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const jumpBtn = document.getElementById('jump-btn');
+
+        // ตัวแปรเกม
+        let gameRunning = false;
+        let time = 60;
+        let score = 0;
+        let gameInterval, timeInterval;
+        const gameWidth = gameArea.offsetWidth;
+        const gameHeight = gameArea.offsetHeight;
+
+        // ตัวแปรฟิสิกส์
+        const gravity = 0.5;
+        const jumpPower = -12;
+        const moveSpeed = 5;
+
+        // ตัวแปรผู้เล่นและ Multiplayer
+        let peer;
+        let conn;
+        let player, otherPlayer;
+        let platforms = [];
+        let collectibles = [];
+        let isHost = false;
+
+        // Player object template
+        const createPlayer = (id, element, isLocal) => ({
+            id,
+            element,
+            x: gameWidth / (isLocal ? 4 : 4 * 3),
+            y: gameHeight - 100,
+            dx: 0,
+            dy: 0,
+            width: 40,
+            height: 40,
+            onGround: false,
+            isLocal // ตัวแปรเพื่อบอกว่าเป็นผู้เล่นของเราหรือไม่
+        });
+
+        // --- ระบบ Multiplayer ---
+
+        function initializePeer(isCreating, peerId) {
+            if (isCreating) {
+                isHost = true;
+                peer = new Peer(); // สร้าง ID ใหม่โดยอัตโนมัติ
+                peer.on('open', id => {
+                    showAlert('สร้างห้องสำเร็จ!', `ส่งรหัสนี้ให้เพื่อน: ${id}`);
+                    roomInfoDisplay.textContent = `รหัสห้อง: ${id}`;
+                    player = createPlayer(1, p1Element, true);
+                    otherPlayer = createPlayer(2, p2Element, false);
+                    p2Element.style.display = 'none'; // ซ่อนผู้เล่น 2 รอการเชื่อมต่อ
+                });
+                peer.on('connection', newConn => {
+                    setupConnection(newConn);
+                    showAlert('ผู้เล่นเข้าร่วมแล้ว!', 'เริ่มเกมได้เลย!');
+                    setTimeout(startGame, 1000);
+                });
+            } else { // Joining
+                isHost = false;
+                peer = new Peer();
+                peer.on('open', id => {
+                    conn = peer.connect(peerId);
+                    setupConnection(conn);
+                    player = createPlayer(2, p2Element, true);
+                    otherPlayer = createPlayer(1, p1Element, false);
                 });
             }
-            
-            // สร้างอุปสรรค
-            function createObstacles() {
-                // ล้างอุปสรรคเก่า
-                obstacles.forEach(obs => {
-                    if (obs.element && obs.element.parentNode) {
-                        obs.element.parentNode.removeChild(obs.element);
+             peer.on('error', err => {
+                showAlert('เกิดข้อผิดพลาด!', err.type);
+            });
+        }
+        
+        function setupConnection(newConn) {
+            conn = newConn;
+            conn.on('open', () => {
+                p2Element.style.display = 'flex';
+                if (!isHost) {
+                    showAlert('เชื่อมต่อสำเร็จ!', 'กำลังรอ Host เริ่มเกม...');
+                }
+            });
+            conn.on('data', onDataReceived);
+        }
+
+        function onDataReceived(data) {
+            switch(data.type) {
+                case 'start':
+                    startGame(data.platforms, data.collectibles);
+                    break;
+                case 'player_update':
+                    otherPlayer.x = data.x;
+                    otherPlayer.y = data.y;
+                    break;
+                case 'collect_item':
+                    const item = collectibles.find(c => c.id === data.id);
+                    if (item && !item.collected) {
+                        item.collected = true;
+                        item.element.style.display = 'none';
+                        updateScore(10);
                     }
-                });
-                obstacles = [];
-                
-                // สร้างอุปสรรคใหม่
-                const obstacleCount = 10 + Math.floor(Math.random() * 5);
-                
-                for (let i = 0; i < obstacleCount; i++) {
-                    const width = 50 + Math.floor(Math.random() * 100);
-                    const height = 50 + Math.floor(Math.random() * 100);
-                    const x = Math.floor(Math.random() * (gameWidth - width));
-                    const y = Math.floor(Math.random() * (gameHeight - height));
-                    
-                    const obstacle = document.createElement('div');
-                    obstacle.className = 'obstacle';
-                    obstacle.style.width = `${width}px`;
-                    obstacle.style.height = `${height}px`;
-                    obstacle.style.left = `${x}px`;
-                    obstacle.style.top = `${y}px`;
-                    
-                    gameArea.appendChild(obstacle);
-                    
-                    obstacles.push({
-                        element: obstacle,
-                        x, y, width, height
-                    });
-                }
-            }
-            
-            // สร้างวัตถุที่เก็บได้
-            function createCollectibles() {
-                // ล้างวัตถุเก่า
-                collectibles.forEach(col => {
-                    if (col.element && col.element.parentNode) {
-                        col.element.parentNode.removeChild(col.element);
-                    }
-                });
-                collectibles = [];
-                
-                // สร้างวัตถุใหม่
-                const collectibleCount = 15;
-                
-                for (let i = 0; i < collectibleCount; i++) {
-                    const x = 30 + Math.floor(Math.random() * (gameWidth - 60));
-                    const y = 30 + Math.floor(Math.random() * (gameHeight - 60));
-                    
-                    const collectible = document.createElement('div');
-                    collectible.className = 'collectible';
-                    collectible.style.left = `${x}px`;
-                    collectible.style.top = `${y}px`;
-                    
-                    gameArea.appendChild(collectible);
-                    
-                    collectibles.push({
-                        element: collectible,
-                        x, y, collected: false
-                    });
-                }
-            }
-            
-            // ตรวจสอบการชน
-            function checkCollisions() {
-                players.forEach(player => {
-                    // ตรวจสอบขอบเขต
-                    if (player.x < 25) player.x = 25;
-                    if (player.x > gameWidth - 25) player.x = gameWidth - 25;
-                    if (player.y < 25) player.y = 25;
-                    if (player.y > gameHeight - 25) player.y = gameHeight - 25;
-                    
-                    // ตรวจสอบอุปสรรค
-                    obstacles.forEach(obs => {
-                        if (
-                            player.x + 25 > obs.x &&
-                            player.x - 25 < obs.x + obs.width &&
-                            player.y + 25 > obs.y &&
-                            player.y - 25 < obs.y + obs.height
-                        ) {
-                            // ชนอุปสรรค - ย้อนกลับการเคลื่อนที่
-                            player.x -= player.dx;
-                            player.y -= player.dy;
-                            player.dx = 0;
-                            player.dy = 0;
-                        }
-                    });
-                    
-                    // ตรวจสอบวัตถุที่เก็บได้
-                    collectibles.forEach(col => {
-                        if (!col.collected) {
-                            const dx = player.x - col.x;
-                            const dy = player.y - col.y;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-                            
-                            if (distance < 40) { // ระยะเก็บ
-                                col.collected = true;
-                                col.element.style.display = 'none';
-                                player.score += 10;
-                                gameScore += 10;
-                                updateScore();
-                                
-                                // ตรวจสอบว่าจบเกมหรือยัง
-                                if (collectibles.every(c => c.collected)) {
-                                    showAlert('ยินดีด้วย!', 'คุณเก็บวัตถุทั้งหมดแล้ว!');
-                                    endGame();
-                                }
-                            }
-                        }
-                    });
-                });
-            }
-            
-            // เกมลูป
-            function gameLoop() {
-                if (!gameRunning) return;
-                
-                // เคลื่อนที่ผู้เล่น
-                players.forEach(player => {
-                    player.x += player.dx;
-                    player.y += player.dy;
-                });
-                
-                // ตรวจสอบการชน
-                checkCollisions();
-                
-                // อัพเดทตำแหน่ง
-                updatePlayerPositions();
-            }
-            
-            // อัพเดทคะแนน
-            function updateScore() {
-                scoreDisplay.textContent = `คะแนน: ${gameScore}`;
-            }
-            
-            // อัพเดทเวลา
-            function updateGameTime() {
-                gameTime--;
-                timeDisplay.textContent = `เวลา: ${gameTime}`;
-                
-                if (gameTime <= 0) {
-                    showAlert('เวลาเหลือศูนย์!', `คะแนนสุดท้าย: ${gameScore}`);
+                    break;
+                case 'game_over':
+                    showAlert('เกมจบแล้ว!', data.message);
                     endGame();
+                    break;
+            }
+        }
+        
+        function sendData(data) {
+            if (conn && conn.open) {
+                conn.send(data);
+            }
+        }
+
+        // --- การจัดการเกม ---
+        
+        function startGame(initialPlatforms, initialCollectibles) {
+            menu.style.display = 'none';
+            gameRunning = true;
+            time = 60;
+            score = 0;
+            updateScore(0);
+            updateTime();
+
+            if (isHost) {
+                generateLevel();
+                sendData({ type: 'start', platforms: platforms.map(p => ({...p, element: null})), collectibles: collectibles.map(c => ({...c, element: null})) });
+            } else {
+                setupLevel(initialPlatforms, initialCollectibles);
+            }
+            
+            // รีเซ็ตตำแหน่งผู้เล่น
+            player.x = gameWidth / 4;
+            player.y = gameHeight - 100;
+            otherPlayer.x = gameWidth * 3 / 4;
+            otherPlayer.y = gameHeight - 100;
+
+            timeInterval = setInterval(updateGameTime, 1000);
+            gameInterval = requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            cancelAnimationFrame(gameInterval);
+            clearInterval(timeInterval);
+            setTimeout(() => menu.style.display = 'flex', 3000);
+        }
+
+        function generateLevel() {
+            // ล้างของเก่า
+            gameArea.innerHTML = '';
+            gameArea.append(p1Element, p2Element);
+            platforms = [];
+            collectibles = [];
+            
+            // สร้างพื้น
+            createPlatform(0, gameHeight - 20, gameWidth, 20);
+            
+            // สร้างแพลตฟอร์มสุ่ม
+            for(let i=0; i<10; i++) {
+                const w = 80 + Math.random() * 100;
+                const h = 20;
+                const x = Math.random() * (gameWidth - w);
+                const y = 100 + Math.random() * (gameHeight - 200);
+                createPlatform(x, y, w, h);
+            }
+
+            // สร้างของให้เก็บ
+             for(let i=0; i<10; i++) {
+                const platformIndex = Math.floor(1 + Math.random() * (platforms.length - 1));
+                const plat = platforms[platformIndex];
+                const x = plat.x + Math.random() * plat.width;
+                const y = plat.y - 35; // อยู่เหนือแพลตฟอร์ม
+                createCollectible(i, x, y);
+            }
+        }
+        
+        function setupLevel(platformData, collectibleData) {
+            gameArea.innerHTML = '';
+            gameArea.append(p1Element, p2Element);
+            platforms = [];
+            collectibles = [];
+            platformData.forEach(p => createPlatform(p.x, p.y, p.width, p.height));
+            collectibleData.forEach(c => createCollectible(c.id, c.x, c.y));
+        }
+
+        function createPlatform(x, y, width, height) {
+            const plat = document.createElement('div');
+            plat.className = 'platform';
+            plat.style.left = `${x}px`;
+            plat.style.top = `${y}px`;
+            plat.style.width = `${width}px`;
+            plat.style.height = `${height}px`;
+            gameArea.appendChild(plat);
+            platforms.push({ element: plat, x, y, width, height });
+        }
+
+        function createCollectible(id, x, y) {
+            const item = document.createElement('div');
+            item.className = 'collectible';
+            item.style.left = `${x}px`;
+            item.style.top = `${y}px`;
+            gameArea.appendChild(item);
+            collectibles.push({ id, element: item, x, y, width: 30, height: 30, collected: false });
+        }
+
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.textContent = `คะแนน: ${score}`;
+        }
+
+        function updateTime() {
+            timeDisplay.textContent = `เวลา: ${time}`;
+            if (time <= 0 && gameRunning) {
+                const message = `หมดเวลา! คะแนนสุดท้าย: ${score}`;
+                showAlert('เกมจบแล้ว!', message);
+                if(isHost) sendData({type: 'game_over', message});
+                endGame();
+            }
+            time--;
+        }
+
+        // --- Game Loop และฟิสิกส์ ---
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            updatePlayer(player);
+            checkCollisions(player);
+            
+            // ส่งข้อมูลตำแหน่งให้ผู้เล่นอื่น
+            sendData({ type: 'player_update', x: player.x, y: player.y });
+
+            // อัปเดตการแสดงผล
+            draw();
+            
+            gameInterval = requestAnimationFrame(gameLoop);
+        }
+
+        function updatePlayer(p) {
+            // Apply gravity
+            p.dy += gravity;
+
+            // Move player
+            p.x += p.dx;
+            p.y += p.dy;
+            
+            // World bounds
+            if (p.x < 0) p.x = 0;
+            if (p.x + p.width > gameWidth) p.x = gameWidth - p.width;
+            
+            p.onGround = false;
+        }
+
+        function checkCollisions(p) {
+             // Platform collision
+            platforms.forEach(plat => {
+                // ตรวจสอบว่าผู้เล่นอยู่ด้านบนของแพลตฟอร์มหรือไม่
+                const isOverlappingX = p.x < plat.x + plat.width && p.x + p.width > plat.x;
+                const wasAbove = p.y + p.height - p.dy <= plat.y; // เช็คว่าเฟรมที่แล้วอยู่สูงกว่าไหม
+                const isNowIntersectingY = p.y + p.height >= plat.y;
+
+                if (isOverlappingX && wasAbove && isNowIntersectingY) {
+                    p.y = plat.y - p.height;
+                    p.dy = 0;
+                    p.onGround = true;
+                    // เอฟเฟกต์ลงพื้น
+                    if (!p.element.classList.contains('jump-effect')) {
+                        p.element.classList.add('jump-effect');
+                        setTimeout(() => p.element.classList.remove('jump-effect'), 300);
+                    }
                 }
+            });
+
+            // Collectible collision
+            collectibles.forEach(item => {
+                if (!item.collected && 
+                    p.x < item.x + item.width &&
+                    p.x + p.width > item.x &&
+                    p.y < item.y + item.height &&
+                    p.y + p.height > item.y
+                ) {
+                    item.collected = true;
+                    item.element.style.display = 'none';
+                    updateScore(10);
+                    sendData({ type: 'collect_item', id: item.id });
+
+                    if (collectibles.every(c => c.collected)) {
+                        const message = 'ยินดีด้วย! เก็บของครบทั้งหมดแล้ว!';
+                        showAlert('ชนะ!', message);
+                        if(isHost) sendData({type: 'game_over', message});
+                        endGame();
+                    }
+                }
+            });
+        }
+        
+        function draw() {
+            player.element.style.transform = `translate(${player.x}px, ${player.y}px)`;
+            otherPlayer.element.style.transform = `translate(${otherPlayer.x}px, ${otherPlayer.y}px)`;
+        }
+
+        // --- การควบคุมและ Event Listeners ---
+
+        function handleMove(direction) {
+            player.dx = direction * moveSpeed;
+        }
+
+        function handleJump() {
+            if (player.onGround) {
+                player.dy = jumpPower;
+                player.element.classList.add('jump-effect');
+                setTimeout(() => player.element.classList.remove('jump-effect'), 300);
             }
+        }
+        
+        leftBtn.addEventListener('pointerdown', () => handleMove(-1));
+        rightBtn.addEventListener('pointerdown', () => handleMove(1));
+        leftBtn.addEventListener('pointerup', () => handleMove(0));
+        rightBtn.addEventListener('pointerup', () => handleMove(0));
+        leftBtn.addEventListener('pointerleave', () => handleMove(0));
+        rightBtn.addEventListener('pointerleave', () => handleMove(0));
+        jumpBtn.addEventListener('pointerdown', handleJump);
+
+        // Keyboard controls for desktop
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') handleMove(-1);
+            if (e.key === 'ArrowRight') handleMove(1);
+            if (e.key === ' ' || e.key === 'ArrowUp') handleJump();
+        });
+        window.addEventListener('keyup', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') handleMove(0);
+        });
+
+        // UI Buttons
+        function showAlert(title, message, showInput = false, onOk) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertInput.style.display = showInput ? 'block' : 'none';
+            alertInput.value = '';
+            alertBox.style.display = 'flex';
             
-            // จบเกม
-            function endGame() {
-                gameRunning = false;
-                clearInterval(gameInterval);
-                clearInterval(timeInterval);
-                
-                // แสดงเมนูหลังจากจบเกม
-                setTimeout(() => {
-                    menu.style.display = 'flex';
-                }, 2000);
-            }
-            
-            // แสดงการแจ้งเตือน
-            function showAlert(title, message) {
-                document.getElementById('alert-title').textContent = title;
-                document.getElementById('alert-message').textContent = message;
-                alertBox.style.display = 'block';
-            }
-            
-            // ซ่อนการแจ้งเตือน
-            function hideAlert() {
+            alertOk.onclick = () => {
                 alertBox.style.display = 'none';
-            }
-            
-            // ควบคุมผู้เล่น
-            function handleControl(action) {
-                if (!gameRunning) return;
-                
-                const player = players[0]; // ควบคุมผู้เล่น 1
-                
-                switch (action) {
-                    case 'up':
-                        player.dy = -playerSpeed;
-                        player.dx = 0;
-                        break;
-                    case 'down':
-                        player.dy = playerSpeed;
-                        player.dx = 0;
-                        break;
-                    case 'left':
-                        player.dx = -playerSpeed;
-                        player.dy = 0;
-                        break;
-                    case 'right':
-                        player.dx = playerSpeed;
-                        player.dy = 0;
-                        break;
-                    case 'up-left':
-                        player.dx = -playerSpeed * 0.7;
-                        player.dy = -playerSpeed * 0.7;
-                        break;
-                    case 'up-right':
-                        player.dx = playerSpeed * 0.7;
-                        player.dy = -playerSpeed * 0.7;
-                        break;
-                    case 'down-left':
-                        player.dx = -playerSpeed * 0.7;
-                        player.dy = playerSpeed * 0.7;
-                        break;
-                    case 'down-right':
-                        player.dx = playerSpeed * 0.7;
-                        player.dy = playerSpeed * 0.7;
-                        break;
-                    default:
-                        player.dx = 0;
-                        player.dy = 0;
+                if(onOk) onOk(alertInput.value);
+            };
+        }
+
+        createRoomBtn.addEventListener('click', () => {
+            initializePeer(true);
+        });
+        
+        joinRoomBtn.addEventListener('click', () => {
+            showAlert('เข้าร่วมห้อง', 'กรอกรหัสห้อง (Room ID) ที่ได้จากเพื่อน:', true, (roomId) => {
+                if(roomId) {
+                    initializePeer(false, roomId);
                 }
-            }
-            
-            // การกระทำพิเศษ
-            function handleAction() {
-                if (!gameRunning) return;
-                
-                // ในตัวอย่างนี้คือการกระโดด
-                players[0].dy = -10;
-                
-                // สามารถเพิ่มการทำงานอื่นๆ ตามต้องการ
-            }
-            
-            // Event listeners
-            startBtn.addEventListener('click', () => {
-                isMultiplayer = false;
-                startGame();
-            });
-            
-            multiplayerBtn.addEventListener('click', () => {
-                isMultiplayer = true;
-                startGame();
-            });
-            
-            howToPlayBtn.addEventListener('click', () => {
-                showAlert('วิธีเล่น', 'ใช้ปุ่มควบคุมเพื่อเคลื่อนที่\nเก็บวัตถุสีเขียวให้ได้มากที่สุด\nเล่นร่วมกับเพื่อนในโหมด Multiplayer');
-            });
-            
-            alertClose.addEventListener('click', hideAlert);
-            
-            controlBtns.forEach(btn => {
-                btn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    handleControl(btn.dataset.action);
-                });
-                
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    handleControl('');
-                });
-                
-                btn.addEventListener('mousedown', () => {
-                    handleControl(btn.dataset.action);
-                });
-                
-                btn.addEventListener('mouseup', () => {
-                    handleControl('');
-                });
-                
-                btn.addEventListener('mouseleave', () => {
-                    handleControl('');
-                });
-            });
-            
-            actionBtn.addEventListener('click', handleAction);
-            actionBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleAction();
-            });
-            
-            // ป้องกันการเลื่อนหน้าจอเมื่อสัมผัส
-            document.addEventListener('touchmove', (e) => {
-                if (gameRunning) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            // ปรับขนาดเมื่อเปลี่ยน orientation
-            window.addEventListener('resize', () => {
-                // สามารถเพิ่มโค้ดปรับขนาดตามต้องการ
             });
         });
+
+        howToPlayBtn.addEventListener('click', () => {
+            showAlert('วิธีเล่น', 'คนหนึ่ง "สร้างห้อง" แล้วส่งรหัสให้เพื่อน อีกคน "เข้าร่วมห้อง" โดยใช้รหัส\nเป้าหมาย: ช่วยกันเก็บของสีเขียวให้หมดก่อนเวลาจะหมด!\nควบคุม: ปุ่มซ้าย/ขวาเพื่อเดิน, ปุ่มกระโดดเพื่อกระโดด');
+        });
+    });
     </script>
 </body>
 </html>
+
