@@ -12,31 +12,35 @@
             align-items: center;
             background-color: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
         }
         
         h1 {
             color: #333;
             margin-bottom: 10px;
+            font-size: clamp(24px, 5vw, 36px); /* Responsive font size */
         }
         
         .game-info {
-            margin-bottom: 20px;
-            font-size: 18px;
+            margin-bottom: 15px;
+            font-size: clamp(16px, 4vw, 20px); /* Responsive font size */
             color: #555;
+            text-align: center;
         }
         
         .board {
             display: grid;
-            grid-template-columns: repeat(8, 60px);
-            grid-template-rows: repeat(8, 60px);
-            gap: 2px;
+            grid-template-columns: repeat(8, clamp(40px, 10vw, 60px)); /* Responsive cell size */
+            grid-template-rows: repeat(8, clamp(40px, 10vw, 60px)); /* Responsive cell size */
+            gap: 1px; /* Smaller gap for mobile */
             margin-bottom: 20px;
+            border: 2px solid #555;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
         .cell {
-            width: 60px;
-            height: 60px;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -45,71 +49,99 @@
         }
         
         .dark {
-            background-color: #8B4513; /* สีน้ำตาลเข้ม */
+            background-color: #8B4513; /* Dark brown */
         }
         
         .light {
-            background-color: #F5DEB3; /* สีน้ำตาลอ่อน */
+            background-color: #F5DEB3; /* Light tan */
         }
         
         .piece {
-            width: 50px;
-            height: 50px;
+            width: 80%; /* Adjusted for better fit */
+            height: 80%; /* Adjusted for better fit */
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease-out; /* Smooth transition for selection */
         }
         
         .player {
-            background-color: #FF0000; /* สีแดงสำหรับผู้เล่น */
+            background-color: #D32F2F; /* Darker red for player */
             color: white;
         }
         
         .bot {
-            background-color: #000000; /* สีดำสำหรับบอท */
+            background-color: #212121; /* Darker black for bot */
             color: white;
         }
         
         .king {
             border: 3px solid gold;
             box-sizing: border-box;
+            background-image: radial-gradient(circle, #FFD700 0%, #FFA500 100%);
+            color: #333; /* Darker text for king */
+            font-size: 1.2em; /* Slightly larger text for king */
         }
         
         .selected {
             box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.7);
+            transform: scale(1.05); /* Slightly larger when selected */
         }
         
         .possible-move {
             box-shadow: 0 0 10px 5px rgba(0, 255, 0, 0.5);
+            background-color: rgba(0, 255, 0, 0.2); /* Subtle green overlay */
         }
         
         .controls {
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            justify-content: center;
+            gap: 15px; /* Spacing between buttons */
         }
         
         button {
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: clamp(14px, 3.5vw, 16px); /* Responsive font size */
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 0 10px;
+            transition: background-color 0.2s ease;
         }
         
         button:hover {
             background-color: #45a049;
         }
+
+        button:active {
+            transform: translateY(1px); /* Simple click effect */
+        }
         
         .status {
-            font-size: 20px;
+            font-size: clamp(18px, 4.5vw, 22px); /* Responsive font size */
             font-weight: bold;
             margin: 10px 0;
             color: #333;
+            text-align: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            .board {
+                gap: 0; /* No gap on very small screens */
+            }
+            .cell {
+                /* Min/Max width/height from clamp() above will handle this */
+            }
         }
     </style>
 </head>
@@ -125,60 +157,27 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const board = document.getElementById('board');
+            const boardElement = document.getElementById('board');
             const statusDisplay = document.getElementById('status');
             const newGameBtn = document.getElementById('newGame');
             const hintBtn = document.getElementById('hint');
             
-            let gameState = initializeGame();
+            let gameState;
             let selectedPiece = null;
             let possibleMoves = [];
             let isPlayerTurn = true;
             let gameOver = false;
+            let mandatoryCaptures = []; // To store pieces that *must* capture
             
-            // สร้างกระดาน
-            function renderBoard() {
-                board.innerHTML = '';
-                
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const cell = document.createElement('div');
-                        cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
-                        cell.dataset.row = row;
-                        cell.dataset.col = col;
-                        
-                        if ((row + col) % 2 !== 0) { // เฉพาะช่องสีเข้ม
-                            const piece = gameState.board[row][col];
-                            if (piece) {
-                                const pieceElement = document.createElement('div');
-                                pieceElement.className = `piece ${piece.player === 'human' ? 'player' : 'bot'} ${piece.isKing ? 'king' : ''}`;
-                                cell.appendChild(pieceElement);
-                            }
-                            
-                            // เน้นช่องที่เลือก
-                            if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
-                                cell.classList.add('selected');
-                            }
-                            
-                            // แสดงการเดินที่เป็นไปได้
-                            if (possibleMoves.some(move => move.row === row && move.col === col)) {
-                                cell.classList.add('possible-move');
-                            }
-                        }
-                        
-                        cell.addEventListener('click', () => handleCellClick(row, col));
-                        board.appendChild(cell);
-                    }
-                }
-                
-                updateStatus();
-            }
+            // Piece values for bot evaluation
+            const PIECE_VALUE = 1;
+            const KING_VALUE = 3;
             
-            // เริ่มเกมใหม่
+            // Initialize the game
             function initializeGame() {
                 const board = Array(8).fill().map(() => Array(8).fill(null));
                 
-                // วางเบี้ยผู้เล่น (แดง)
+                // Place player pieces (Red)
                 for (let row = 5; row < 8; row++) {
                     for (let col = 0; col < 8; col++) {
                         if ((row + col) % 2 !== 0) {
@@ -187,7 +186,7 @@
                     }
                 }
                 
-                // วางเบี้ยบอท (ดำ)
+                // Place bot pieces (Black)
                 for (let row = 0; row < 3; row++) {
                     for (let col = 0; col < 8; col++) {
                         if ((row + col) % 2 !== 0) {
@@ -203,76 +202,143 @@
                 };
             }
             
-            // จัดการการคลิกที่กระดาน
-            function handleCellClick(row, col) {
+            // Render the board
+            function renderBoard() {
+                boardElement.innerHTML = '';
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        if ((row + col) % 2 !== 0) { // Only dark squares are playable
+                            const piece = gameState.board[row][col];
+                            if (piece) {
+                                const pieceElement = document.createElement('div');
+                                pieceElement.className = `piece ${piece.player === 'human' ? 'player' : 'bot'} ${piece.isKing ? 'king' : ''}`;
+                                cell.appendChild(pieceElement);
+                            }
+                            
+                            // Highlight selected cell
+                            if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
+                                cell.classList.add('selected');
+                            }
+                            
+                            // Highlight possible moves
+                            if (possibleMoves.some(move => move.row === row && move.col === col)) {
+                                cell.classList.add('possible-move');
+                            }
+                        }
+                        
+                        cell.addEventListener('click', () => handleCellClick(row, col));
+                        boardElement.appendChild(cell);
+                    }
+                }
+                
+                updateStatus();
+            }
+            
+            // Handle cell clicks
+            async function handleCellClick(row, col) {
                 if (gameOver || !isPlayerTurn || (row + col) % 2 === 0) return;
                 
                 const piece = gameState.board[row][col];
                 
-                // ถ้าเลือกเบี้ยของผู้เล่น
-                if (piece && piece.player === 'human') {
-                    selectedPiece = { row, col };
-                    possibleMoves = getPossibleMoves(row, col);
-                    renderBoard();
-                } 
-                // ถ้าเลือกช่องว่างที่เป็นการเดินที่เป็นไปได้
-                else if (selectedPiece && possibleMoves.some(move => move.row === row && move.col === col)) {
+                // If a piece is selected and the clicked cell is a possible move
+                if (selectedPiece && possibleMoves.some(move => move.row === row && move.col === col)) {
                     const move = possibleMoves.find(m => m.row === row && m.col === col);
+                    
+                    // Make the move
                     makeMove(selectedPiece.row, selectedPiece.col, row, col, move.captures);
                     
-                    // ถ้ายังมีการกินต่อได้
+                    // Check for multi-jump
                     if (move.captures.length > 0) {
-                        const newPossibleMoves = getPossibleMoves(row, col).filter(m => m.captures.length > 0);
-                        if (newPossibleMoves.length > 0) {
+                        const nextCaptures = getPossibleMoves(row, col, true).filter(m => m.captures.length > 0);
+                        if (nextCaptures.length > 0) {
                             selectedPiece = { row, col };
-                            possibleMoves = newPossibleMoves;
+                            possibleMoves = nextCaptures;
                             renderBoard();
-                            return;
+                            statusDisplay.textContent = 'บังคับให้กินต่อ!';
+                            return; // Stay on player's turn for multi-jump
                         }
                     }
                     
+                    // End of player's turn
                     selectedPiece = null;
                     possibleMoves = [];
                     isPlayerTurn = false;
                     renderBoard();
                     
-                    // ให้บอทเดินหลังจากหน่วงเวลาเล็กน้อย
-                    setTimeout(botMove, 1000);
+                    // Let bot move after a short delay
+                    setTimeout(botMove, 800);
+                } 
+                // If a piece is clicked
+                else if (piece && piece.player === 'human') {
+                    // Check for mandatory captures
+                    const availableCaptures = getAllPossibleMoves('human').filter(m => m.captures.length > 0);
+                    const clickedPieceCaptures = getPossibleMoves(row, col, true).filter(m => m.captures.length > 0);
+
+                    if (availableCaptures.length > 0 && clickedPieceCaptures.length === 0) {
+                        statusDisplay.textContent = 'คุณต้องกินเบี้ยคู่ต่อสู้!';
+                        selectedPiece = null;
+                        possibleMoves = [];
+                        renderBoard();
+                        return; // Prevent selecting a piece that cannot capture if a capture is mandatory
+                    }
+
+                    selectedPiece = { row, col };
+                    possibleMoves = getPossibleMoves(row, col);
+                    
+                    // If there are mandatory captures for this piece, only show those
+                    const capturesForThisPiece = possibleMoves.filter(m => m.captures.length > 0);
+                    if (capturesForThisPiece.length > 0) {
+                        possibleMoves = capturesForThisPiece;
+                        statusDisplay.textContent = 'บังคับให้กิน!';
+                    } else if (availableCaptures.length > 0) {
+                         // This piece cannot capture, but another piece can. Clear selection.
+                         selectedPiece = null;
+                         possibleMoves = [];
+                         statusDisplay.textContent = 'คุณต้องกินเบี้ยคู่ต่อสู้!';
+                    }
+                    renderBoard();
+                } else {
+                    // Clicked on an empty square or bot piece, or selected piece is not making a valid move
+                    selectedPiece = null;
+                    possibleMoves = [];
+                    renderBoard();
                 }
             }
             
-            // หาการเดินที่เป็นไปได้
-            function getPossibleMoves(row, col) {
+            // Get possible moves for a piece
+            function getPossibleMoves(row, col, isCheckingMultiJump = false) {
                 const piece = gameState.board[row][col];
                 if (!piece) return [];
                 
                 const moves = [];
                 const directions = [];
                 
-                // กำหนดทิศทางที่เดินได้
+                // Define directions based on player and king status
                 if (piece.player === 'human' || piece.isKing) {
-                    directions.push({ dr: -1, dc: -1 });
-                    directions.push({ dr: -1, dc: 1 });
+                    directions.push({ dr: -1, dc: -1 }); // Up-left
+                    directions.push({ dr: -1, dc: 1 });  // Up-right
                 }
                 if (piece.player === 'bot' || piece.isKing) {
-                    directions.push({ dr: 1, dc: -1 });
-                    directions.push({ dr: 1, dc: 1 });
+                    directions.push({ dr: 1, dc: -1 });  // Down-left
+                    directions.push({ dr: 1, dc: 1 });   // Down-right
                 }
                 
-                // ตรวจสอบการเดินปกติและการกิน
+                let hasCapture = false;
+                // First, find all possible captures
                 for (const dir of directions) {
                     const newRow = row + dir.dr;
                     const newCol = col + dir.dc;
                     
                     if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
-                        if (!gameState.board[newRow][newCol]) {
-                            // การเดินปกติ
-                            if (!hasCaptureMove(piece.player)) {
-                                moves.push({ row: newRow, col: newCol, captures: [] });
-                            }
-                        } 
-                        // การกินเบี้ย
-                        else if (gameState.board[newRow][newCol].player !== piece.player) {
+                        // Check for capture
+                        const jumpedPiece = gameState.board[newRow][newCol];
+                        if (jumpedPiece && jumpedPiece.player !== piece.player) {
                             const jumpRow = newRow + dir.dr;
                             const jumpCol = newCol + dir.dc;
                             
@@ -282,39 +348,86 @@
                                     col: jumpCol, 
                                     captures: [{ row: newRow, col: newCol }]
                                 });
+                                hasCapture = true;
                             }
                         }
                     }
                 }
                 
-                // ตรวจสอบว่ามีการกินเบี้ยที่เป็นไปได้หรือไม่
-                const captureMoves = moves.filter(move => move.captures.length > 0);
-                return captureMoves.length > 0 ? captureMoves : moves;
-            }
-            
-            // ตรวจสอบว่ามีการกินเบี้ยที่เป็นไปได้สำหรับผู้เล่นนี้หรือไม่
-            function hasCaptureMove(player) {
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState.board[row][col];
-                        if (piece && piece.player === player) {
-                            const moves = getPossibleMoves(row, col);
-                            if (moves.some(move => move.captures.length > 0)) {
-                                return true;
+                // If there are captures, only return captures.
+                // Unless we're checking for multi-jumps, in which case we only care about captures.
+                if (hasCapture) {
+                    return moves;
+                } else if (!isCheckingMultiJump) {
+                    // If no captures, find normal moves (only if not forced to jump)
+                    for (const dir of directions) {
+                        const newRow = row + dir.dr;
+                        const newCol = col + dir.dc;
+                        
+                        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                            if (!gameState.board[newRow][newCol]) {
+                                moves.push({ row: newRow, col: newCol, captures: [] });
                             }
                         }
                     }
                 }
-                return false;
+                
+                return moves;
             }
-            
-            // ทำการเดิน
+
+            // Get all possible moves for a given player
+            function getAllPossibleMoves(player) {
+                const allMoves = [];
+                let hasForcedCapture = false;
+
+                // First pass: identify if any piece has a mandatory capture
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const piece = gameState.board[r][c];
+                        if (piece && piece.player === player) {
+                            const pieceMoves = getPossibleMoves(r, c, false); // false means don't force multi-jump check
+                            if (pieceMoves.some(m => m.captures.length > 0)) {
+                                hasForcedCapture = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasForcedCapture) break;
+                }
+
+                // Second pass: collect moves based on whether captures are mandatory
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const piece = gameState.board[r][c];
+                        if (piece && piece.player === player) {
+                            const pieceMoves = getPossibleMoves(r, c, false);
+                            if (hasForcedCapture) {
+                                // If a capture is mandatory, only add capture moves
+                                const captures = pieceMoves.filter(m => m.captures.length > 0);
+                                if (captures.length > 0) {
+                                    for (const move of captures) {
+                                        allMoves.push({ from: { row: r, col: c }, to: move.row, toCol: move.col, captures: move.captures });
+                                    }
+                                }
+                            } else {
+                                // Otherwise, add all moves (normal and optional captures)
+                                for (const move of pieceMoves) {
+                                    allMoves.push({ from: { row: r, col: c }, to: move.row, toCol: move.col, captures: move.captures });
+                                }
+                            }
+                        }
+                    }
+                }
+                return allMoves;
+            }
+
+            // Make a move
             function makeMove(fromRow, fromCol, toRow, toCol, captures) {
                 const piece = gameState.board[fromRow][fromCol];
                 gameState.board[fromRow][fromCol] = null;
                 gameState.board[toRow][toCol] = piece;
                 
-                // ทำการกินเบี้ย
+                // Handle captures
                 for (const capture of captures) {
                     if (gameState.board[capture.row][capture.col].player === 'human') {
                         gameState.humanPieces--;
@@ -324,170 +437,149 @@
                     gameState.board[capture.row][capture.col] = null;
                 }
                 
-                // ตรวจสอบการเป็น King
+                // Check for king promotion
                 if ((piece.player === 'human' && toRow === 0) || (piece.player === 'bot' && toRow === 7)) {
                     piece.isKing = true;
                 }
                 
-                // ตรวจสอบการจบเกม
+                // Check for game over
                 if (gameState.humanPieces === 0 || gameState.botPieces === 0 || 
-                    (isPlayerTurn && !hasValidMove('human')) || (!isPlayerTurn && !hasValidMove('bot'))) {
+                    (!hasValidMove('human') && isPlayerTurn) || (!hasValidMove('bot') && !isPlayerTurn)) {
                     gameOver = true;
                 }
             }
             
-            // ตรวจสอบว่ามีการเดินที่ถูกต้องหรือไม่
+            // Check if player has any valid moves
             function hasValidMove(player) {
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState.board[row][col];
-                        if (piece && piece.player === player) {
-                            const moves = getPossibleMoves(row, col);
-                            if (moves.length > 0) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
+                return getAllPossibleMoves(player).length > 0;
             }
             
-            // การเดินของบอท (โหด)
-            function botMove() {
+            // Bot's move logic (more "evil")
+            async function botMove() {
                 if (gameOver) return;
                 
-                // หาการเดินที่เป็นไปได้ทั้งหมด
-                const allMoves = [];
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState.board[row][col];
-                        if (piece && piece.player === 'bot') {
-                            const moves = getPossibleMoves(row, col);
-                            for (const move of moves) {
-                                allMoves.push({
-                                    from: { row, col },
-                                    to: { row: move.row, col: move.col },
-                                    captures: move.captures,
-                                    piece: piece
-                                });
-                            }
-                        }
-                    }
-                }
+                const allBotMoves = getAllPossibleMoves('bot');
                 
-                // ถ้าไม่มีทางเดิน
-                if (allMoves.length === 0) {
+                if (allBotMoves.length === 0) {
                     gameOver = true;
                     renderBoard();
                     return;
                 }
                 
-                // เลือกการเดินที่ดีที่สุด (บอทโหด)
                 let bestMove = null;
                 let bestScore = -Infinity;
                 
-                for (const move of allMoves) {
-                    let score = 0;
+                // Iterate through all possible bot moves and evaluate them
+                for (const move of allBotMoves) {
+                    // Simulate the move to evaluate its outcome
+                    const simulatedGameState = JSON.parse(JSON.stringify(gameState)); // Deep copy
+                    const simulatedPiece = simulatedGameState.board[move.from.row][move.from.col];
                     
-                    // ให้คะแนนการกินเบี้ย
-                    score += move.captures.length * 10;
+                    simulatedGameState.board[move.from.row][move.from.col] = null;
+                    simulatedGameState.board[move.to.row][move.to.col] = simulatedPiece;
                     
-                    // ให้คะแนนการป้องกัน King
-                    if (move.piece.isKing) {
-                        score += 1;
-                    }
-                    
-                    // ให้คะแนนการเป็น King
-                    if (!move.piece.isKing && move.to.row === 7) {
-                        score += 5;
-                    }
-                    
-                    // ให้คะแนนการเข้าใกล้เบี้ยของศัตรู
-                    if (!move.piece.isKing) {
-                        const humanPieces = [];
-                        for (let r = 0; r < 8; r++) {
-                            for (let c = 0; c < 8; c++) {
-                                if (gameState.board[r][c] && gameState.board[r][c].player === 'human') {
-                                    humanPieces.push({ row: r, col: c });
-                                }
-                            }
+                    let currentScore = 0;
+
+                    // Apply captures in simulation
+                    for (const capture of move.captures) {
+                        if (simulatedGameState.board[capture.row][capture.col].player === 'human') {
+                            simulatedGameState.humanPieces--;
+                        } else {
+                            simulatedGameState.botPieces--;
                         }
-                        
-                        if (humanPieces.length > 0) {
-                            let minDistance = Infinity;
-                            for (const hp of humanPieces) {
-                                const dist = Math.abs(move.to.row - hp.row) + Math.abs(move.to.col - hp.col);
-                                if (dist < minDistance) minDistance = dist;
+                        simulatedGameState.board[capture.row][capture.col] = null;
+                    }
+
+                    // Check for king promotion in simulation
+                    if ((simulatedPiece.player === 'human' && move.to.row === 0) || (simulatedPiece.player === 'bot' && move.to.row === 7)) {
+                        simulatedPiece.isKing = true;
+                    }
+
+                    // Evaluate the board state after the simulated move
+                    currentScore = evaluateBoard(simulatedGameState);
+                    
+                    // Prioritize immediate captures
+                    currentScore += move.captures.length * 100; // Strong incentive for captures
+                    
+                    // Prioritize kinging
+                    if (!gameState.board[move.from.row][move.from.col].isKing && move.to.row === 7) {
+                        currentScore += 50; // Strong incentive to become king
+                    }
+
+                    // If a multi-jump is possible, consider the score after the subsequent jumps
+                    if (move.captures.length > 0) {
+                        const nextCaptures = getPossibleMoves(move.to.row, move.to.col, true).filter(m => m.captures.length > 0);
+                        if (nextCaptures.length > 0) {
+                            // Recursively find the best multi-jump path and add its score
+                            let maxMultiJumpScore = 0;
+                            for (const nextMove of nextCaptures) {
+                                // Simplified multi-jump evaluation for bot's current turn
+                                maxMultiJumpScore = Math.max(maxMultiJumpScore, evaluateBoard(simulatedGameState) + nextMove.captures.length * 100);
                             }
-                            score += (10 - minDistance) * 0.5;
+                            currentScore += maxMultiJumpScore;
                         }
                     }
-                    
-                    // ให้คะแนนการป้องกัน
-                    if (isSafePosition(move.to.row, move.to.col)) {
-                        score += 2;
-                    }
-                    
-                    // ถ้าได้คะแนนมากกว่าเลือกการเดินนี้
-                    if (score > bestScore || (score === bestScore && Math.random() > 0.5)) {
-                        bestScore = score;
+
+                    if (currentScore > bestScore || (currentScore === bestScore && Math.random() > 0.5)) {
+                        bestScore = currentScore;
                         bestMove = move;
                     }
                 }
                 
-                // ทำการเดิน
-                makeMove(
-                    bestMove.from.row, 
-                    bestMove.from.col, 
-                    bestMove.to.row, 
-                    bestMove.to.col, 
-                    bestMove.captures
-                );
-                
-                // ถ้ายังมีการกินต่อได้
-                if (bestMove.captures.length > 0) {
-                    const newPossibleMoves = getPossibleMoves(bestMove.to.row, bestMove.to.col)
-                        .filter(m => m.captures.length > 0);
+                // Execute the best move
+                if (bestMove) {
+                    makeMove(
+                        bestMove.from.row, 
+                        bestMove.from.col, 
+                        bestMove.to.row, 
+                        bestMove.to.col, 
+                        bestMove.captures
+                    );
                     
-                    if (newPossibleMoves.length > 0) {
-                        setTimeout(botMove, 800);
-                        return;
-                    }
-                }
-                
-                isPlayerTurn = true;
-                renderBoard();
-            }
-            
-            // ตรวจสอบว่าตำแหน่งปลอดภัยจากการถูกกินหรือไม่
-            function isSafePosition(row, col) {
-                const directions = [
-                    { dr: -1, dc: -1 }, { dr: -1, dc: 1 },
-                    { dr: 1, dc: -1 }, { dr: 1, dc: 1 }
-                ];
-                
-                for (const dir of directions) {
-                    const enemyRow = row - dir.dr;
-                    const enemyCol = col - dir.dc;
-                    const jumpRow = row + dir.dr;
-                    const jumpCol = col + dir.dc;
-                    
-                    if (enemyRow >= 0 && enemyRow < 8 && enemyCol >= 0 && enemyCol < 8 &&
-                        jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
-                        
-                        const enemyPiece = gameState.board[enemyRow][enemyCol];
-                        const jumpPiece = gameState.board[jumpRow][jumpCol];
-                        
-                        if (enemyPiece && enemyPiece.player === 'human' && !jumpPiece) {
-                            return false;
+                    // If multi-jump is possible, bot continues its turn
+                    if (bestMove.captures.length > 0) {
+                        const nextCaptures = getPossibleMoves(bestMove.to.row, bestMove.to.col, true).filter(m => m.captures.length > 0);
+                        if (nextCaptures.length > 0) {
+                            selectedPiece = { row: bestMove.to.row, col: bestMove.to.col };
+                            possibleMoves = nextCaptures; // For highlighting during multi-jump
+                            renderBoard();
+                            setTimeout(botMove, 800); // Bot takes next jump
+                            return;
                         }
                     }
                 }
                 
-                return true;
+                isPlayerTurn = true;
+                selectedPiece = null;
+                possibleMoves = [];
+                renderBoard();
+            }
+
+            // Evaluate the current board state for the bot (higher score is better for bot)
+            function evaluateBoard(boardState) {
+                let score = 0;
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const piece = boardState.board[r][c];
+                        if (piece) {
+                            if (piece.player === 'bot') {
+                                score += piece.isKing ? KING_VALUE : PIECE_VALUE;
+                                // Encourage forward movement and central control
+                                score += (r / 2); // Bot wants to move down (higher row index)
+                                if (c >= 2 && c <= 5) score += 0.5; // Center control
+                            } else { // Human pieces
+                                score -= piece.isKing ? KING_VALUE : PIECE_VALUE;
+                                // Discourage opponent forward movement and central control
+                                score -= ((7 - r) / 2); // Human wants to move up (lower row index)
+                                if (c >= 2 && c <= 5) score -= 0.5; // Center control
+                            }
+                        }
+                    }
+                }
+                return score;
             }
             
-            // อัพเดทสถานะเกม
+            // Update game status display
             function updateStatus() {
                 if (gameOver) {
                     if (gameState.humanPieces === 0 || !hasValidMove('human')) {
@@ -496,92 +588,96 @@
                         statusDisplay.textContent = 'คุณชนะ! ยินดีด้วย!';
                     }
                 } else {
-                    statusDisplay.textContent = isPlayerTurn ? 'ตาคุณ: เลือกเบี้ยของคุณ' : 'ตาบอท: กำลังคิด...';
+                    if (isPlayerTurn) {
+                        statusDisplay.textContent = 'ตาคุณ: เลือกเบี้ยของคุณ';
+                        const forcedJumps = getAllPossibleMoves('human').filter(m => m.captures.length > 0);
+                        if (forcedJumps.length > 0) {
+                            statusDisplay.textContent = 'บังคับให้กิน!';
+                        }
+                    } else {
+                        statusDisplay.textContent = 'ตาบอท: กำลังคิด...';
+                    }
                 }
             }
             
-            // คำแนะนำ
+            // Hint functionality
             hintBtn.addEventListener('click', () => {
                 if (!isPlayerTurn || gameOver) return;
                 
-                // หาการเดินที่ดีที่สุดสำหรับผู้เล่น
-                let bestMove = null;
-                let bestScore = -Infinity;
+                const allPlayerMoves = getAllPossibleMoves('human');
                 
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = gameState.board[row][col];
-                        if (piece && piece.player === 'human') {
-                            const moves = getPossibleMoves(row, col);
-                            for (const move of moves) {
-                                let score = 0;
-                                
-                                // ให้คะแนนการกินเบี้ย
-                                score += move.captures.length * 10;
-                                
-                                // ให้คะแนนการเป็น King
-                                if (!piece.isKing && move.row === 0) {
-                                    score += 5;
-                                }
-                                
-                                // ให้คะแนนการป้องกัน
-                                if (isSafePosition(move.row, move.col)) {
-                                    score += 2;
-                                }
-                                
-                                // ให้คะแนนการเข้าใกล้เบี้ยของศัตรู
-                                if (!piece.isKing) {
-                                    const botPieces = [];
-                                    for (let r = 0; r < 8; r++) {
-                                        for (let c = 0; c < 8; c++) {
-                                            if (gameState.board[r][c] && gameState.board[r][c].player === 'bot') {
-                                                botPieces.push({ row: r, col: c });
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (botPieces.length > 0) {
-                                        let minDistance = Infinity;
-                                        for (const bp of botPieces) {
-                                            const dist = Math.abs(move.row - bp.row) + Math.abs(move.col - bp.col);
-                                            if (dist < minDistance) minDistance = dist;
-                                        }
-                                        score += (10 - minDistance) * 0.5;
-                                    }
-                                }
-                                
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMove = { from: { row, col }, to: move };
-                                }
-                            }
+                if (allPlayerMoves.length === 0) {
+                    alert('ไม่มีการเดินที่เป็นไปได้ในตอนนี้');
+                    return;
+                }
+
+                let bestHintMove = null;
+                let bestHintScore = -Infinity;
+
+                for (const move of allPlayerMoves) {
+                    const simulatedGameState = JSON.parse(JSON.stringify(gameState));
+                    const simulatedPiece = simulatedGameState.board[move.from.row][move.from.col];
+                    
+                    simulatedGameState.board[move.from.row][move.from.col] = null;
+                    simulatedGameState.board[move.to.row][move.to.col] = simulatedPiece;
+
+                    // Apply captures in simulation
+                    for (const capture of move.captures) {
+                        if (simulatedGameState.board[capture.row][capture.col].player === 'human') {
+                            simulatedGameState.humanPieces--;
+                        } else {
+                            simulatedGameState.botPieces--;
                         }
+                        simulatedGameState.board[capture.row][capture.col] = null;
+                    }
+
+                    // Check for king promotion in simulation
+                    if ((simulatedPiece.player === 'human' && move.to.row === 0) || (simulatedPiece.player === 'bot' && move.to.row === 7)) {
+                        simulatedPiece.isKing = true;
+                    }
+
+                    // Evaluate the board state from the human's perspective (higher score is better for human)
+                    let currentHintScore = -evaluateBoard(simulatedGameState); // Invert bot's evaluation for human
+
+                    // Prioritize captures
+                    currentHintScore += move.captures.length * 100;
+                    
+                    // Prioritize kinging
+                    if (!gameState.board[move.from.row][move.from.col].isKing && move.to.row === 0) {
+                        currentHintScore += 50;
+                    }
+
+                    if (currentHintScore > bestHintScore) {
+                        bestHintScore = currentHintScore;
+                        bestHintMove = move;
                     }
                 }
                 
-                if (bestMove) {
-                    selectedPiece = bestMove.from;
-                    possibleMoves = [bestMove.to];
+                if (bestHintMove) {
+                    selectedPiece = bestHintMove.from;
+                    possibleMoves = [{ row: bestHintMove.to.row, col: bestHintMove.to.col, captures: bestHintMove.captures }];
                     renderBoard();
                     setTimeout(() => {
-                        alert(`คำแนะนำ: ย้ายจาก (${7-bestMove.from.row},${bestMove.from.col}) ไปที่ (${7-bestMove.to.row},${bestMove.to.col})`);
+                        alert(`คำแนะนำ: ย้ายจาก (${bestHintMove.from.row},${bestHintMove.from.col}) ไปที่ (${bestHintMove.to.row},${bestHintMove.to.col})`);
                     }, 100);
                 } else {
                     alert('ไม่มีคำแนะนำในตอนนี้');
                 }
             });
             
-            // เริ่มเกมใหม่
+            // New game button handler
             newGameBtn.addEventListener('click', () => {
                 gameState = initializeGame();
                 selectedPiece = null;
                 possibleMoves = [];
                 isPlayerTurn = true;
                 gameOver = false;
+                mandatoryCaptures = [];
                 renderBoard();
             });
             
-            // เรนเดอร์กระดานครั้งแรก
+            // Initial render
+            gameState = initializeGame();
             renderBoard();
         });
     </script>
