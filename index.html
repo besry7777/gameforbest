@@ -3,1544 +3,449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jump Together - สตาร์ดิววัลลีย์</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
+    <title>หมากฮอต Co-op</title>
     <style>
-        /* การตั้งค่าพื้นฐาน */
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #e74c3c;
-            --accent-color: #2ecc71;
-            --dark-bg: #1a1a1a;
-            --light-bg: #2d2d2d;
-            --text-color: #ecf0f1;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-        }
-
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
             user-select: none;
         }
-
-        html, body {
-            width: 100%;
-            height: 100%;
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
             overflow: hidden;
-            font-family: 'Kanit', sans-serif;
-            touch-action: manipulation;
-            background: #1a1a1a;
-        }
-
-        /* คอนเทนเนอร์หลัก */
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
         }
-
-        /* พื้นที่เกม */
-        #game-area {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: #1a1a1a;
-            background-image: 
-                linear-gradient(rgba(50, 50, 50, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(50, 50, 50, 0.2) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
-        /* ตัวละครผู้เล่น */
-        .character {
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            z-index: 10;
-            transition: transform 0.1s ease-out;
-            image-rendering: pixelated;
-            background-size: 256px 256px; /* 4 directions * 4 frames */
-        }
-
-        .character-up {
-            background-position: 0 0;
-        }
-
-        .character-right {
-            background-position: -64px 0;
-        }
-
-        .character-down {
-            background-position: -128px 0;
-        }
-
-        .character-left {
-            background-position: -192px 0;
-        }
-
-        .character-animate {
-            animation: walk 0.5s steps(4) infinite;
-        }
-
-        @keyframes walk {
-            100% { background-position-y: -256px; }
-        }
-
-        .player-name {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0,0,0,0.7);
-            color: white;
-            padding: 2px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 11;
-        }
-
-        /* วัตถุในเกม */
-        .tile {
-            position: absolute;
-            background-size: cover;
-            z-index: 5;
-        }
-
-        .npc {
-            position: absolute;
-            width: 64px;
-            height: 64px;
-            background-size: 256px 256px;
-            z-index: 8;
-            image-rendering: pixelated;
-        }
-
-        .interactable {
-            position: absolute;
-            width: 48px;
-            height: 48px;
-            background-size: cover;
-            z-index: 7;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        /* การควบคุมแบบวงกลม */
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .joystick-container {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-
-        .joystick-base {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            position: relative;
-        }
-
-        .joystick-thumb {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.5);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s;
-            touch-action: none;
-        }
-
-        #action-btn {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background-color: rgba(231, 76, 60, 0.8);
-            border: 2px solid white;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px var(--shadow-color);
-            transition: transform 0.1s, background-color 0.1s;
-        }
-
-        #action-btn:active {
-            background-color: rgba(231, 76, 60, 1);
-            transform: scale(0.95);
-        }
-
-        /* สถานะเกม */
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px;
-            background-color: rgba(0,0,0,0.5);
-            color: var(--text-color);
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 0 0 5px var(--shadow-color);
-        }
-
-        /* เมนูและ UI */
-        #menu, #lobby, #alert, #dialog {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.85);
+        
+        .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            text-align: center;
             padding: 20px;
+            height: 100%;
         }
-
-        .menu-title {
-            color: white;
-            font-size: 32px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px white;
-        }
-
-        .menu-btn {
-            background: linear-gradient(to bottom, var(--primary-color), #2980b9);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 10px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            width: 250px;
+        
+        .lobby {
             text-align: center;
-            font-family: 'Kanit', sans-serif;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 10px var(--shadow-color);
-        }
-
-        .menu-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px var(--shadow-color);
-        }
-
-        .menu-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 5px var(--shadow-color);
-        }
-
-        #lobby { z-index: 150; display: none; }
-        #alert { z-index: 200; display: none; }
-        #dialog { z-index: 180; display: none; }
-
-        .dialog-box {
-            background-color: rgba(0,0,0,0.8);
-            border: 2px solid white;
-            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            background-color: white;
             padding: 20px;
-            max-width: 80%;
-            color: white;
-        }
-
-        .dialog-text {
-            margin-bottom: 15px;
-            font-size: 18px;
-            line-height: 1.5;
-        }
-
-        .dialog-choices {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .dialog-choice {
-            background-color: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .dialog-choice:hover {
-            background-color: rgba(255,255,255,0.2);
-        }
-
-        .room-code {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 5px;
-            color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 15px 25px;
             border-radius: 10px;
-            margin: 20px 0;
-            animation: shake 0.5s infinite alternate;
-            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-
-        @keyframes shake {
-            0% { transform: rotate(-1deg); }
-            100% { transform: rotate(1deg); }
-        }
-
-        .player-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-            width: 80%;
-            max-width: 300px;
-        }
-
-        .player-item {
-            background-color: rgba(255,255,255,0.1);
-            padding: 10px 15px;
-            border-radius: 5px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .player-host {
-            background-color: rgba(52, 152, 219, 0.3);
-        }
-
-        .player-ready {
-            background-color: rgba(46, 204, 113, 0.3);
-        }
-
-        .player-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .player-1-icon {
-            background-color: var(--primary-color);
-        }
-
-        .player-2-icon {
-            background-color: var(--secondary-color);
-        }
-
-        #start-game-btn {
-            background: linear-gradient(to bottom, var(--accent-color), #27ae60);
+        
+        .game-board {
             display: none;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+            background-color: #e0c9a6;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        #ready-btn {
-            background: linear-gradient(to bottom, #f39c12, #e67e22);
-        }
-
-        /* Minimap */
-        #minimap {
+        
+        .dot {
             position: absolute;
-            bottom: 100px;
-            right: 20px;
-            width: 150px;
-            height: 150px;
-            background-color: rgba(0,0,0,0.5);
-            border: 2px solid white;
-            z-index: 50;
+            width: 8%;
+            height: 8%;
+            background-color: #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
         }
-
-        /* Inventory */
-        #inventory {
+        
+        .line {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0,0,0,0.7);
+            background-color: #333;
+            transform-origin: 0 0;
+        }
+        
+        .piece {
+            position: absolute;
+            width: 6%;
+            height: 6%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .piece.red {
+            background-color: #e74c3c;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .piece.blue {
+            background-color: #3498db;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .piece.selected {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2ecc71;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #27ae60;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .player {
             padding: 10px;
             border-radius: 5px;
-            z-index: 50;
-            display: flex;
-            gap: 5px;
+            color: white;
+            font-weight: bold;
+            width: 48%;
+            text-align: center;
         }
-
-        .inventory-slot {
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        
+        .player.host {
+            background-color: #e74c3c;
+        }
+        
+        .player.guest {
+            background-color: #3498db;
+        }
+        
+        .status {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .rules {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .rules h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .rules ol {
+            padding-left: 20px;
+        }
+        
+        .rules li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <div class="game-info">
-            <div id="score">คะแนน: 0</div>
-            <div id="room-info"></div>
-            <div id="time">เวลา: 12:00</div>
-        </div>
-        
-        <div id="game-area">
-            <!-- ตัวละครและวัตถุจะถูกเพิ่มโดย JavaScript -->
-        </div>
-        
-        <div id="minimap"></div>
-        <div id="inventory"></div>
-        
-        <div class="controls">
-            <div class="joystick-container">
-                <div class="joystick-base" id="joystick-base">
-                    <div class="joystick-thumb" id="joystick-thumb"></div>
+    <div class="container">
+        <div class="lobby" id="lobby">
+            <h1>หมากฮอต Co-op</h1>
+            <div id="joinSection">
+                <input type="text" id="roomCode" placeholder="ใส่รหัสห้อง">
+                <button id="joinBtn">เข้าร่วมห้อง</button>
+                <p>หรือ</p>
+                <button id="createBtn">สร้างห้องใหม่</button>
+            </div>
+            <div id="waitingSection" style="display: none;">
+                <h2>รหัสห้อง: <span id="displayRoomCode"></span></h2>
+                <p>ส่งลิงค์นี้ให้เพื่อน: <span id="roomLink"></span></p>
+                <div class="player-info">
+                    <div class="player host" id="hostPlayer">เจ้าของห้อง: คุณ</div>
+                    <div class="player guest" id="guestPlayer">ผู้เล่น 2: กำลังรอ...</div>
                 </div>
-            </div>
-            <button id="action-btn">โต้ตอบ</button>
-        </div>
-        
-        <!-- หน้าหลักเมนู -->
-        <div id="menu">
-            <h1 class="menu-title">Jump Together</h1>
-            <button class="menu-btn" id="create-room-btn">สร้างห้อง</button>
-            <button class="menu-btn" id="join-room-btn">เข้าร่วมห้อง</button>
-            <button class="menu-btn" id="how-to-play-btn">วิธีเล่น</button>
-        </div>
-        
-        <!-- หน้าล็อบบี้รอผู้เล่น -->
-        <div id="lobby">
-            <h1 class="menu-title">รอผู้เล่น...</h1>
-            <div class="room-code" id="room-code-display"></div>
-            
-            <div class="player-list" id="player-list">
-                <!-- ผู้เล่นจะถูกเพิ่มโดย JavaScript -->
-            </div>
-            
-            <button class="menu-btn" id="start-game-btn">เริ่มเกม</button>
-            <button class="menu-btn" id="ready-btn">พร้อมแล้ว!</button>
-            <button class="menu-btn" id="leave-lobby-btn">ออกจากห้อง</button>
-        </div>
-        
-        <!-- หน้าต่างแจ้งเตือน -->
-        <div class="alert" id="alert">
-            <h2 id="alert-title">แจ้งเตือน</h2>
-            <p id="alert-message">ข้อความ</p>
-            <input type="text" id="alert-input" style="display:none;" placeholder="กรอกข้อมูล...">
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="menu-btn" id="alert-ok">ตกลง</button>
-                <button class="menu-btn" id="alert-cancel" style="display:none; background: linear-gradient(to bottom, #e74c3c, #c0392b);">ยกเลิก</button>
+                <button id="startBtn" disabled>เริ่มเกม</button>
             </div>
         </div>
         
-        <!-- หน้าต่างบทสนทนา -->
-        <div id="dialog">
-            <div class="dialog-box">
-                <div class="dialog-text" id="dialog-text"></div>
-                <div class="dialog-choices" id="dialog-choices"></div>
-            </div>
+        <div class="game-board" id="gameBoard"></div>
+        
+        <div class="rules">
+            <h3>กติกาสากลหมากฮอต</h3>
+            <ol>
+                <li>ผู้เล่นผลัดกันเดินทีละคน โดยเริ่มจากผู้เล่นสีแดง</li>
+                <li>เดินหมากไปยังจุดที่ว่างโดยเชื่อมต่อกับเส้น</li>
+                <li>เมื่อสามารถสร้างแถวของหมากตัวเอง 3 ตัวเรียงกัน ให้กินหมากของคู่ต่อสู้ 1 ตัว</li>
+                <li>ผู้เล่นที่กินหมากคู่ต่อสู้จนเหลือน้อยกว่า 3 ตัวหรือทำให้คู่ต่อสู้เดินไม่ได้เป็นผู้ชนะ</li>
+            </ol>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // องค์ประกอบ DOM
-        const gameArea = document.getElementById('game-area');
-        const scoreDisplay = document.getElementById('score');
-        const timeDisplay = document.getElementById('time');
-        const roomInfoDisplay = document.getElementById('room-info');
-        const menu = document.getElementById('menu');
-        const lobby = document.getElementById('lobby');
-        const roomCodeDisplay = document.getElementById('room-code-display');
-        const playerList = document.getElementById('player-list');
-        const createRoomBtn = document.getElementById('create-room-btn');
-        const joinRoomBtn = document.getElementById('join-room-btn');
-        const howToPlayBtn = document.getElementById('how-to-play-btn');
-        const startGameBtn = document.getElementById('start-game-btn');
-        const readyBtn = document.getElementById('ready-btn');
-        const leaveLobbyBtn = document.getElementById('leave-lobby-btn');
-        const alertBox = document.getElementById('alert');
-        const alertTitle = document.getElementById('alert-title');
-        const alertMessage = document.getElementById('alert-message');
-        const alertInput = document.getElementById('alert-input');
-        const alertOk = document.getElementById('alert-ok');
-        const alertCancel = document.getElementById('alert-cancel');
-        const actionBtn = document.getElementById('action-btn');
-        const joystickBase = document.getElementById('joystick-base');
-        const joystickThumb = document.getElementById('joystick-thumb');
-        const dialogBox = document.getElementById('dialog');
-        const dialogText = document.getElementById('dialog-text');
-        const dialogChoices = document.getElementById('dialog-choices');
-        const minimap = document.getElementById('minimap');
-        const inventory = document.getElementById('inventory');
-
-        // ตัวแปรเกม
-        let gameRunning = false;
-        let gameTime = { hours: 6, minutes: 0 };
-        let score = 0;
-        let gameInterval, timeInterval;
-        const gameWidth = 2000; // ขนาดแมพใหญ่
-        const gameHeight = 2000;
-        let cameraX = 0;
-        let cameraY = 0;
-
-        // ตัวแปรฟิสิกส์
-        const gravity = 0.5;
-        const moveSpeed = 3;
-        const maxJoystickDistance = 50;
-
-        // ตัวแปรผู้เล่นและ Multiplayer
-        let peer;
-        let conn;
-        let players = {};
-        let myPlayerId = null;
-        let myPlayerName = "ผู้เล่น";
-        let isHost = false;
-        let isReady = false;
-        let currentMap = {};
-        let npcs = {};
-        let interactables = {};
-        let joystickActive = false;
-        let joystickAngle = 0;
-        let joystickDistance = 0;
-        let currentDirection = 'down';
-        let currentInteractable = null;
-        let inventoryItems = [];
-
-        // ตัวละครสไปรท์ชีท (สามารถเปลี่ยนเป็นรูปของคุณได้)
-        const characterSprites = {
-            player1: 'url("https://i.imgur.com/your-image1.png")',
-            player2: 'url("https://i.imgur.com/your-image2.png")',
-            player3: 'url("https://i.imgur.com/your-image3.png")',
-            player4: 'url("https://i.imgur.com/your-image4.png")'
-        };
-
-        // NPC sprites
-        const npcSprites = {
-            farmer: 'url("https://i.imgur.com/npc-farmer.png")',
-            merchant: 'url("https://i.imgur.com/npc-merchant.png")',
-            blacksmith: 'url("https://i.imgur.com/npc-blacksmith.png")'
-        };
-
-        // ไดอะล็อก NPC
-        const npcDialogs = {
-            farmer: [
-                "สวัสดี! ยินดีต้อนรับสู่ฟาร์มของเรา",
-                "วันนี้อากาศดีเหมาะสำหรับการเพาะปลูก",
-                "คุณช่วยเก็บผักให้ฉันหน่อยได้ไหม?"
-            ],
-            merchant: [
-                "มีอะไรให้ผมช่วยไหมครับ?",
-                "สินค้าของเรามีคุณภาพดีที่สุดในเมือง",
-                "โปรโมชั่นวันนี้ ซื้อ 1 แถม 1"
-            ],
-            blacksmith: [
-                "ต้องการอาวุธหรือเกราะใหม่ไหม?",
-                "ฉันสามารถสร้างสิ่งของที่แข็งแกร่งที่สุดให้คุณ",
-                "ระวังมือร้อนนะ!"
-            ]
-        };
-
-        // --- ระบบ Multiplayer ---
-        function initializePeer(isCreating, peerId, playerName) {
-            if (playerName) myPlayerName = playerName;
-            
-            if (isCreating) {
-                isHost = true;
-                peer = new Peer();
-                peer.on('open', id => {
-                    showLobby(id);
-                    myPlayerId = 'player1';
-                    addPlayerToList(myPlayerId, myPlayerName, true, true);
-                    
-                    // สร้างผู้เล่นของเรา
-                    createPlayerElement(myPlayerId, true);
-                });
-                peer.on('connection', newConn => {
-                    setupConnection(newConn);
-                });
-            } else {
-                isHost = false;
-                peer = new Peer();
-                peer.on('open', id => {
-                    conn = peer.connect(peerId);
-                    setupConnection(conn);
-                    myPlayerId = 'player2';
-                    addPlayerToList(myPlayerId, myPlayerName, false, true);
-                    
-                    // สร้างผู้เล่นของเรา
-                    createPlayerElement(myPlayerId, true);
-                    
-                    // ส่งข้อมูลชื่อผู้เล่น
-                    sendData({ type: 'player_info', name: myPlayerName });
-                });
-            }
-            
-            peer.on('error', err => {
-                showAlert('เกิดข้อผิดพลาด!', err.type);
-            });
-        }
-        
-        function setupConnection(newConn) {
-            conn = newConn;
-            conn.on('open', () => {
-                const otherPlayerId = isHost ? 'player2' : 'player1';
-                addPlayerToList(otherPlayerId, 'ผู้เล่นอีกคน', !isHost, false);
-                createPlayerElement(otherPlayerId, false);
-                
-                if (isHost) {
-                    sendData({ 
-                        type: 'player_info', 
-                        name: myPlayerName,
-                        players: getPlayerListData()
-                    });
-                }
-            });
-            conn.on('data', onDataReceived);
-            conn.on('close', () => {
-                showAlert('การเชื่อมต่อขาดหาย', 'ผู้เล่นอีกคนออกจากเกมแล้ว');
-                leaveLobby();
-            });
-        }
-
-        function onDataReceived(data) {
-            switch(data.type) {
-                case 'player_info':
-                    updatePlayerInfo(data);
-                    break;
-                case 'lobby_update':
-                    updateLobby(data);
-                    break;
-                case 'player_ready':
-                    updatePlayerReady(data.playerId, data.isReady);
-                    break;
-                case 'start_game':
-                    startGame(data.map);
-                    break;
-                case 'player_update':
-                    updatePlayerPosition(data.playerId, data);
-                    break;
-                case 'interact':
-                    handleRemoteInteract(data);
-                    break;
-                case 'game_over':
-                    showAlert('เกมจบแล้ว!', data.message);
-                    endGame();
-                    break;
-            }
-        }
-        
-        function sendData(data) {
-            if (conn && conn.open) {
-                conn.send(data);
-            }
-        }
-
-        // --- การจัดการเกม ---
-        
-        function startGame(mapData) {
-            lobby.style.display = 'none';
-            gameRunning = true;
-            score = 0;
-            gameTime = { hours: 6, minutes: 0 };
-            updateScore(0);
-            updateTime();
-
-            // สร้างแมพเกม
-            if (isHost) {
-                generateMap();
-                sendData({ 
-                    type: 'start_game',
-                    map: currentMap
-                });
-            } else {
-                loadMap(mapData);
-            }
-            
-            // รีเซ็ตตำแหน่งผู้เล่น
-            Object.keys(players).forEach((playerId, index) => {
-                const player = players[playerId];
-                player.x = 1000 + (index * 100);
-                player.y = 1000;
-                player.dx = 0;
-                player.dy = 0;
-                player.onGround = true;
-                updatePlayerElement(player);
-            });
-
-            timeInterval = setInterval(updateGameTime, 60000); // อัพเดททุกนาทีเกม
-            gameInterval = requestAnimationFrame(gameLoop);
-            
-            // อัพเดทกล้อง
-            updateCamera();
-        }
-        
-        function endGame() {
-            gameRunning = false;
-            cancelAnimationFrame(gameInterval);
-            clearInterval(timeInterval);
-            
-            // ล้างเกม
-            gameArea.innerHTML = '';
-            players = {};
-            currentMap = {};
-            npcs = {};
-            interactables = {};
-            
-            // กลับไปที่เมนูหลัก
-            setTimeout(() => {
-                menu.style.display = 'flex';
-            }, 3000);
-        }
-
-        function generateMap() {
-            // สร้างแมพสุ่ม (ในที่นี้เป็นตัวอย่างง่ายๆ)
-            currentMap = {
-                width: gameWidth,
-                height: gameHeight,
-                tiles: [],
-                npcs: [],
-                interactables: []
-            };
-
-            // สร้างพื้นหญ้า
-            for (let y = 0; y < gameHeight; y += 100) {
-                for (let x = 0; x < gameWidth; x += 100) {
-                    currentMap.tiles.push({
-                        x, y, 
-                        width: 100, height: 100,
-                        type: Math.random() > 0.2 ? 'grass' : 'water',
-                        walkable: Math.random() > 0.2
-                    });
-                }
-            }
-
-            // สร้าง NPCs
-            const npcTypes = ['farmer', 'merchant', 'blacksmith'];
-            for (let i = 0; i < 10; i++) {
-                currentMap.npcs.push({
-                    id: `npc-${i}`,
-                    x: 200 + Math.random() * (gameWidth - 400),
-                    y: 200 + Math.random() * (gameHeight - 400),
-                    type: npcTypes[Math.floor(Math.random() * npcTypes.length)],
-                    dialog: npcDialogs[npcTypes[Math.floor(Math.random() * npcTypes.length)]]
-                });
-            }
-
-            // สร้างสิ่งของที่โต้ตอบได้
-            const interactableTypes = ['tree', 'rock', 'chest', 'plant'];
-            for (let i = 0; i < 20; i++) {
-                currentMap.interactables.push({
-                    id: `interact-${i}`,
-                    x: 100 + Math.random() * (gameWidth - 200),
-                    y: 100 + Math.random() * (gameHeight - 200),
-                    type: interactableTypes[Math.floor(Math.random() * interactableTypes.length)],
-                    collected: false
-                });
-            }
-
-            loadMap(currentMap);
-        }
-
-        function loadMap(mapData) {
-            gameArea.innerHTML = '';
-            currentMap = mapData;
-            npcs = {};
-            interactables = {};
-
-            // สร้างไทล์แมพ
-            mapData.tiles.forEach(tile => {
-                const tileElement = document.createElement('div');
-                tileElement.className = 'tile';
-                tileElement.style.left = `${tile.x}px`;
-                tileElement.style.top = `${tile.y}px`;
-                tileElement.style.width = `${tile.width}px`;
-                tileElement.style.height = `${tile.height}px`;
-                
-                if (tile.type === 'grass') {
-                    tileElement.style.backgroundColor = '#5a8f3d';
-                    tileElement.style.backgroundImage = 'url("https://i.imgur.com/grass-tile.png")';
-                } else if (tile.type === 'water') {
-                    tileElement.style.backgroundColor = '#3a7dae';
-                    tileElement.style.backgroundImage = 'url("https://i.imgur.com/water-tile.png")';
-                }
-                
-                gameArea.appendChild(tileElement);
-            });
-
-            // สร้าง NPCs
-            mapData.npcs.forEach(npc => {
-                const npcElement = document.createElement('div');
-                npcElement.className = 'npc';
-                npcElement.id = npc.id;
-                npcElement.style.left = `${npc.x}px`;
-                npcElement.style.top = `${npc.y}px`;
-                npcElement.style.backgroundImage = npcSprites[npc.type];
-                gameArea.appendChild(npcElement);
-                
-                npcs[npc.id] = {
-                    element: npcElement,
-                    x: npc.x,
-                    y: npc.y,
-                    width: 64,
-                    height: 64,
-                    type: npc.type,
-                    dialog: npc.dialog
-                };
-            });
-
-            // สร้างสิ่งของที่โต้ตอบได้
-            mapData.interactables.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'interactable';
-                itemElement.id = item.id;
-                itemElement.style.left = `${item.x}px`;
-                itemElement.style.top = `${item.y}px`;
-                
-                if (item.type === 'tree') {
-                    itemElement.style.backgroundImage = 'url("https://i.imgur.com/tree.png")';
-                } else if (item.type === 'rock') {
-                    itemElement.style.backgroundImage = 'url("https://i.imgur.com/rock.png")';
-                } else if (item.type === 'chest') {
-                    itemElement.style.backgroundImage = 'url("https://i.imgur.com/chest.png")';
-                } else if (item.type === 'plant') {
-                    itemElement.style.backgroundImage = 'url("https://i.imgur.com/plant.png")';
-                }
-                
-                gameArea.appendChild(itemElement);
-                
-                interactables[item.id] = {
-                    element: itemElement,
-                    x: item.x,
-                    y: item.y,
-                    width: 48,
-                    height: 48,
-                    type: item.type,
-                    collected: item.collected || false
-                };
-            });
-
-            // สร้างผู้เล่นใหม่
-            Object.keys(players).forEach(playerId => {
-                createPlayerElement(playerId, playerId === myPlayerId);
-            });
-        }
-
-        function updateScore(points) {
-            score += points || 0;
-            scoreDisplay.textContent = `คะแนน: ${score}`;
-        }
-
-        function updateTime() {
-            gameTime.minutes++;
-            if (gameTime.minutes >= 60) {
-                gameTime.minutes = 0;
-                gameTime.hours++;
-                if (gameTime.hours >= 24) {
-                    gameTime.hours = 0;
-                }
-            }
-            
-            const ampm = gameTime.hours >= 12 ? 'PM' : 'AM';
-            const displayHours = gameTime.hours % 12 || 12;
-            const displayMinutes = gameTime.minutes.toString().padStart(2, '0');
-            
-            timeDisplay.textContent = `เวลา: ${displayHours}:${displayMinutes} ${ampm}`;
-        }
-
-        // --- Game Loop และฟิสิกส์ ---
-        
-        function gameLoop() {
-            if (!gameRunning) return;
-
-            // อัพเดทผู้เล่นของเรา
-            if (players[myPlayerId]) {
-                updatePlayer(players[myPlayerId]);
-                checkInteractions(players[myPlayerId]);
-                
-                // ส่งข้อมูลตำแหน่งให้ผู้เล่นอื่น
-                sendData({ 
-                    type: 'player_update',
-                    x: players[myPlayerId].x,
-                    y: players[myPlayerId].y,
-                    dx: players[myPlayerId].dx,
-                    dy: players[myPlayerId].dy,
-                    direction: currentDirection
-                });
-            }
-            
-            // อัพเดทกล้อง
-            updateCamera();
-            
-            // อัพเดทการแสดงผล
-            draw();
-            
-            gameInterval = requestAnimationFrame(gameLoop);
-        }
-
-        function updatePlayer(p) {
-            // เคลื่อนที่ผู้เล่นตามจอยสติ๊ก
-            if (joystickActive) {
-                const moveX = Math.cos(joystickAngle) * (joystickDistance / maxJoystickDistance);
-                const moveY = Math.sin(joystickAngle) * (joystickDistance / maxJoystickDistance);
-                
-                p.dx = moveX * moveSpeed;
-                p.dy = moveY * moveSpeed;
-                
-                // กำหนดทิศทาง
-                if (Math.abs(moveX) > Math.abs(moveY)) {
-                    currentDirection = moveX > 0 ? 'right' : 'left';
-                } else {
-                    currentDirection = moveY > 0 ? 'down' : 'up';
-                }
-                
-                // เพิ่ม animation เดิน
-                p.element.classList.add('character-animate');
-            } else {
-                p.dx *= 0.7; // ความฝืดเมื่อปล่อยจอยสติ๊ก
-                p.dy *= 0.7;
-                if (Math.abs(p.dx) < 0.1) p.dx = 0;
-                if (Math.abs(p.dy) < 0.1) p.dy = 0;
-                
-                // หยุด animation เดิน
-                p.element.classList.remove('character-animate');
-            }
-
-            // เคลื่อนที่ผู้เล่น
-            p.x += p.dx;
-            p.y += p.dy;
-            
-            // จำกัดขอบเขตแมพ
-            p.x = Math.max(0, Math.min(gameWidth - p.width, p.x));
-            p.y = Math.max(0, Math.min(gameHeight - p.height, p.y));
-        }
-
-        function checkInteractions(p) {
-            // ตรวจสอบว่าอยู่ใกล้ NPC หรือสิ่งของที่โต้ตอบได้หรือไม่
-            currentInteractable = null;
-            
-            // ตรวจสอบ NPCs
-            Object.values(npcs).forEach(npc => {
-                const dx = p.x - npc.x;
-                const dy = p.y - npc.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 100) { // ระยะที่สามารถโต้ตอบได้
-                    currentInteractable = npc;
-                }
-            });
-            
-            // ตรวจสอบสิ่งของที่โต้ตอบได้
-            Object.values(interactables).forEach(item => {
-                if (!item.collected) {
-                    const dx = p.x - item.x;
-                    const dy = p.y - item.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < 80) { // ระยะที่สามารถโต้ตอบได้
-                        currentInteractable = item;
-                    }
-                }
-            });
-        }
-        
-        function updatePlayerPosition(playerId, data) {
-            if (players[playerId]) {
-                players[playerId].x = data.x;
-                players[playerId].y = data.y;
-                players[playerId].dx = data.dx;
-                players[playerId].dy = data.dy;
-                
-                // อัพเดททิศทาง
-                if (data.direction) {
-                    players[playerId].element.className = `character character-${data.direction} player-${playerId === 'player1' ? '1' : '2'}`;
-                    
-                    // อัพเดท animation
-                    if (Math.abs(data.dx) > 0.1 || Math.abs(data.dy) > 0.1) {
-                        players[playerId].element.classList.add('character-animate');
-                    } else {
-                        players[playerId].element.classList.remove('character-animate');
-                    }
-                }
-            }
-        }
-        
-        function updateCamera() {
-            if (players[myPlayerId]) {
-                // เคลื่อนกล้องตามผู้เล่น (center on player)
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight - 180; // ลบส่วนควบคุมและข้อมูล
-                
-                cameraX = Math.max(0, Math.min(gameWidth - viewportWidth, players[myPlayerId].x - viewportWidth/2));
-                cameraY = Math.max(0, Math.min(gameHeight - viewportHeight, players[myPlayerId].y - viewportHeight/2));
-                
-                gameArea.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`;
-            }
-        }
-
-        function draw() {
-            // อัพเดทตำแหน่งผู้เล่นทั้งหมด
-            Object.values(players).forEach(p => {
-                updatePlayerElement(p);
-            });
-        }
-        
-        function updatePlayerElement(p) {
-            p.element.style.left = `${p.x}px`;
-            p.element.style.top = `${p.y}px`;
-            
-            // อัพเดททิศทาง
-            if (p.isLocal) {
-                p.element.className = `character character-${currentDirection} player-${p.id === 'player1' ? '1' : '2'}`;
-            }
-        }
-
-        // --- การโต้ตอบกับ NPC และสิ่งของ ---
-        function handleInteract() {
-            if (!gameRunning || !currentInteractable) return;
-            
-            if (currentInteractable.dialog) {
-                // เป็น NPC - แสดงไดอะล็อก
-                showDialog(currentInteractable.dialog);
-            } else {
-                // เป็นสิ่งของที่เก็บได้
-                if (!currentInteractable.collected) {
-                    currentInteractable.collected = true;
-                    currentInteractable.element.style.display = 'none';
-                    updateScore(10);
-                    
-                    // เพิ่มไอเทมเข้าอินเวนทอรี่
-                    addToInventory(currentInteractable.type);
-                    
-                    if (isHost) {
-                        sendData({ 
-                            type: 'interact',
-                            id: currentInteractable.id
-                        });
-                    }
-                }
-            }
-        }
-        
-        function handleRemoteInteract(data) {
-            if (interactables[data.id]) {
-                interactables[data.id].collected = true;
-                interactables[data.id].element.style.display = 'none';
-            }
-        }
-        
-        function showDialog(messages) {
-            dialogBox.style.display = 'flex';
-            dialogChoices.innerHTML = '';
-            
-            // แสดงข้อความแรก
-            dialogText.textContent = messages[0];
-            
-            // เพิ่มตัวเลือก
-            messages.slice(1).forEach((msg, index) => {
-                const choice = document.createElement('div');
-                choice.className = 'dialog-choice';
-                choice.textContent = msg;
-                choice.onclick = () => {
-                    if (index === messages.length - 2) {
-                        // ตัวเลือกสุดท้าย - ปิดไดอะล็อก
-                        dialogBox.style.display = 'none';
-                    } else {
-                        // แสดงข้อความต่อไป
-                        dialogText.textContent = msg;
-                    }
-                };
-                dialogChoices.appendChild(choice);
-            });
-        }
-        
-        function addToInventory(itemType) {
-            if (inventoryItems.length >= 8) return; // จำกัดจำนวนช่อง
-            
-            inventoryItems.push(itemType);
-            updateInventory();
-        }
-        
-        function updateInventory() {
-            inventory.innerHTML = '';
-            
-            inventoryItems.forEach((item, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'inventory-slot';
-                
-                const icon = document.createElement('div');
-                icon.style.width = '30px';
-                icon.style.height = '30px';
-                
-                if (item === 'tree') {
-                    icon.style.backgroundImage = 'url("https://i.imgur.com/tree-icon.png")';
-                } else if (item === 'rock') {
-                    icon.style.backgroundImage = 'url("https://i.imgur.com/rock-icon.png")';
-                } else if (item === 'chest') {
-                    icon.style.backgroundImage = 'url("https://i.imgur.com/chest-icon.png")';
-                } else if (item === 'plant') {
-                    icon.style.backgroundImage = 'url("https://i.imgur.com/plant-icon.png")';
-                }
-                
-                slot.appendChild(icon);
-                inventory.appendChild(slot);
-            });
-        }
-
-        // --- การสร้างผู้เล่นและ UI ---
-        
-        function createPlayerElement(playerId, isLocal) {
-            if (players[playerId] && players[playerId].element) {
-                gameArea.removeChild(players[playerId].element);
-            }
-            
-            const character = document.createElement('div');
-            character.className = `character character-down player-${playerId === 'player1' ? '1' : '2'}`;
-            character.id = `character-${playerId}`;
-            
-            // ใช้สไปรท์ชีทที่กำหนด
-            character.style.backgroundImage = characterSprites[playerId] || characterSprites.player1;
-            
-            const nameTag = document.createElement('div');
-            nameTag.className = 'player-name';
-            nameTag.textContent = players[playerId]?.name || (playerId === 'player1' ? 'ผู้เล่น 1' : 'ผู้เล่น 2');
-            character.appendChild(nameTag);
-            
-            gameArea.appendChild(character);
-            
-            players[playerId] = {
-                id: playerId,
-                element: character,
-                name: players[playerId]?.name || (playerId === 'player1' ? 'ผู้เล่น 1' : 'ผู้เล่น 2'),
-                x: 1000,
-                y: 1000,
-                dx: 0,
-                dy: 0,
-                width: 64,
-                height: 64,
-                isLocal,
-                direction: 'down'
-            };
-            
-            return players[playerId];
-        }
-
-        // --- ระบบห้องและล็อบบี้ ---
-        
-        function showLobby(roomCode) {
-            menu.style.display = 'none';
-            lobby.style.display = 'flex';
-            roomCodeDisplay.textContent = roomCode;
-            
-            if (isHost) {
-                startGameBtn.style.display = 'block';
-                readyBtn.style.display = 'none';
-            } else {
-                startGameBtn.style.display = 'none';
-                readyBtn.style.display = 'block';
-            }
-        }
-        
-        function leaveLobby() {
-            if (conn) {
-                conn.close();
-                conn = null;
-            }
-            if (peer) {
-                peer.destroy();
-                peer = null;
-            }
-            
-            lobby.style.display = 'none';
-            menu.style.display = 'flex';
-            playerList.innerHTML = '';
-            players = {};
-        }
-        
-        function addPlayerToList(playerId, name, isHostPlayer, isMe) {
-            const playerItem = document.createElement('div');
-            playerItem.className = `player-item ${isHostPlayer ? 'player-host' : ''} ${isMe ? 'player-ready' : ''}`;
-            playerItem.id = `player-${playerId}`;
-            
-            const playerIcon = document.createElement('div');
-            playerIcon.className = `player-icon player-${playerId === 'player1' ? '1' : '2'}-icon`;
-            
-            const playerName = document.createElement('span');
-            playerName.textContent = isMe ? `${name} (คุณ)` : name;
-            
-            playerItem.appendChild(playerIcon);
-            playerItem.appendChild(playerName);
-            
-            if (isMe) {
-                const readyText = document.createElement('span');
-                readyText.textContent = '✓ พร้อมแล้ว';
-                readyText.style.marginLeft = '10px';
-                readyText.style.color = '#2ecc71';
-                playerItem.appendChild(readyText);
-            }
-            
-            playerList.appendChild(playerItem);
-            
-            // บันทึกข้อมูลผู้เล่น
-            if (!players[playerId]) {
-                players[playerId] = {
-                    id: playerId,
-                    name: name,
-                    isReady: isMe
-                };
-            }
-        }
-        
-        function updatePlayerInfo(data) {
-            if (data.players) {
-                // อัพเดทข้อมูลผู้เล่นทั้งหมด (สำหรับผู้เล่นที่เข้าร่วมทีหลัง)
-                playerList.innerHTML = '';
-                Object.keys(data.players).forEach(playerId => {
-                    const isMe = playerId === myPlayerId;
-                    addPlayerToList(
-                        playerId, 
-                        data.players[playerId].name, 
-                        playerId === 'player1', 
-                        isMe
-                    );
-                    
-                    if (!players[playerId]) {
-                        players[playerId] = {
-                            id: playerId,
-                            name: data.players[playerId].name,
-                            isReady: data.players[playerId].isReady
-                        };
-                        
-                        if (!isMe) {
-                            createPlayerElement(playerId, false);
-                        }
-                    }
-                });
-            } else {
-                // อัพเดทข้อมูลผู้เล่นเดียว
-                const playerId = data.playerId || (isHost ? 'player2' : 'player1');
-                if (players[playerId]) {
-                    players[playerId].name = data.name;
-                    
-                    const playerElement = document.getElementById(`player-${playerId}`);
-                    if (playerElement) {
-                        const nameElement = playerElement.querySelector('span');
-                        if (nameElement) {
-                            nameElement.textContent = data.name;
-                        }
-                    }
-                }
-            }
-        }
-        
-        function updateLobby(data) {
-            // อัพเดทสถานะล็อบบี้จาก Host
-            playerList.innerHTML = '';
-            Object.keys(data.players).forEach(playerId => {
-                const isMe = playerId === myPlayerId;
-                addPlayerToList(
-                    playerId, 
-                    data.players[playerId].name, 
-                    playerId === 'player1', 
-                    data.players[playerId].isReady
-                );
-                
-                players[playerId] = {
-                    id: playerId,
-                    name: data.players[playerId].name,
-                    isReady: data.players[playerId].isReady
-                };
-                
-                if (!isMe && !document.getElementById(`character-${playerId}`)) {
-                    createPlayerElement(playerId, false);
-                }
-            });
-        }
-        
-        function updatePlayerReady(playerId, ready) {
-            if (players[playerId]) {
-                players[playerId].isReady = ready;
-                
-                const playerElement = document.getElementById(`player-${playerId}`);
-                if (playerElement) {
-                    if (ready) {
-                        playerElement.classList.add('player-ready');
-                    } else {
-                        playerElement.classList.remove('player-ready');
-                    }
-                }
-            }
-        }
-        
-        function getPlayerListData() {
-            const data = {};
-            Object.keys(players).forEach(playerId => {
-                data[playerId] = {
-                    name: players[playerId].name,
-                    isReady: players[playerId].isReady
-                };
-            });
-            return data;
-        }
-
-        // --- การควบคุมแบบวงกลม ---
-        
-        function setupJoystick() {
-            let joystickStartX = 0;
-            let joystickStartY = 0;
-            let joystickBaseRect = joystickBase.getBoundingClientRect();
-            let joystickBaseX = joystickBaseRect.left + joystickBaseRect.width / 2;
-            let joystickBaseY = joystickBaseRect.top + joystickBaseRect.height / 2;
-            
-            function handleStart(e) {
-                e.preventDefault();
-                joystickActive = true;
-                const touch = e.type.includes('touch') ? e.touches[0] : e;
-                joystickStartX = touch.clientX;
-                joystickStartY = touch.clientY;
-                joystickBaseRect = joystickBase.getBoundingClientRect();
-                joystickBaseX = joystickBaseRect.left + joystickBaseRect.width / 2;
-                joystickBaseY = joystickBaseRect.top + joystickBaseRect.height / 2;
-                document.addEventListener('mousemove', handleMove);
-                document.addEventListener('touchmove', handleMove, { passive: false });
-                document.addEventListener('mouseup', handleEnd);
-                document.addEventListener('touchend', handleEnd);
-            }
-            
-            function handleMove(e) {
-                if (!joystickActive) return;
-                e.preventDefault();
-                
-                const touch = e.type.includes('touch') ? e.touches[0] : e;
-                const deltaX = touch.clientX - joystickStartX;
-                const deltaY = touch.clientY - joystickStartY;
-                
-                // คำนวณมุมและระยะทาง
-                joystickAngle = Math.atan2(deltaY, deltaX);
-                joystickDistance = Math.min(
-                    Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                    maxJoystickDistance
-                );
-                
-                // เคลื่อนที่ thumb ของจอยสติ๊ก
-                const thumbX = Math.cos(joystickAngle) * joystickDistance;
-                const thumbY = Math.sin(joystickAngle) * joystickDistance;
-                joystickThumb.style.transform = `translate(calc(-50% + ${thumbX}px), calc(-50% + ${thumbY}px))`;
-                
-                // เปลี่ยนสีเมื่อเคลื่อนที่
-                const intensity = joystickDistance / maxJoystickDistance;
-                joystickThumb.style.backgroundColor = `rgba(255, 255, 255, ${0.5 + intensity * 0.3})`;
-            }
-            
-            function handleEnd() {
-                joystickActive = false;
-                joystickThumb.style.transform = 'translate(-50%, -50%)';
-                joystickThumb.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
-                document.removeEventListener('mousemove', handleMove);
-                document.removeEventListener('touchmove', handleMove);
-                document.removeEventListener('mouseup', handleEnd);
-                document.removeEventListener('touchend', handleEnd);
-            }
-            
-            joystickBase.addEventListener('mousedown', handleStart);
-            joystickBase.addEventListener('touchstart', handleStart, { passive: false });
-        }
-
-        // --- Event Listeners ---
-        
-        function showAlert(title, message, showInput = false, showCancel = false, onConfirm, onCancel) {
-            alertTitle.textContent = title;
-            alertMessage.textContent = message;
-            alertInput.style.display = showInput ? 'block' : 'none';
-            alertCancel.style.display = showCancel ? 'block' : 'none';
-            alertInput.value = '';
-            alertBox.style.display = 'flex';
-            
-            alertOk.onclick = () => {
-                alertBox.style.display = 'none';
-                if(onConfirm) onConfirm(alertInput.value);
-            };
-            
-            alertCancel.onclick = () => {
-                alertBox.style.display = 'none';
-                if(onCancel) onCancel();
-            };
-        }
-
-        createRoomBtn.addEventListener('click', () => {
-            showAlert(
-                'สร้างห้องเกม', 
-                'กรุณากรอกชื่อของคุณ:', 
-                true, 
-                true,
-                (name) => {
-                    if (name && name.trim() !== '') {
-                        initializePeer(true, null, name.trim());
-                    }
-                },
-                () => {}
-            );
-        });
-        
-        joinRoomBtn.addEventListener('click', () => {
-            showAlert(
-                'เข้าร่วมห้องเกม', 
-                'กรุณากรอกชื่อและรหัสห้อง (คั่นด้วยลูกน้ำ):', 
-                true, 
-                true,
-                (input) => {
-                    if (input) {
-                        const [name, roomId] = input.split(',').map(s => s.trim());
-                        if (name && roomId) {
-                            initializePeer(false, roomId, name);
-                        }
-                    }
-                },
-                () => {}
-            );
-        });
-
-        howToPlayBtn.addEventListener('click', () => {
-            showAlert(
-                'วิธีเล่น', 
-                '1. คนหนึ่ง "สร้างห้อง" แล้วส่งรหัสให้เพื่อน\n' +
-                '2. อีกคน "เข้าร่วมห้อง" โดยใช้รหัส\n' +
-                '3. เป้าหมาย: สำรวจโลกและโต้ตอบกับ NPC และสิ่งของต่างๆ\n\n' +
-                'ควบคุม:\n' +
-                '- จอยสติ๊กด้านซ้ายสำหรับเดิน\n' +
-                '- ปุ่มโต้ตอบด้านขวาเมื่ออยู่ใกล้ NPC หรือสิ่งของ\n\n' +
-                'คุณสมบัติ:\n' +
-                '- แมพขนาดใหญ่ให้สำรวจ\n' +
-                '- ระบบเวลาจริง\n' +
-                '- อินเวนทอรี่เก็บของ'
-            );
-        });
-
-        startGameBtn.addEventListener('click', () => {
-            if (isHost) {
-                // ตรวจสอบว่าผู้เล่นทั้งหมดพร้อมหรือไม่
-                const allReady = Object.values(players).every(p => p.isReady);
-                
-                if (allReady || Object.keys(players).length === 1) {
-                    sendData({ 
-                        type: 'start_game',
-                        map: currentMap
-                    });
-                    startGame(currentMap);
-                } else {
-                    showAlert('ยังเริ่มเกมไม่ได้', 'ผู้เล่นอีกคนยังไม่พร้อม!');
-                }
-            }
-        });
-        
-        readyBtn.addEventListener('click', () => {
-            isReady = !isReady;
-            if (isReady) {
-                readyBtn.textContent = 'ยกเลิกความพร้อม';
-                readyBtn.style.background = 'linear-gradient(to bottom, #e74c3c, #c0392b)';
-            } else {
-                readyBtn.textContent = 'พร้อมแล้ว!';
-                readyBtn.style.background = 'linear-gradient(to bottom, #f39c12, #e67e22)';
-            }
-            
-            players[myPlayerId].isReady = isReady;
-            sendData({ 
-                type: 'player_ready',
-                playerId: myPlayerId,
-                isReady: isReady
-            });
-            
-            // สำหรับ Host ให้อัพเดทล็อบบี้ทันที
-            if (isHost) {
-                sendData({
-                    type: 'lobby_update',
-                    players: getPlayerListData()
-                });
-            }
-        });
-        
-        leaveLobbyBtn.addEventListener('click', leaveLobby);
-        actionBtn.addEventListener('click', handleInteract);
-        
-        // Keyboard controls for desktop
-        window.addEventListener('keydown', e => {
-            if (!gameRunning) return;
-            
-            if (e.key === 'ArrowLeft') {
-                currentDirection = 'left';
-                players[myPlayerId].dx = -moveSpeed;
-                players[myPlayerId].element.classList.add('character-animate');
-            }
-            if (e.key === 'ArrowRight') {
-                currentDirection = 'right';
-                players[myPlayerId].dx = moveSpeed;
-                players[myPlayerId].element.classList.add('character-animate');
-            }
-            if (e.key === 'ArrowUp') {
-                currentDirection = 'up';
-                players[myPlayerId].dy = -moveSpeed;
-                players[myPlayerId].element.classList.add('character-animate');
-            }
-            if (e.key === 'ArrowDown') {
-                currentDirection = 'down';
-                players[myPlayerId].dy = moveSpeed;
-                players[myPlayerId].element.classList.add('character-animate');
-            }
-            if (e.key === ' ' || e.key === 'Enter') {
-                handleInteract();
-            }
-        });
-        
-        window.addEventListener('keyup', e => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                players[myPlayerId].dx = 0;
-            }
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                players[myPlayerId].dy = 0;
-            }
-            
-            if (Math.abs(players[myPlayerId].dx) < 0.1 && Math.abs(players[myPlayerId].dy) < 0.1) {
-                players[myPlayerId].element.classList.remove('character-animate');
-            }
-        });
-
-        // เริ่มต้นจอยสติ๊ก
-        setupJoystick();
-        
-        // ป้องกันการเลื่อนหน้าจอเมื่อสัมผัส
-        document.addEventListener('touchmove', (e) => {
-            if (gameRunning) {
-                e.preventDefault();
-            }
+        // ป้องกันการเลื่อนหน้าจอ
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
         }, { passive: false });
         
-        // ปรับขนาดเมื่อเปลี่ยน orientation
-        window.addEventListener('resize', () => {
-            if (gameRunning) {
-                updateCamera();
+        // ป้องกันการดับเบิลคลิกซูม
+        document.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // ตัวแปรเกม
+        let isHost = false;
+        let roomCode = '';
+        let currentPlayer = 'red';
+        let selectedPiece = null;
+        let pieces = {};
+        let lines = [];
+        let dots = [];
+        let gameStarted = false;
+        
+        // องค์ประกอบ DOM
+        const lobby = document.getElementById('lobby');
+        const gameBoard = document.getElementById('gameBoard');
+        const joinSection = document.getElementById('joinSection');
+        const waitingSection = document.getElementById('waitingSection');
+        const roomCodeInput = document.getElementById('roomCode');
+        const displayRoomCode = document.getElementById('displayRoomCode');
+        const roomLink = document.getElementById('roomLink');
+        const joinBtn = document.getElementById('joinBtn');
+        const createBtn = document.getElementById('createBtn');
+        const startBtn = document.getElementById('startBtn');
+        const hostPlayer = document.getElementById('hostPlayer');
+        const guestPlayer = document.getElementById('guestPlayer');
+        
+        // สร้างห้องใหม่
+        createBtn.addEventListener('click', function() {
+            isHost = true;
+            roomCode = generateRoomCode();
+            displayRoomCode.textContent = roomCode;
+            roomLink.textContent = window.location.href.split('?')[0] + '?room=' + roomCode;
+            
+            joinSection.style.display = 'none';
+            waitingSection.style.display = 'block';
+            startBtn.disabled = true;
+            
+            // ในความเป็นจริงควรเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase สำหรับการจัดการห้อง
+            // แต่ในตัวอย่างนี้จะใช้การจำลอง
+            setTimeout(() => {
+                guestPlayer.textContent = 'ผู้เล่น 2: เพื่อน (สีน้ำเงิน)';
+                startBtn.disabled = false;
+            }, 2000);
+        });
+        
+        // เข้าร่วมห้อง
+        joinBtn.addEventListener('click', function() {
+            roomCode = roomCodeInput.value.trim();
+            if (roomCode.length === 0) {
+                alert('กรุณากรอกรหัสห้อง');
+                return;
+            }
+            
+            isHost = false;
+            displayRoomCode.textContent = roomCode;
+            
+            joinSection.style.display = 'none';
+            waitingSection.style.display = 'block';
+            hostPlayer.textContent = 'เจ้าของห้อง: เพื่อน (สีแดง)';
+            guestPlayer.textContent = 'ผู้เล่น 2: คุณ (สีน้ำเงิน)';
+            startBtn.style.display = 'none';
+            
+            // ในความเป็นจริงควรเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase สำหรับการจัดการห้อง
+            // แต่ในตัวอย่างนี้จะใช้การจำลอง
+            setTimeout(() => {
+                startGame();
+            }, 2000);
+        });
+        
+        // เริ่มเกม
+        startBtn.addEventListener('click', function() {
+            startGame();
+        });
+        
+        // ฟังก์ชันเริ่มเกม
+        function startGame() {
+            lobby.style.display = 'none';
+            gameBoard.style.display = 'block';
+            gameStarted = true;
+            
+            initializeBoard();
+        }
+        
+        // สร้างรหัสห้องแบบสุ่ม
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let result = '';
+            for (let i = 0; i < 5; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        // เริ่มต้นกระดานเกม
+        function initializeBoard() {
+            const boardSize = gameBoard.offsetWidth;
+            const spacing = boardSize / 8;
+            
+            // สร้างจุด
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 7; col++) {
+                    if ((row < 2 || row > 4) && (col < 2 || col > 4)) continue;
+                    
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dot.style.left = `${col * spacing + spacing}px`;
+                    dot.style.top = `${row * spacing + spacing}px`;
+                    dot.dataset.row = row;
+                    dot.dataset.col = col;
+                    gameBoard.appendChild(dot);
+                    dots.push({row, col});
+                    
+                    // เพิ่มหมาก
+                    if ((row === 0 || row === 6) && col === 3) {
+                        addPiece(row, col, 'red');
+                    } else if ((col === 0 || col === 6) && row === 3) {
+                        addPiece(row, col, 'blue');
+                    }
+                }
+            }
+            
+            // สร้างเส้นเชื่อม
+            createConnections();
+            
+            // เพิ่ม Event Listeners สำหรับหมาก
+            document.querySelectorAll('.piece').forEach(piece => {
+                piece.addEventListener('click', handlePieceClick);
+            });
+        }
+        
+        // เพิ่มหมาก
+        function addPiece(row, col, color) {
+            const boardSize = gameBoard.offsetWidth;
+            const spacing = boardSize / 8;
+            
+            const piece = document.createElement('div');
+            piece.className = `piece ${color}`;
+            piece.style.left = `${col * spacing + spacing}px`;
+            piece.style.top = `${row * spacing + spacing}px`;
+            piece.dataset.row = row;
+            piece.dataset.col = col;
+            piece.dataset.color = color;
+            gameBoard.appendChild(piece);
+            
+            pieces[`${row},${col}`] = {row, col, color, element: piece};
+        }
+        
+        // สร้างเส้นเชื่อมระหว่างจุด
+        function createConnections() {
+            const boardSize = gameBoard.offsetWidth;
+            const spacing = boardSize / 8;
+            
+            dots.forEach(dot1 => {
+                dots.forEach(dot2 => {
+                    // เชื่อมเฉพาะจุดที่อยู่ติดกันในแนวตั้งหรือแนวนอน
+                    if ((Math.abs(dot1.row - dot2.row) === 1 && dot1.col === dot2.col) || 
+                        (Math.abs(dot1.col - dot2.col) === 1 && dot1.row === dot2.row)) {
+                        
+                        const x1 = dot1.col * spacing + spacing;
+                        const y1 = dot1.row * spacing + spacing;
+                        const x2 = dot2.col * spacing + spacing;
+                        const y2 = dot2.row * spacing + spacing;
+                        
+                        const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                        
+                        const line = document.createElement('div');
+                        line.className = 'line';
+                        line.style.width = `${length}px`;
+                        line.style.height = '2px';
+                        line.style.left = `${x1}px`;
+                        line.style.top = `${y1}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        line.dataset.from = `${dot1.row},${dot1.col}`;
+                        line.dataset.to = `${dot2.row},${dot2.col}`;
+                        gameBoard.appendChild(line);
+                        
+                        lines.push({
+                            from: `${dot1.row},${dot1.col}`,
+                            to: `${dot2.row},${dot2.col}`,
+                            element: line
+                        });
+                    }
+                });
+            });
+        }
+        
+        // จัดการเมื่อคลิกที่หมาก
+        function handlePieceClick(e) {
+            if (!gameStarted || currentPlayer !== (isHost ? 'red' : 'blue')) return;
+            
+            const piece = e.target;
+            const color = piece.dataset.color;
+            
+            if (color !== currentPlayer) return;
+            
+            // เลือกหรือยกเลิกเลือกหมาก
+            if (selectedPiece === piece) {
+                piece.classList.remove('selected');
+                selectedPiece = null;
+            } else {
+                if (selectedPiece) selectedPiece.classList.remove('selected');
+                piece.classList.add('selected');
+                selectedPiece = piece;
+            }
+        }
+        
+        // ในความเป็นจริงควรมีโค้ดสำหรับการเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase
+        // เพื่อให้ผู้เล่นสามารถเล่นร่วมกันได้จริง
+        
+        // ตรวจสอบว่ามีรหัสห้องใน URL หรือไม่ (สำหรับผู้เล่นที่เข้าร่วมผ่านลิงค์)
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            
+            if (roomParam) {
+                roomCodeInput.value = roomParam;
             }
         });
-    });
     </script>
 </body>
 </html>
