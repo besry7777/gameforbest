@@ -3,449 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>หมากฮอต Co-op</title>
+    <title>หมากฮอส 8x8</title>
     <style>
+        :root {
+            --board-bg-dark: #b58863;
+            --board-bg-light: #f0d9b5;
+            --piece-red: #c41e3a;
+            --piece-blue: #007bff;
+            --piece-shadow: rgba(0,0,0,0.4);
+            --selected-glow: #32cd32;
+            --valid-move-dot: rgba(0, 0, 0, 0.2);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            touch-action: manipulation;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            overflow: hidden;
-            height: 100vh;
+            background-color: #333;
+            color: #fff;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            height: 100%;
+            gap: 15px;
+            width: 95%;
+            max-width: 500px;
         }
-        
-        .lobby {
+
+        .game-header {
+            width: 100%;
             text-align: center;
-            max-width: 500px;
-            width: 100%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+        }
+
+        .game-header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px #000;
         }
         
-        .game-board {
-            display: none;
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 1/1;
-            background-color: #e0c9a6;
-            position: relative;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .dot {
-            position: absolute;
-            width: 8%;
-            height: 8%;
-            background-color: #333;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .line {
-            position: absolute;
-            background-color: #333;
-            transform-origin: 0 0;
-        }
-        
-        .piece {
-            position: absolute;
-            width: 6%;
-            height: 6%;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s;
-            z-index: 10;
-        }
-        
-        .piece.red {
-            background-color: #e74c3c;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        
-        .piece.blue {
-            background-color: #3498db;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        
-        .piece.selected {
-            transform: translate(-50%, -50%) scale(1.2);
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-        
-        .controls {
-            margin-top: 20px;
+        .status-bar {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            width: 100%;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .player-info {
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .player-info.red {
+            background-color: var(--piece-red);
+        }
+        
+        .player-info.blue {
+            background-color: var(--piece-blue);
+        }
+
+        .player-info.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--selected-glow);
+        }
+
+        #turn-status {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .game-board {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #ccc;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .square {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
             justify-content: center;
         }
+
+        .square.dark {
+            background-color: var(--board-bg-dark);
+        }
+
+        .square.light {
+            background-color: var(--board-bg-light);
+        }
+
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: inset 0 -4px 6px var(--piece-shadow), 0 2px 2px rgba(255,255,255,0.5);
+            transition: all 0.2s ease-in-out;
+            position: relative; /* For king icon */
+        }
         
-        button {
-            padding: 10px 20px;
+        .piece.red { background-color: var(--piece-red); }
+        .piece.blue { background-color: var(--piece-blue); }
+
+        .piece.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px 3px var(--selected-glow);
+        }
+
+        .piece.king::after {
+            content: '👑';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: calc(min(3vw, 20px));
+            text-shadow: 0px 0px 2px #000;
+        }
+        
+        .valid-move-indicator {
+            width: 30%;
+            height: 30%;
+            background-color: var(--valid-move-dot);
+            border-radius: 50%;
+            pointer-events: none; /* Allows clicks to pass through to the square */
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        #restartBtn {
+            padding: 12px 25px;
+            font-size: 1.1em;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             background-color: #2ecc71;
             color: white;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
-        
-        button:hover {
+
+        #restartBtn:hover {
             background-color: #27ae60;
         }
-        
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        
-        input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .player-info {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .player {
-            padding: 10px;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            width: 48%;
-            text-align: center;
-        }
-        
-        .player.host {
-            background-color: #e74c3c;
-        }
-        
-        .player.guest {
-            background-color: #3498db;
-        }
-        
-        .status {
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        
-        .rules {
-            background-color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .rules h3 {
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-        
-        .rules ol {
-            padding-left: 20px;
-        }
-        
-        .rules li {
-            margin-bottom: 5px;
-        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="lobby" id="lobby">
-            <h1>หมากฮอต Co-op</h1>
-            <div id="joinSection">
-                <input type="text" id="roomCode" placeholder="ใส่รหัสห้อง">
-                <button id="joinBtn">เข้าร่วมห้อง</button>
-                <p>หรือ</p>
-                <button id="createBtn">สร้างห้องใหม่</button>
-            </div>
-            <div id="waitingSection" style="display: none;">
-                <h2>รหัสห้อง: <span id="displayRoomCode"></span></h2>
-                <p>ส่งลิงค์นี้ให้เพื่อน: <span id="roomLink"></span></p>
-                <div class="player-info">
-                    <div class="player host" id="hostPlayer">เจ้าของห้อง: คุณ</div>
-                    <div class="player guest" id="guestPlayer">ผู้เล่น 2: กำลังรอ...</div>
-                </div>
-                <button id="startBtn" disabled>เริ่มเกม</button>
-            </div>
+        <div class="game-header">
+            <h1>หมากฮอส</h1>
         </div>
-        
+
+        <div class="status-bar">
+            <div id="player1Info" class="player-info red">แดง: 12</div>
+            <div id="player2Info" class="player-info blue">น้ำเงิน: 12</div>
+        </div>
+
         <div class="game-board" id="gameBoard"></div>
-        
-        <div class="rules">
-            <h3>กติกาสากลหมากฮอต</h3>
-            <ol>
-                <li>ผู้เล่นผลัดกันเดินทีละคน โดยเริ่มจากผู้เล่นสีแดง</li>
-                <li>เดินหมากไปยังจุดที่ว่างโดยเชื่อมต่อกับเส้น</li>
-                <li>เมื่อสามารถสร้างแถวของหมากตัวเอง 3 ตัวเรียงกัน ให้กินหมากของคู่ต่อสู้ 1 ตัว</li>
-                <li>ผู้เล่นที่กินหมากคู่ต่อสู้จนเหลือน้อยกว่า 3 ตัวหรือทำให้คู่ต่อสู้เดินไม่ได้เป็นผู้ชนะ</li>
-            </ol>
+
+        <div class="controls">
+            <button id="restartBtn">เริ่มเกมใหม่</button>
         </div>
     </div>
 
     <script>
-        // ป้องกันการเลื่อนหน้าจอ
-        document.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-        
-        // ป้องกันการดับเบิลคลิกซูม
-        document.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-        
-        // ตัวแปรเกม
-        let isHost = false;
-        let roomCode = '';
-        let currentPlayer = 'red';
-        let selectedPiece = null;
-        let pieces = {};
-        let lines = [];
-        let dots = [];
-        let gameStarted = false;
-        
-        // องค์ประกอบ DOM
-        const lobby = document.getElementById('lobby');
         const gameBoard = document.getElementById('gameBoard');
-        const joinSection = document.getElementById('joinSection');
-        const waitingSection = document.getElementById('waitingSection');
-        const roomCodeInput = document.getElementById('roomCode');
-        const displayRoomCode = document.getElementById('displayRoomCode');
-        const roomLink = document.getElementById('roomLink');
-        const joinBtn = document.getElementById('joinBtn');
-        const createBtn = document.getElementById('createBtn');
-        const startBtn = document.getElementById('startBtn');
-        const hostPlayer = document.getElementById('hostPlayer');
-        const guestPlayer = document.getElementById('guestPlayer');
-        
-        // สร้างห้องใหม่
-        createBtn.addEventListener('click', function() {
-            isHost = true;
-            roomCode = generateRoomCode();
-            displayRoomCode.textContent = roomCode;
-            roomLink.textContent = window.location.href.split('?')[0] + '?room=' + roomCode;
+        const restartBtn = document.getElementById('restartBtn');
+        const player1Info = document.getElementById('player1Info');
+        const player2Info = document.getElementById('player2Info');
+
+        const BOARD_SIZE = 8;
+        const P1 = 1; // Red
+        const P2 = 2; // Blue
+        const P1_KING = 3;
+        const P2_KING = 4;
+
+        let boardState = [];
+        let currentPlayer = P1;
+        let selectedPiece = null; // { row, col, element }
+        let mustCapture = false;
+        let turnInProgress = false;
+
+        function createBoard() {
+            boardState = Array(BOARD_SIZE).fill(0).map(() => Array(BOARD_SIZE).fill(0));
             
-            joinSection.style.display = 'none';
-            waitingSection.style.display = 'block';
-            startBtn.disabled = true;
-            
-            // ในความเป็นจริงควรเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase สำหรับการจัดการห้อง
-            // แต่ในตัวอย่างนี้จะใช้การจำลอง
-            setTimeout(() => {
-                guestPlayer.textContent = 'ผู้เล่น 2: เพื่อน (สีน้ำเงิน)';
-                startBtn.disabled = false;
-            }, 2000);
-        });
-        
-        // เข้าร่วมห้อง
-        joinBtn.addEventListener('click', function() {
-            roomCode = roomCodeInput.value.trim();
-            if (roomCode.length === 0) {
-                alert('กรุณากรอกรหัสห้อง');
-                return;
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if ((row + col) % 2 !== 0) {
+                        boardState[row][col] = P2; // Player 2 (Blue) on top
+                    }
+                }
             }
+
+            for (let row = BOARD_SIZE - 3; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if ((row + col) % 2 !== 0) {
+                        boardState[row][col] = P1; // Player 1 (Red) on bottom
+                    }
+                }
+            }
+        }
+
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+            let p1Count = 0;
+            let p2Count = 0;
             
-            isHost = false;
-            displayRoomCode.textContent = roomCode;
-            
-            joinSection.style.display = 'none';
-            waitingSection.style.display = 'block';
-            hostPlayer.textContent = 'เจ้าของห้อง: เพื่อน (สีแดง)';
-            guestPlayer.textContent = 'ผู้เล่น 2: คุณ (สีน้ำเงิน)';
-            startBtn.style.display = 'none';
-            
-            // ในความเป็นจริงควรเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase สำหรับการจัดการห้อง
-            // แต่ในตัวอย่างนี้จะใช้การจำลอง
-            setTimeout(() => {
-                startGame();
-            }, 2000);
-        });
-        
-        // เริ่มเกม
-        startBtn.addEventListener('click', function() {
-            startGame();
-        });
-        
-        // ฟังก์ชันเริ่มเกม
-        function startGame() {
-            lobby.style.display = 'none';
-            gameBoard.style.display = 'block';
-            gameStarted = true;
-            
-            initializeBoard();
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+
+                    const pieceType = boardState[row][col];
+                    if (pieceType !== 0) {
+                        const piece = document.createElement('div');
+                        piece.classList.add('piece');
+                        if (pieceType === P1 || pieceType === P1_KING) {
+                            piece.classList.add('red');
+                            p1Count++;
+                        } else {
+                            piece.classList.add('blue');
+                            p2Count++;
+                        }
+                        if (pieceType === P1_KING || pieceType === P2_KING) {
+                            piece.classList.add('king');
+                        }
+                        square.appendChild(piece);
+                    }
+                    gameBoard.appendChild(square);
+                }
+            }
+            updateStatus(p1Count, p2Count);
         }
         
-        // สร้างรหัสห้องแบบสุ่ม
-        function generateRoomCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let result = '';
-            for (let i = 0; i < 5; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-        
-        // เริ่มต้นกระดานเกม
-        function initializeBoard() {
-            const boardSize = gameBoard.offsetWidth;
-            const spacing = boardSize / 8;
+        function updateStatus(p1Count, p2Count) {
+            player1Info.textContent = `แดง: ${p1Count}`;
+            player2Info.textContent = `น้ำเงิน: ${p2Count}`;
             
-            // สร้างจุด
-            for (let row = 0; row < 7; row++) {
-                for (let col = 0; col < 7; col++) {
-                    if ((row < 2 || row > 4) && (col < 2 || col > 4)) continue;
-                    
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    dot.style.left = `${col * spacing + spacing}px`;
-                    dot.style.top = `${row * spacing + spacing}px`;
-                    dot.dataset.row = row;
-                    dot.dataset.col = col;
-                    gameBoard.appendChild(dot);
-                    dots.push({row, col});
-                    
-                    // เพิ่มหมาก
-                    if ((row === 0 || row === 6) && col === 3) {
-                        addPiece(row, col, 'red');
-                    } else if ((col === 0 || col === 6) && row === 3) {
-                        addPiece(row, col, 'blue');
+            player1Info.classList.remove('active');
+            player2Info.classList.remove('active');
+            
+            if(currentPlayer === P1) {
+                player1Info.classList.add('active');
+            } else {
+                player2Info.classList.add('active');
+            }
+        }
+
+        function getValidMoves(row, col, pieceType) {
+            let moves = [];
+            const isKing = (pieceType === P1_KING || pieceType === P2_KING);
+            const player = (pieceType === P1 || pieceType === P1_KING) ? P1 : P2;
+            const opponent = (player === P1) ? [P2, P2_KING] : [P1, P1_KING];
+            const directions = isKing ? [[-1,-1], [-1,1], [1,-1], [1,1]] : (player === P1 ? [[-1,-1], [-1,1]] : [[1,-1], [1,1]]);
+
+            // Check for captures first
+            for(const [dr, dc] of directions) {
+                if(isKing) {
+                     for(let i = 1; i < BOARD_SIZE; i++) {
+                        const newRow = row + dr * i;
+                        const newCol = col + dc * i;
+                        const nextRow = newRow + dr;
+                        const nextCol = newCol + dc;
+
+                        if(!isValid(newRow, newCol) || !isValid(nextRow, nextCol)) break;
+
+                        if (opponent.includes(boardState[newRow][newCol]) && boardState[nextRow][nextCol] === 0) {
+                            moves.push({ to: [nextRow, nextCol], capture: [newRow, newCol] });
+                            // King can't jump over multiple empty squares to capture
+                            break; 
+                        }
+                        if (boardState[newRow][newCol] !== 0) break;
+                    }
+                } else {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    const nextRow = row + dr * 2;
+                    const nextCol = col + dc * 2;
+                    if(isValid(nextRow, nextCol) && opponent.includes(boardState[newRow][newCol]) && boardState[nextRow][nextCol] === 0) {
+                        moves.push({ to: [nextRow, nextCol], capture: [newRow, newCol] });
                     }
                 }
             }
             
-            // สร้างเส้นเชื่อม
-            createConnections();
-            
-            // เพิ่ม Event Listeners สำหรับหมาก
-            document.querySelectorAll('.piece').forEach(piece => {
-                piece.addEventListener('click', handlePieceClick);
-            });
-        }
-        
-        // เพิ่มหมาก
-        function addPiece(row, col, color) {
-            const boardSize = gameBoard.offsetWidth;
-            const spacing = boardSize / 8;
-            
-            const piece = document.createElement('div');
-            piece.className = `piece ${color}`;
-            piece.style.left = `${col * spacing + spacing}px`;
-            piece.style.top = `${row * spacing + spacing}px`;
-            piece.dataset.row = row;
-            piece.dataset.col = col;
-            piece.dataset.color = color;
-            gameBoard.appendChild(piece);
-            
-            pieces[`${row},${col}`] = {row, col, color, element: piece};
-        }
-        
-        // สร้างเส้นเชื่อมระหว่างจุด
-        function createConnections() {
-            const boardSize = gameBoard.offsetWidth;
-            const spacing = boardSize / 8;
-            
-            dots.forEach(dot1 => {
-                dots.forEach(dot2 => {
-                    // เชื่อมเฉพาะจุดที่อยู่ติดกันในแนวตั้งหรือแนวนอน
-                    if ((Math.abs(dot1.row - dot2.row) === 1 && dot1.col === dot2.col) || 
-                        (Math.abs(dot1.col - dot2.col) === 1 && dot1.row === dot2.row)) {
-                        
-                        const x1 = dot1.col * spacing + spacing;
-                        const y1 = dot1.row * spacing + spacing;
-                        const x2 = dot2.col * spacing + spacing;
-                        const y2 = dot2.row * spacing + spacing;
-                        
-                        const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-                        
-                        const line = document.createElement('div');
-                        line.className = 'line';
-                        line.style.width = `${length}px`;
-                        line.style.height = '2px';
-                        line.style.left = `${x1}px`;
-                        line.style.top = `${y1}px`;
-                        line.style.transform = `rotate(${angle}deg)`;
-                        line.dataset.from = `${dot1.row},${dot1.col}`;
-                        line.dataset.to = `${dot2.row},${dot2.col}`;
-                        gameBoard.appendChild(line);
-                        
-                        lines.push({
-                            from: `${dot1.row},${dot1.col}`,
-                            to: `${dot2.row},${dot2.col}`,
-                            element: line
-                        });
+            // If captures are possible, only they are valid
+            if (moves.length > 0) {
+                mustCapture = true;
+                return moves;
+            }
+
+            // If no captures, check for regular moves
+            if (mustCapture) return []; // If a capture is mandatory somewhere else, this piece can't do a simple move.
+
+            for(const [dr, dc] of directions) {
+                if(isKing) {
+                    for(let i = 1; i < BOARD_SIZE; i++) {
+                        const newRow = row + dr * i;
+                        const newCol = col + dc * i;
+                        if(!isValid(newRow, newCol) || boardState[newRow][newCol] !== 0) break;
+                        moves.push({ to: [newRow, newCol] });
                     }
-                });
+                } else {
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    if(isValid(newRow, newCol) && boardState[newRow][newCol] === 0) {
+                        moves.push({ to: [newRow, newCol] });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function checkForMandatoryCaptures(player) {
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const piece = boardState[r][c];
+                    if (piece !== 0 && (player === P1 ? (piece === P1 || piece === P1_KING) : (piece === P2 || piece === P2_KING))) {
+                        if (getValidMoves(r, c, piece).some(move => move.capture)) {
+                           return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        function handleSquareClick(e) {
+            if (turnInProgress) return;
+            const target = e.target.closest('.square');
+            if (!target) return;
+
+            const row = parseInt(target.dataset.row);
+            const col = parseInt(target.dataset.col);
+            const pieceType = boardState[row][col];
+            const clickedPiece = target.querySelector('.piece');
+            const isCurrentPlayerPiece = (currentPlayer === P1 && (pieceType === P1 || pieceType === P1_KING)) ||
+                                         (currentPlayer === P2 && (pieceType === P2 || pieceType === P2_KING));
+
+            if (selectedPiece) {
+                // Attempting to move
+                const validMoves = getValidMoves(selectedPiece.row, selectedPiece.col, boardState[selectedPiece.row][selectedPiece.col]);
+                const move = validMoves.find(m => m.to[0] === row && m.to[1] === col);
+                
+                if (move) {
+                    movePiece(selectedPiece.row, selectedPiece.col, row, col, move.capture);
+                } else {
+                    // Clicked somewhere else, deselect
+                    clearHighlights();
+                    selectedPiece = null;
+                }
+            } else if (isCurrentPlayerPiece) {
+                // Selecting a piece
+                clearHighlights();
+                mustCapture = checkForMandatoryCaptures(currentPlayer);
+                const validMoves = getValidMoves(row, col, pieceType);
+                if(mustCapture && !validMoves.some(m => m.capture)) {
+                    // This piece cannot move because another piece must capture
+                    return;
+                }
+                if(validMoves.length > 0) {
+                    selectedPiece = { row, col, element: clickedPiece };
+                    clickedPiece.classList.add('selected');
+                    highlightValidMoves(validMoves);
+                }
+            }
+        }
+        
+        async function movePiece(fromRow, fromCol, toRow, toCol, captured) {
+            turnInProgress = true;
+            const pieceType = boardState[fromRow][fromCol];
+            boardState[toRow][toCol] = pieceType;
+            boardState[fromRow][fromCol] = 0;
+            
+            if (captured) {
+                boardState[captured[0]][captured[1]] = 0;
+            }
+            
+            // Check for King promotion
+            if (pieceType === P1 && toRow === 0) boardState[toRow][toCol] = P1_KING;
+            if (pieceType === P2 && toRow === BOARD_SIZE - 1) boardState[toRow][toCol] = P2_KING;
+            
+            selectedPiece = null;
+            clearHighlights();
+            renderBoard();
+            await new Promise(res => setTimeout(res, 100)); // Short delay for rendering
+
+            // Check for multi-jump
+            if (captured) {
+                const multiJumpMoves = getValidMoves(toRow, toCol, boardState[toRow][toCol]).filter(m => m.capture);
+                if (multiJumpMoves.length > 0) {
+                    selectedPiece = { row: toRow, col: toCol, element: gameBoard.children[toRow * BOARD_SIZE + toCol].querySelector('.piece') };
+                    selectedPiece.element.classList.add('selected');
+                    highlightValidMoves(multiJumpMoves);
+                    turnInProgress = false; // Allow next jump
+                    return;
+                }
+            }
+            
+            switchTurn();
+            turnInProgress = false;
+        }
+
+        function switchTurn() {
+            currentPlayer = (currentPlayer === P1) ? P2 : P1;
+            checkWinCondition();
+        }
+
+        function checkWinCondition() {
+            let p1Pieces = 0;
+            let p2Pieces = 0;
+            let p1Moves = 0;
+            let p2Moves = 0;
+            
+            for(let r=0; r<BOARD_SIZE; r++) {
+                for(let c=0; c<BOARD_SIZE; c++) {
+                    const piece = boardState[r][c];
+                    if(piece === P1 || piece === P1_KING) {
+                        p1Pieces++;
+                        if(currentPlayer === P1) p1Moves += getValidMoves(r, c, piece).length;
+                    } else if (piece === P2 || piece === P2_KING) {
+                        p2Pieces++;
+                        if(currentPlayer === P2) p2Moves += getValidMoves(r, c, piece).length;
+                    }
+                }
+            }
+            
+            updateStatus(p1Pieces, p2Pieces);
+
+            if(p1Pieces === 0) announceWinner(P2);
+            else if (p2Pieces === 0) announceWinner(P1);
+            else if (currentPlayer === P1 && p1Moves === 0) announceWinner(P2);
+            else if (currentPlayer === P2 && p2Moves === 0) announceWinner(P1);
+        }
+
+        function announceWinner(player) {
+            turnInProgress = true;
+            const winnerName = player === P1 ? "ผู้เล่นสีแดง" : "ผู้เล่นสีน้ำเงิน";
+            setTimeout(() => {
+                alert(`${winnerName} เป็นผู้ชนะ!`);
+            }, 300);
+        }
+
+        function isValid(row, col) {
+            return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+        }
+
+        function highlightValidMoves(moves) {
+            moves.forEach(move => {
+                const square = gameBoard.children[move.to[0] * BOARD_SIZE + move.to[1]];
+                const indicator = document.createElement('div');
+                indicator.className = 'valid-move-indicator';
+                square.appendChild(indicator);
             });
         }
         
-        // จัดการเมื่อคลิกที่หมาก
-        function handlePieceClick(e) {
-            if (!gameStarted || currentPlayer !== (isHost ? 'red' : 'blue')) return;
-            
-            const piece = e.target;
-            const color = piece.dataset.color;
-            
-            if (color !== currentPlayer) return;
-            
-            // เลือกหรือยกเลิกเลือกหมาก
-            if (selectedPiece === piece) {
-                piece.classList.remove('selected');
-                selectedPiece = null;
-            } else {
-                if (selectedPiece) selectedPiece.classList.remove('selected');
-                piece.classList.add('selected');
-                selectedPiece = piece;
-            }
+        function clearHighlights() {
+            document.querySelectorAll('.piece.selected').forEach(p => p.classList.remove('selected'));
+            document.querySelectorAll('.valid-move-indicator').forEach(i => i.remove());
+        }
+
+        function initGame() {
+            createBoard();
+            renderBoard();
+            currentPlayer = P1;
+            selectedPiece = null;
+            mustCapture = false;
+            turnInProgress = false;
+            gameBoard.addEventListener('click', handleSquareClick);
         }
         
-        // ในความเป็นจริงควรมีโค้ดสำหรับการเชื่อมต่อกับเซิร์ฟเวอร์หรือ Firebase
-        // เพื่อให้ผู้เล่นสามารถเล่นร่วมกันได้จริง
-        
-        // ตรวจสอบว่ามีรหัสห้องใน URL หรือไม่ (สำหรับผู้เล่นที่เข้าร่วมผ่านลิงค์)
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomParam = urlParams.get('room');
-            
-            if (roomParam) {
-                roomCodeInput.value = roomParam;
-            }
-        });
+        restartBtn.addEventListener('click', initGame);
+        window.addEventListener('load', initGame);
     </script>
 </body>
 </html>
