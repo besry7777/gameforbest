@@ -1,201 +1,235 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Birthday Surprise</title>
-<style>
-body {
-margin: 0;
-overflow: hidden;
-background: #000;
-color: #f0f; /* สีชมพูอมม่วง */
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-height: 100vh;
-font-family: 'Courier New', Courier, monospace;
-}
-    #matrix-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-    }
-
-    .content {
-        position: relative;
-        z-index: 2;
-        text-align: center;
-    }
-
-    .header-text {
-        position: absolute;
-        top: 20px;
-        width: 100%;
-        text-align: center;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.2em;
-        letter-spacing: 2px;
-        z-index: 3;
-    }
-
-    #countdown {
-        font-size: 25vw; /* ขนาดตัวอักษรปรับตามความกว้างจอ */
-        font-weight: bold;
-        text-shadow: 0 0 10px #f0f, 0 0 20px #f0f;
-        animation: flicker 1.5s infinite alternate;
-    }
-
-    #final-message {
-        font-size: 10vw;
-        font-weight: bold;
-        text-shadow: 0 0 10px #f0f, 0 0 20px #f0f;
-        display: none; /* ซ่อนไว้ก่อน */
-        animation: flicker 1.5s infinite alternate;
-    }
-
-    .birthday-greetings {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .greeting-image {
-        max-width: 80%;
-        height: auto;
-        margin-bottom: 20px;
-    }
-
-    .greeting-text {
-        color: white;
-        font-size: 2em;
-        font-weight: bold;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    @keyframes flicker {
-        0%, 18%, 22%, 25%, 53%, 57%, 100% {
-            text-shadow:
-            0 0 4px #f0f,
-            0 0 11px #f0f,
-            0 0 19px #f0f,
-            0 0 40px #f0f,
-            0 0 80px #f0f,
-            0 0 90px #f0f,
-            0 0 100px #f0f,
-            0 0 150px #f0f;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
+    <style>
+        /* ตั้งค่าให้เกมแสดงเต็มจอและไม่มี scrollbar */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        20%, 24%, 55% {
-            text-shadow: none;
+        /* ตั้งค่า Canvas ซึ่งเป็นหน้าจอเกมของเรา */
+        canvas {
+            display: block;
+            background-color: #333; /* สีพื้นหลังของเกม */
         }
-    }
+        /* Container สำหรับปุ่มควบคุมทั้งหมด */
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 30px;
+            box-sizing: border-box;
+            -webkit-touch-callout: none; /* ป้องกันเมนูขึ้นมาตอนกดค้างบน iOS */
+            -webkit-user-select: none; /* ป้องกันการเลือกข้อความ */
+        }
+        /* กลุ่มปุ่มเดิน (D-pad) */
+        #d-pad {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        /* ปุ่มแต่ละปุ่ม */
+        .btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: black;
+        }
+        /* จัดตำแหน่งปุ่มเดิน */
+        #up { top: 0; left: 40px; }
+        #down { bottom: 0; left: 40px; }
+        #left { top: 40px; left: 0; }
+        #right { top: 40px; right: 0; }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-</style>
-
+        /* ปุ่ม Action (คุย/ตี) */
+        #action-button {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 80, 80, 0.6);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-<div class="header-text">happybirthdaydeargift.vercel.app</div>
 
-<canvas id="matrix-canvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
-<div class="content">
-    <div id="countdown">3</div>
-    <div id="final-message">HAPPY<br>BIRTHDAY</div>
-</div>
+    <div id="controls">
+        <div id="d-pad">
+            <div id="up" class="btn">▲</div>
+            <div id="down" class="btn">▼</div>
+            <div id="left" class="btn">◀</div>
+            <div id="right" class="btn">▶</div>
+        </div>
+        <div id="action-button">คุย/ตี</div>
+    </div>
 
-<div id="birthdayGreetings" class="birthday-greetings">
-    <img id="greetingImage1" src="" alt="Birthday Greeting 1" class="greeting-image" style="display: none;">
-    <img id="greetingImage2" src="" alt="Birthday Greeting 2" class="greeting-image" style="display: none;">
-    <div class="greeting-text">สุขสันต์วันเกิดนะ!</div>
-</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-<script>
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    const countdownElement = document.getElementById('countdown');
-    const finalMessageElement = document.getElementById('final-message');
-    const birthdayGreetingsElement = document.getElementById('birthdayGreetings');
-    const greetingImage1 = document.getElementById('greetingImage1');
-    const greetingImage2 = document.getElementById('greetingImage2');
+        // ตั้งค่าให้ Canvas เต็มจอแนวตั้ง
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-    // Set the image sources
-    greetingImage1.src = 'http://googleusercontent.com/file_content/0';
-    greetingImage2.src = 'http://googleusercontent.com/file_content/1';
+        // สถานะของปุ่ม (รองรับการกดหลายปุ่มพร้อมกัน)
+        const keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            action: false
+        };
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        // ตัวละครผู้เล่น
+        const player = {
+            x: canvas.width / 2 - 15,
+            y: canvas.height / 2 - 15,
+            width: 30,
+            height: 30,
+            speed: 4,
+            color: 'skyblue'
+        };
 
-    const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
-    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const nums = '0123456789';
-    const alphabet = katakana + latin + nums;
+        // NPC สำหรับทดสอบการคุย
+        const npc = {
+            x: canvas.width / 2 + 100,
+            y: canvas.height / 2,
+            width: 30,
+            height: 30,
+            color: 'lightgreen'
+        };
+        
+        // --- การควบคุม ---
 
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const rainDrops = [];
+        // ฟังก์ชันสำหรับจัดการการกดปุ่มบนหน้าจอ (Touch)
+        function setupTouchControls() {
+            const controlsMap = {
+                'up': 'up', 'down': 'down', 'left': 'left', 'right': 'right',
+                'action-button': 'action'
+            };
 
-    for (let x = 0; x < columns; x++) {
-        rainDrops.push(1);
-    }
-
-    const drawMatrix = () => {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#f0f'; // สีตัวอักษร
-        ctx.font = fontSize + 'px monospace';
-
-        for (let i = 0; i < rainDrops.length; i++) {
-            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-            ctx.fillText(text, i * fontSize, rainDrops.length > 0 ? rainDrops.indexOf(rainDrops.at(i)) * fontSize : 0);
-
-            if (rainDrops.length > 0 && rainDrops.at(i) * fontSize > canvas.height && Math.random() > 0.975) {
-                rainDrops.splice(i, 1, 0);
-            }
-            if (rainDrops.length > 0) {
-                rainDrops.splice(i, 1, rainDrops.at(i) + 1);
+            for (const [elementId, keyName] of Object.entries(controlsMap)) {
+                const element = document.getElementById(elementId);
+                element.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // ป้องกันพฤติกรรมเริ่มต้นของเบราว์เซอร์
+                    keys[keyName] = true;
+                    element.style.background = 'rgba(255, 255, 255, 0.9)'; // ทำให้ปุ่มสว่างขึ้นเมื่อกด
+                    if(elementId === 'action-button') element.style.background = 'rgba(255, 80, 80, 0.9)';
+                });
+                element.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    keys[keyName] = false;
+                    element.style.background = 'rgba(255, 255, 255, 0.5)'; // กลับเป็นสีเดิม
+                     if(elementId === 'action-button') element.style.background = 'rgba(255, 80, 80, 0.6)';
+                });
             }
         }
-    };
+        setupTouchControls();
 
-    setInterval(drawMatrix, 33);
+        // การควบคุมด้วยคีย์บอร์ด (สำหรับทดสอบบนคอม)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            if (e.key === ' ') keys.action = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            if (e.key === ' ') keys.action = false;
+        });
 
-    // Countdown Logic
-    let count = 3;
-    const interval = setInterval(() => {
-        count--;
-        if (count > 0) {
-            countdownElement.innerText = count;
-        } else if (count === 0) {
-            countdownElement.innerText = '1'; // แสดงเลข 1 ก่อนเปลี่ยน
-            setTimeout(() => {
-                countdownElement.style.display = 'none';
-                finalMessageElement.style.display = 'block';
-                finalMessageElement.style.animation = 'fadeIn 2s ease-in-out forwards';
-                setTimeout(() => {
-                    finalMessageElement.style.display = 'none';
-                    birthdayGreetingsElement.style.display = 'flex';
-                    birthdayGreetingsElement.style.animation = 'fadeIn 2s ease-in-out forwards';
-                    greetingImage1.style.display = 'block';
-                    greetingImage1.style.animation = 'fadeIn 3s ease-in-out forwards';
-                    setTimeout(() => {
-                        greetingImage2.style.display = 'block';
-                        greetingImage2.style.animation = 'fadeIn 3s ease-in-out forwards';
-                    }, 2000);
-                    clearInterval(interval);
-                }, 3000);
-            }, 1000);
+
+        // --- Game Logic ---
+        function update() {
+            // การเคลื่อนที่
+            if (keys.up) player.y -= player.speed;
+            if (keys.down) player.y += player.speed;
+            if (keys.left) player.x -= player.speed;
+            if (keys.right) player.x += player.speed;
+
+            // ไม่ให้ผู้เล่นตกขอบจอ
+            if (player.x < 0) player.x = 0;
+            if (player.y < 0) player.y = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+
+            // การมีปฏิสัมพันธ์ (คุย)
+            const dx = player.x - npc.x;
+            const dy = player.y - npc.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (keys.action && distance < 50) {
+                alert("สวัสดีนักเดินทาง! โปรดช่วยหมู่บ้านเราด้วย!");
+                keys.action = false; // ป้องกันการ alert รัวๆ
+            }
         }
-    }, 1000);
-</script>
 
+        // --- Drawing ---
+        function draw() {
+            // ล้างหน้าจอทั้งหมดในทุกเฟรม
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // วาดพื้นหลัง (ถ้ามี)
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // วาด NPC
+            ctx.fillStyle = npc.color;
+            ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
+
+            // วาดผู้เล่น
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        // --- Game Loop ---
+        function gameLoop() {
+            update(); // อัปเดตตรรกะของเกม
+            draw();   // วาดภาพใหม่
+            requestAnimationFrame(gameLoop); // วนลูปการทำงานให้ลื่นไหล
+        }
+
+        // เริ่มเกม
+        gameLoop();
+
+    </script>
 </body>
 </html>
