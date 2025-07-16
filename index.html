@@ -18,7 +18,17 @@
       background: url('https://i.imgur.com/ihDJe4n.png'); /* พื้นหญ้า */
       background-size: 64px 64px;
     }
+* {
+  touch-action: manipulation; /* ปิด double tap zoom ในหลายปุ่ม */
+}
 
+#joystick-area,
+#action-button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
     /* ปุ่มควบคุมแบบจอยวงกลม */
     #controls {
       position: fixed;
