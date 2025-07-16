@@ -1,80 +1,152 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สุขสันต์วันเกิดนะ!</title>
+    <title>Countdown</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap');
-
         body {
-            font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
-            color: #333;
-            text-align: center;
-            padding: 50px;
             margin: 0;
+            overflow: hidden;
+            background: #000;
+            color: #f0f; /* สีชมพูอมม่วง */
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
         }
 
-        .birthday-card {
-            background-color: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            animation: fadeIn 1.5s ease-in-out;
+        #matrix-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
         }
 
-        h1 {
-            color: #e91e63; /* สีชมพูสดใส */
-            font-size: 3em;
-            margin-bottom: 20px;
-        }
-
-        p {
+        .header-text {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 1.2em;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .message {
-            font-style: italic;
-            color: #555;
+            letter-spacing: 2px;
+            z-index: 3;
         }
         
-        .footer {
-            margin-top: 30px;
-            font-size: 1em;
-            color: #777;
+        #countdown {
+            font-size: 25vw; /* ขนาดตัวอักษรปรับตามความกว้างจอ */
+            font-weight: bold;
+            text-shadow: 0 0 10px #f0f, 0 0 20px #f0f;
+            animation: flicker 1.5s infinite alternate;
         }
 
+        #final-message {
+            font-size: 10vw;
+            font-weight: bold;
+            text-shadow: 0 0 10px #f0f, 0 0 20px #f0f;
+            display: none; /* ซ่อนไว้ก่อน */
+            animation: flicker 1.5s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow:
+                0 0 4px #f0f,
+                0 0 11px #f0f,
+                0 0 19px #f0f,
+                0 0 40px #f0f,
+                0 0 80px #f0f,
+                0 0 90px #f0f,
+                0 0 100px #f0f,
+                0 0 150px #f0f;
+            }
+            20%, 24%, 55% {        
+                text-shadow: none;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="birthday-card">
-        <h1>สุขสันต์วันเกิด!</h1>
-        <p class="message">ถึงจะไม่มีใครอยู่ข้างๆ ในวันนี้ แต่อย่าลืมว่าคุณมีค่าและเก่งที่สุดเสมอ ขอให้วันเกิดปีนี้เป็นวันที่ดี เป็นการเริ่มต้นใหม่ที่สดใส มีความสุขมากๆ นะคะ</p>
-        <p>ขอให้ทุกๆ วันหลังจากนี้เต็มไปด้วยรอยยิ้ม เสียงหัวเราะ และเรื่องราวดีๆ นะคะ 😊</p>
-        <div class="footer">
-            <p>🎂🎉 สุขสันต์วันเกิดอีกครั้งนะ! 🎉🎂</p>
-        </div>
+    <div class="header-text">happybirthdaydeargift.vercel.app</div>
+    
+    <canvas id="matrix-canvas"></canvas>
+    
+    <div class="content">
+        <div id="countdown">3</div>
+        <div id="final-message">HAPPY<br>BIRTHDAY</div>
     </div>
+
+    <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const rainDrops = [];
+
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        const drawMatrix = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#f0f'; // สีตัวอักษร
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+
+        setInterval(drawMatrix, 33);
+
+        // Countdown Logic
+        const countdownElement = document.getElementById('countdown');
+        const finalMessageElement = document.getElementById('final-message');
+        let count = 3;
+
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownElement.innerText = count;
+            } else if (count === 0) {
+                 countdownElement.innerText = '1'; // แสดงเลข 1 ก่อนเปลี่ยน
+                 setTimeout(() => {
+                    countdownElement.style.display = 'none';
+                    finalMessageElement.style.display = 'block';
+                    clearInterval(interval);
+                 }, 1000);
+            }
+        }, 1000);
+    </script>
 
 </body>
 </html>
