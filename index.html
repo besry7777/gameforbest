@@ -70,17 +70,45 @@
       font-weight: bold;
       user-select: none;
     }
+    #joystick-area {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 150px;
+  height: 150px;
+  touch-action: none;
+}
+
+#joystick-bg, #joystick-stick {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#joystick-bg {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  left: 75px; top: 75px;
+}
+
+#joystick-stick {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  left: 75px; top: 75px;
+}
   </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
 
-<div id="controls">
-  <div id="up" class="circle-btn">▲</div>
-  <div id="down" class="circle-btn">▼</div>
-  <div id="left" class="circle-btn">◀</div>
-  <div id="right" class="circle-btn">▶</div>
+<div id="joystick-area">
+  <div id="joystick-bg"></div>
+  <div id="joystick-stick"></div>
 </div>
 <div id="action-button">คุย</div>
 
@@ -93,7 +121,48 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
+let joystick = {
+  active: false,
+  startX: 0,
+  startY: 0,
+  dx: 0,
+  dy: 0
+};
 
+const stick = document.getElementById("joystick-stick");
+const area = document.getElementById("joystick-area");
+
+area.addEventListener("touchstart", function (e) {
+  const touch = e.touches[0];
+  joystick.active = true;
+  joystick.startX = touch.clientX;
+  joystick.startY = touch.clientY;
+});
+
+area.addEventListener("touchmove", function (e) {
+  if (!joystick.active) return;
+  const touch = e.touches[0];
+  const dx = touch.clientX - joystick.startX;
+  const dy = touch.clientY - joystick.startY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const maxDist = 40;
+
+  // จำกัดไม่ให้ลากเกินระยะ
+  const angle = Math.atan2(dy, dx);
+  joystick.dx = Math.cos(angle) * Math.min(dist, maxDist);
+  joystick.dy = Math.sin(angle) * Math.min(dist, maxDist);
+
+  stick.style.left = 75 + joystick.dx + "px";
+  stick.style.top = 75 + joystick.dy + "px";
+});
+
+area.addEventListener("touchend", function () {
+  joystick.active = false;
+  joystick.dx = 0;
+  joystick.dy = 0;
+  stick.style.left = "75px";
+  stick.style.top = "75px";
+});
 // โหลดภาพพิกเซล
 const playerImg = new Image();
 playerImg.src = 'player.png'; // ใส่ภาพของคุณเอง
