@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
   <style>
     /* สไตล์พื้นฐาน */
@@ -14,6 +14,7 @@
       display: flex; justify-content: center; align-items: center;
       touch-action: none;
       font-family: 'Courier New', monospace;
+      -webkit-tap-highlight-color: transparent;
     }
     canvas {
       display: block;
@@ -95,6 +96,8 @@
       color: white;
       font-weight: bold;
       text-shadow: 1px 1px 2px #000;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     #action-btn {
@@ -118,18 +121,20 @@
       bottom: 20px;
       left: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       border: 4px solid #4a2c12;
       border-radius: 10px;
       padding: 15px;
       color: white;
       display: none;
       z-index: 100;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
     #dialog-text {
       margin-bottom: 15px;
       line-height: 1.5;
+      min-height: 60px;
     }
 
     #dialog-options {
@@ -144,6 +149,7 @@
       border-radius: 5px;
       padding: 8px;
       cursor: pointer;
+      transition: background 0.2s;
     }
 
     .dialog-option:hover {
@@ -157,7 +163,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -184,6 +190,7 @@
       cursor: pointer;
       min-width: 200px;
       text-align: center;
+      transition: background 0.2s;
     }
 
     .menu-button:hover {
@@ -195,12 +202,29 @@
       position: fixed;
       top: 10px;
       left: 10px;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
       border: 3px solid #4a2c12;
       border-radius: 8px;
-      padding: 8px;
+      padding: 10px;
       color: white;
       font-size: 14px;
+      min-width: 180px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .status-label {
+      width: 70px;
+    }
+
+    .status-value {
+      flex-grow: 1;
     }
 
     .status-bar {
@@ -209,18 +233,21 @@
       border-radius: 5px;
       margin-top: 3px;
       overflow: hidden;
+      position: relative;
     }
 
     .health-bar {
       height: 100%;
-      background: #ff4444;
+      background: linear-gradient(to right, #ff0000, #ff4444);
       width: 100%;
+      transition: width 0.3s;
     }
 
     .energy-bar {
       height: 100%;
-      background: #44aaff;
+      background: linear-gradient(to right, #0066ff, #44aaff);
       width: 100%;
+      transition: width 0.3s;
     }
 
     /* เอฟเฟกต์เปลี่ยนฉาก */
@@ -235,6 +262,65 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease-in-out;
+    }
+
+    /* เควส UI */
+    #quest-log {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 3px solid #4a2c12;
+      border-radius: 8px;
+      padding: 10px;
+      color: white;
+      font-size: 14px;
+      max-width: 200px;
+      max-height: 150px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 10;
+      display: none;
+    }
+
+    #quest-log h3 {
+      margin-top: 0;
+      color: #f8d030;
+      border-bottom: 1px solid #6d4a2a;
+      padding-bottom: 5px;
+    }
+
+    .quest-item {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #4a2c12;
+    }
+
+    /* ปุ่มเปิดปิด UI */
+    .ui-toggle {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #4a2c12;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      z-index: 20;
+      cursor: pointer;
+    }
+
+    #toggle-quest {
+      top: 60px;
+      right: 10px;
+    }
+
+    #toggle-stats {
+      top: 110px;
+      right: 10px;
     }
   </style>
 </head>
@@ -273,12 +359,35 @@
 
 <!-- สถานะผู้เล่น -->
 <div id="player-status">
-  <div>ชื่อ: <span id="player-name">นักผจญภัย</span></div>
-  <div>HP: <span id="hp-text">100/100</span></div>
+  <div class="status-row">
+    <div class="status-label">ชื่อ:</div>
+    <div class="status-value" id="player-name">นักผจญภัย</div>
+  </div>
+  <div class="status-row">
+    <div class="status-label">HP:</div>
+    <div class="status-value" id="hp-text">100/100</div>
+  </div>
   <div class="status-bar"><div class="health-bar" id="health-bar"></div></div>
-  <div>พลังงาน: <span id="energy-text">50/50</span></div>
+  <div class="status-row">
+    <div class="status-label">พลังงาน:</div>
+    <div class="status-value" id="energy-text">50/50</div>
+  </div>
   <div class="status-bar"><div class="energy-bar" id="energy-bar"></div></div>
+  <div class="status-row">
+    <div class="status-label">เงิน:</div>
+    <div class="status-value" id="money-text">100</div>
+  </div>
 </div>
+
+<!-- เควส UI -->
+<div id="quest-log">
+  <h3>เควสปัจจุบัน</h3>
+  <div id="quest-list"></div>
+</div>
+
+<!-- ปุ่มเปิดปิด UI -->
+<div class="ui-toggle" id="toggle-quest">Q</div>
+<div class="ui-toggle" id="toggle-stats">S</div>
 
 <!-- เอฟเฟกต์เปลี่ยนฉาก -->
 <div class="scene-transition" id="scene-transition"></div>
@@ -298,6 +407,10 @@ const world = {
 // ระบบสุ่ม
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomFloat(min, max) {
+  return Math.random() * (max - min) + min;
 }
 
 // ประเภทฉาก
@@ -322,64 +435,136 @@ function generateMap(sceneType, width, height) {
         // ฉากป่า
         if (elevation > 0.6) {
           // ภูเขา
-          row.push({ type: 'mountain', color: '#8B8B8B', walkable: false });
+          row.push({ 
+            type: 'mountain', 
+            color: getMountainColor(x, y),
+            walkable: false 
+          });
         } else if (elevation > 0.4) {
           // หิน
-          row.push({ type: 'rock', color: '#A0A0A0', walkable: true });
+          row.push({ 
+            type: 'rock', 
+            color: getRockColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > 0.2) {
           // ดิน
-          row.push({ type: 'dirt', color: '#8B4513', walkable: true });
+          row.push({ 
+            type: 'dirt', 
+            color: getDirtColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.2) {
           // หญ้า
-          row.push({ type: 'grass', color: '#2E8B57', walkable: true });
+          row.push({ 
+            type: 'grass', 
+            color: getGrassColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.4) {
           // ทราย
-          row.push({ type: 'sand', color: '#F4A460', walkable: true });
+          row.push({ 
+            type: 'sand', 
+            color: getSandColor(x, y),
+            walkable: true 
+          });
         } else {
           // น้ำ
-          row.push({ type: 'water', color: '#1E90FF', walkable: false });
+          row.push({ 
+            type: 'water', 
+            color: getWaterColor(x, y),
+            walkable: false 
+          });
         }
       } else if (sceneType === SCENES.TOWN) {
         // ฉากเมือง
         if (elevation > 0.6) {
           // อาคาร
-          row.push({ type: 'building', color: '#B22222', walkable: false });
+          row.push({ 
+            type: 'building', 
+            color: getBuildingColor(x, y),
+            walkable: false 
+          });
         } else if (elevation > 0.4) {
           // ถนนหิน
-          row.push({ type: 'stone_road', color: '#808080', walkable: true });
+          row.push({ 
+            type: 'stone_road', 
+            color: getStoneRoadColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > 0.2) {
           // ถนนดิน
-          row.push({ type: 'dirt_road', color: '#8B4513', walkable: true });
+          row.push({ 
+            type: 'dirt_road', 
+            color: getDirtRoadColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.2) {
           // พื้นหญ้าเมือง
-          row.push({ type: 'town_grass', color: '#7CFC00', walkable: true });
+          row.push({ 
+            type: 'town_grass', 
+            color: getTownGrassColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.4) {
           // แผ่นไม้
-          row.push({ type: 'wood_plank', color: '#DEB887', walkable: true });
+          row.push({ 
+            type: 'wood_plank', 
+            color: getWoodPlankColor(x, y),
+            walkable: true 
+          });
         } else {
           // น้ำพุ
-          row.push({ type: 'fountain', color: '#87CEEB', walkable: false });
+          row.push({ 
+            type: 'fountain', 
+            color: getFountainColor(x, y),
+            walkable: false 
+          });
         }
       } else if (sceneType === SCENES.CAVE) {
         // ฉากถ้ำ
         if (elevation > 0.6) {
           // หินยักษ์
-          row.push({ type: 'big_rock', color: '#696969', walkable: false });
+          row.push({ 
+            type: 'big_rock', 
+            color: getBigRockColor(x, y),
+            walkable: false 
+          });
         } else if (elevation > 0.4) {
           // หิน
-          row.push({ type: 'rock', color: '#808080', walkable: true });
+          row.push({ 
+            type: 'rock', 
+            color: getCaveRockColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > 0.2) {
           // ดินถ้ำ
-          row.push({ type: 'cave_dirt', color: '#654321', walkable: true });
+          row.push({ 
+            type: 'cave_dirt', 
+            color: getCaveDirtColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.2) {
           // หินระยิบระยับ
-          row.push({ type: 'shiny_rock', color: '#DAA520', walkable: true });
+          row.push({ 
+            type: 'shiny_rock', 
+            color: getShinyRockColor(x, y),
+            walkable: true 
+          });
         } else if (elevation > -0.4) {
           // น้ำใต้ดิน
-          row.push({ type: 'underground_water', color: '#4169E1', walkable: false });
+          row.push({ 
+            type: 'underground_water', 
+            color: getUndergroundWaterColor(x, y),
+            walkable: false 
+          });
         } else {
           // คริสตัล
-          row.push({ type: 'crystal', color: '#9370DB', walkable: false });
+          row.push({ 
+            type: 'crystal', 
+            color: getCrystalColor(x, y),
+            walkable: false 
+          });
         }
       }
     }
@@ -390,6 +575,125 @@ function generateMap(sceneType, width, height) {
   addFeatures(map, sceneType);
   
   return map;
+}
+
+// ฟังก์ชันสร้างสีแบบสุ่มสำหรับแต่ละประเภท Tile
+function getMountainColor(x, y) {
+  const base = 0x8B;
+  const variation = Math.floor(Math.sin(x * 0.2 + y * 0.3) * 20;
+  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
+}
+
+function getRockColor(x, y) {
+  const base = 0xA0;
+  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15;
+  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
+}
+
+function getDirtColor(x, y) {
+  const r = 0x8B + Math.floor(Math.sin(x * 0.1) * 10;
+  const g = 0x45 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x13 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getGrassColor(x, y) {
+  const r = 0x2E + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0x8B + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x57 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getSandColor(x, y) {
+  const r = 0xF4 + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0xA4 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x60 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getWaterColor(x, y) {
+  const r = 0x1E + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
+  const g = 0x90 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
+  const b = 0xFF;
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getBuildingColor(x, y) {
+  const r = 0xB2 + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0x22 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x22 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getStoneRoadColor(x, y) {
+  const base = 0x80;
+  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
+  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
+}
+
+function getDirtRoadColor(x, y) {
+  return getDirtColor(x, y);
+}
+
+function getTownGrassColor(x, y) {
+  const r = 0x7C + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0xFC + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x00 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getWoodPlankColor(x, y) {
+  const r = 0xDE + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0xB8 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x87 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getFountainColor(x, y) {
+  const r = 0x87 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
+  const g = 0xCE + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
+  const b = 0xEB;
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getBigRockColor(x, y) {
+  const base = 0x69;
+  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
+  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
+}
+
+function getCaveRockColor(x, y) {
+  const base = 0x80;
+  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
+  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
+}
+
+function getCaveDirtColor(x, y) {
+  const r = 0x65 + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0x43 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x21 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getShinyRockColor(x, y) {
+  const r = 0xDA + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
+  const g = 0xA5 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
+  const b = 0x20;
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getUndergroundWaterColor(x, y) {
+  const r = 0x41 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
+  const g = 0x69 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
+  const b = 0xE1;
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getCrystalColor(x, y) {
+  const r = 0x93 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
+  const g = 0x70 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
+  const b = 0xDB;
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 // เพิ่มรายละเอียดให้แผนที่ (ต้นไม้, ทางเดิน, ฯลฯ)
@@ -403,26 +707,57 @@ function addFeatures(map, sceneType) {
       for (let x = 0; x < width; x++) {
         if (map[y][x].type === 'grass' && Math.random() < 0.05) {
           map[y][x].feature = 'tree';
-          map[y][x].featureColor = '#228B22';
+        } else if (map[y][x].type === 'water' && Math.random() < 0.02) {
+          map[y][x].feature = 'lily_pad';
         }
       }
     }
     
     // สร้างทางเดินแบบสุ่ม
     createPath(map, width / 2, height / 2, 100);
+    
+    // เพิ่มดอกไม้
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (map[y][x].type === 'grass' && !map[y][x].feature && Math.random() < 0.03) {
+          map[y][x].feature = 'flower';
+          map[y][x].featureColor = getRandomFlowerColor();
+        }
+      }
+    }
   }
   else if (sceneType === SCENES.TOWN) {
     // เพิ่มบ้านและ NPC ในเมือง
+    const buildingPositions = [];
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (map[y][x].type === 'building' && Math.random() < 0.2) {
           map[y][x].feature = 'house';
+          buildingPositions.push({x, y});
+        } else if (map[y][x].type === 'town_grass' && Math.random() < 0.03) {
+          map[y][x].feature = 'town_flower';
+          map[y][x].featureColor = getRandomFlowerColor();
         }
       }
     }
     
+    // เพิ่มร้านค้า
+    if (buildingPositions.length > 0) {
+      const shop = buildingPositions[Math.floor(buildingPositions.length / 2)];
+      map[shop.y][shop.x].feature = 'shop';
+    }
+    
     // สร้างถนนหลัก
     createTownRoads(map);
+    
+    // เพิ่มโคมไฟ
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (map[y][x].type === 'stone_road' && Math.random() < 0.05) {
+          map[y][x].feature = 'street_light';
+        }
+      }
+    }
   }
   else if (sceneType === SCENES.CAVE) {
     // เพิ่มคริสตัลในถ้ำ
@@ -430,10 +765,23 @@ function addFeatures(map, sceneType) {
       for (let x = 0; x < width; x++) {
         if (map[y][x].type === 'shiny_rock' && Math.random() < 0.1) {
           map[y][x].feature = 'crystal_cluster';
+        } else if (map[y][x].type === 'cave_dirt' && Math.random() < 0.02) {
+          map[y][x].feature = 'mushroom';
         }
       }
     }
+    
+    // เพิ่มทางเดินในถ้ำ
+    createCavePaths(map);
   }
+}
+
+function getRandomFlowerColor() {
+  const colors = [
+    '#FF0000', '#FF69B4', '#FFA500', '#FFFF00', 
+    '#00FF00', '#00FFFF', '#0000FF', '#8A2BE2'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
 }
 
 // สร้างทางเดินแบบสุ่ม
@@ -451,7 +799,7 @@ function createPath(map, startX, startY, steps) {
       for (let dx = -1; dx <= 1; dx++) {
         if (map[y + dy][x + dx].walkable !== false) {
           map[y + dy][x + dx].type = 'path';
-          map[y + dy][x + dx].color = '#D2B48C';
+          map[y + dy][x + dx].color = getPathColor(x + dx, y + dy);
         }
       }
     }
@@ -465,6 +813,13 @@ function createPath(map, startX, startY, steps) {
   }
 }
 
+function getPathColor(x, y) {
+  const r = 0xD2 + Math.floor(Math.sin(x * 0.1) * 10);
+  const g = 0xB4 + Math.floor(Math.cos(y * 0.1) * 10);
+  const b = 0x8C + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 // สร้างถนนในเมือง
 function createTownRoads(map) {
   const width = map[0].length;
@@ -475,7 +830,7 @@ function createTownRoads(map) {
     for (let y = height/2 - 2; y <= height/2 + 2; y++) {
       if (y >= 0 && y < height) {
         map[y][x].type = 'stone_road';
-        map[y][x].color = '#808080';
+        map[y][x].color = getStoneRoadColor(x, y);
       }
     }
   }
@@ -485,10 +840,43 @@ function createTownRoads(map) {
     for (let x = width/2 - 2; x <= width/2 + 2; x++) {
       if (x >= 0 && x < width) {
         map[y][x].type = 'stone_road';
-        map[y][x].color = '#808080';
+        map[y][x].color = getStoneRoadColor(x, y);
       }
     }
   }
+}
+
+// สร้างทางเดินในถ้ำ
+function createCavePaths(map) {
+  const width = map[0].length;
+  const height = map.length;
+  
+  // ทางเดินหลัก
+  for (let x = width/4; x < 3*width/4; x++) {
+    for (let y = height/4 - 1; y <= height/4 + 1; y++) {
+      if (y >= 0 && y < height) {
+        map[y][x].type = 'cave_path';
+        map[y][x].color = getCavePathColor(x, y);
+      }
+    }
+  }
+  
+  // ทางเดินเชื่อม
+  for (let y = height/4; y < 3*height/4; y++) {
+    for (let x = width/2 - 1; x <= width/2 + 1; x++) {
+      if (x >= 0 && x < width) {
+        map[y][x].type = 'cave_path';
+        map[y][x].color = getCavePathColor(x, y);
+      }
+    }
+  }
+}
+
+function getCavePathColor(x, y) {
+  const r = 0x8B + Math.floor(Math.sin(x * 0.1) * 10;
+  const g = 0x45 + Math.floor(Math.cos(y * 0.1) * 10;
+  const b = 0x13 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10;
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 // ตัวละครหลัก
@@ -505,6 +893,7 @@ const player = {
   maxHp: 100,
   energy: 50,
   maxEnergy: 50,
+  money: 100,
   direction: 'down', // 'up', 'down', 'left', 'right'
   moving: false,
   jumping: false,
@@ -513,7 +902,13 @@ const player = {
   skinColor: '#FFDBAC',
   hairColor: '#8B4513',
   shirtColor: '#4169E1',
-  pantsColor: '#2E8B57'
+  pantsColor: '#2E8B57',
+  shoesColor: '#000000',
+  animationFrame: 0,
+  inventory: [],
+  quests: [],
+  experience: 0,
+  level: 1
 };
 
 // NPCs
@@ -530,6 +925,11 @@ const npcs = {
       hairColor: '#000000',
       shirtColor: '#FF6347',
       pantsColor: '#8B4513',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: false,
+      moveTimer: 0,
+      moveInterval: randomInt(100, 300),
       dialogues: [
         {
           id: 1,
@@ -555,6 +955,19 @@ const npcs = {
             { text: "ลาก่อน", nextDialog: -1 }
           ]
         }
+      ],
+      quests: [
+        {
+          id: "deliver_goods",
+          name: "ส่งของให้พ่อค้า",
+          description: "นำเห็ดหายาก 5 ดอกมาให้พ่อค้า",
+          requiredItem: "rare_mushroom",
+          requiredAmount: 5,
+          reward: 100,
+          rewardItem: "health_potion",
+          rewardAmount: 2,
+          completed: false
+        }
       ]
     },
     {
@@ -568,6 +981,11 @@ const npcs = {
       hairColor: '#FFFFFF',
       shirtColor: '#9370DB',
       pantsColor: '#4B0082',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: false,
+      moveTimer: 0,
+      moveInterval: randomInt(150, 400),
       dialogues: [
         {
           id: 1,
@@ -592,12 +1010,81 @@ const npcs = {
             { text: "ลาก่อน", nextDialog: -1 }
           ]
         }
+      ],
+      quests: [
+        {
+          id: "find_gem",
+          name: "ตามหาอัญมณีศักดิ์สิทธิ์",
+          description: "ตามหาอัญมณีศักดิ์สิทธิ์ที่หายไป",
+          requiredItem: "sacred_gem",
+          requiredAmount: 1,
+          reward: 500,
+          rewardItem: "magic_amulet",
+          rewardAmount: 1,
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 3,
+      x: world.width / 2 + 300,
+      y: world.height / 2 - 150,
+      width: 24,
+      height: 32,
+      name: "นักล่า",
+      skinColor: '#D2B48C',
+      hairColor: '#8B4513',
+      shirtColor: '#556B2F',
+      pantsColor: '#8B4513',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: true,
+      moveTimer: 0,
+      moveInterval: randomInt(50, 200),
+      movePattern: 'random',
+      dialogues: [
+        {
+          id: 1,
+          text: "เฮ้! เจอสัตว์ประหลาดตัวใหญ่แถวๆ นั้นไหม?",
+          options: [
+            { text: "เห็นเมื่อกี้ทางเหนือ", nextDialog: 2 },
+            { text: "ไม่เห็น", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 2,
+          text: "ขอบคุณสำหรับข้อมูล! ถ้าช่วยฉันล่ามันได้จะให้รางวัล",
+          options: [
+            { text: "ตกลง", nextDialog: 3, quest: "hunt_monster" },
+            { text: "ไม่สนใจ", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 3,
+          text: "ดีมาก! มันมักจะอยู่แถวถ้ำทางเหนือ",
+          options: [
+            { text: "เข้าใจแล้ว", nextDialog: -1 }
+          ]
+        }
+      ],
+      quests: [
+        {
+          id: "hunt_monster",
+          name: "ล่าสัตว์ประหลาด",
+          description: "ล่าสัตว์ประหลาดในป่าและนำหลักฐานมาให้",
+          requiredItem: "monster_claw",
+          requiredAmount: 3,
+          reward: 200,
+          rewardItem: "hunter_bow",
+          rewardAmount: 1,
+          completed: false
+        }
       ]
     }
   ],
   town: [
     {
-      id: 3,
+      id: 4,
       x: world.width / 2 + 100,
       y: world.height / 2 - 100,
       width: 24,
@@ -607,6 +1094,11 @@ const npcs = {
       hairColor: '#A9A9A9',
       shirtColor: '#FFD700',
       pantsColor: '#000000',
+      shoesColor: '#FFFFFF',
+      direction: 'down',
+      moving: false,
+      moveTimer: 0,
+      moveInterval: randomInt(200, 500),
       dialogues: [
         {
           id: 1,
@@ -639,10 +1131,23 @@ const npcs = {
             { text: "ลาก่อน", nextDialog: -1 }
           ]
         }
+      ],
+      quests: [
+        {
+          id: "defeat_bandits",
+          name: "กำจัดโจรป่า",
+          description: "กำจัดโจรป่า 5 คนที่คุกคามเมือง",
+          requiredItem: "bandit_scarf",
+          requiredAmount: 5,
+          reward: 300,
+          rewardItem: "town_key",
+          rewardAmount: 1,
+          completed: false
+        }
       ]
     },
     {
-      id: 4,
+      id: 5,
       x: world.width / 2 - 150,
       y: world.height / 2 + 50,
       width: 24,
@@ -652,6 +1157,11 @@ const npcs = {
       hairColor: '#000000',
       shirtColor: '#FF0000',
       pantsColor: '#0000FF',
+      shoesColor: '#FFFFFF',
+      direction: 'down',
+      moving: false,
+      moveTimer: 0,
+      moveInterval: randomInt(100, 300),
       dialogues: [
         {
           id: 1,
@@ -677,12 +1187,88 @@ const npcs = {
             { text: "ลาก่อน", nextDialog: -1 }
           ]
         }
+      ],
+      quests: [
+        {
+          id: "collect_gems",
+          name: "เก็บรวบรวมอัญมณี",
+          description: "นำอัญมณีสีต่างๆ มาให้พ่อค้าเครื่องประดับ",
+          requiredItem: "colorful_gem",
+          requiredAmount: 10,
+          reward: 400,
+          rewardItem: "gold_ring",
+          rewardAmount: 1,
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 6,
+      x: world.width / 2 - 50,
+      y: world.height / 2 - 150,
+      width: 24,
+      height: 32,
+      name: "นักรบฝึกหัด",
+      skinColor: '#FFDBAC',
+      hairColor: '#8B4513',
+      shirtColor: '#800000',
+      pantsColor: '#000080',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: true,
+      moveTimer: 0,
+      moveInterval: randomInt(50, 150),
+      movePattern: 'patrol',
+      patrolPoints: [
+        {x: world.width / 2 - 50, y: world.height / 2 - 150},
+        {x: world.width / 2 + 50, y: world.height / 2 - 150},
+        {x: world.width / 2 + 50, y: world.height / 2 - 100},
+        {x: world.width / 2 - 50, y: world.height / 2 - 100}
+      ],
+      currentPatrolIndex: 0,
+      dialogues: [
+        {
+          id: 1,
+          text: "เฮ้! อยากฝึกต่อสู้ด้วยไหม?",
+          options: [
+            { text: "ได้เลย", nextDialog: 2 },
+            { text: "ไม่สนใจ", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 2,
+          text: "เยี่ยม! ถ้าเอาชนะฉันได้จะให้รางวัล",
+          options: [
+            { text: "เริ่มกันเลย", nextDialog: 3, quest: "sparring" },
+            { text: "ไม่แล้วกัน", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 3,
+          text: "เตรียมตัวให้ดีนะ!",
+          options: [
+            { text: "เข้าใจแล้ว", nextDialog: -1 }
+          ]
+        }
+      ],
+      quests: [
+        {
+          id: "sparring",
+          name: "ฝึกต่อสู้",
+          description: "เอาชนะนักรบฝึกหัดในการฝึกซ้อม",
+          requiredItem: "sparring_victory",
+          requiredAmount: 1,
+          reward: 150,
+          rewardItem: "training_sword",
+          rewardAmount: 1,
+          completed: false
+        }
       ]
     }
   ],
   cave: [
     {
-      id: 5,
+      id: 7,
       x: world.width / 2,
       y: world.height / 2 - 200,
       width: 24,
@@ -692,6 +1278,12 @@ const npcs = {
       hairColor: '#8B4513',
       shirtColor: '#808080',
       pantsColor: '#696969',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: true,
+      moveTimer: 0,
+      moveInterval: randomInt(100, 250),
+      movePattern: 'random',
       dialogues: [
         {
           id: 1,
@@ -716,6 +1308,82 @@ const npcs = {
             { text: "ได้เลย", nextDialog: -1, quest: "find_mystery_gem" },
             { text: "ไม่สัญญา", nextDialog: -1 }
           ]
+        }
+      ],
+      quests: [
+        {
+          id: "find_mystery_gem",
+          name: "อัญมณีลึกลับ",
+          description: "หาอัญมณีลึกลับในถ้ำ",
+          requiredItem: "mystery_gem",
+          requiredAmount: 1,
+          reward: 250,
+          rewardItem: "miner_pickaxe",
+          rewardAmount: 1,
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 8,
+      x: world.width / 2 + 100,
+      y: world.height / 2 + 100,
+      width: 24,
+      height: 32,
+      name: "นักขุด",
+      skinColor: '#D2B48C',
+      hairColor: '#000000',
+      shirtColor: '#A0522D',
+      pantsColor: '#8B4513',
+      shoesColor: '#000000',
+      direction: 'down',
+      moving: false,
+      moveTimer: 0,
+      moveInterval: randomInt(200, 400),
+      dialogues: [
+        {
+          id: 1,
+          text: "โอ้โห! มีคนมาที่นี่ไม่บ่อยนัก",
+          options: [
+            { text: "คุณมาทำอะไรที่นี่?", nextDialog: 2 },
+            { text: "ลาก่อน", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 2,
+          text: "ฉันกำลังขุดหาอัญมณี ถ้าช่วยฉันได้จะแบ่งให้",
+          options: [
+            { text: "ช่วยอะไรบ้าง?", nextDialog: 3 },
+            { text: "ไม่สนใจ", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 3,
+          text: "ช่วยหาวัตถุดิบสำหรับเครื่องมือขุดให้หน่อย",
+          options: [
+            { text: "ได้เลย", nextDialog: 4, quest: "mining_supplies" },
+            { text: "ไม่ว่าง", nextDialog: -1 }
+          ]
+        },
+        {
+          id: 4,
+          text: "ขอบคุณ! ต้องการไม้แข็งและหินแข็ง 5 ชิ้น",
+          options: [
+            { text: "เข้าใจแล้ว", nextDialog: -1 }
+          ]
+        }
+      ],
+      quests: [
+        {
+          id: "mining_supplies",
+          name: "อุปกรณ์ขุดเหมือง",
+          description: "นำไม้แข็งและหินแข็งมาให้นักขุด",
+          requiredItem: "hardwood",
+          requiredAmount: 5,
+          reward: 180,
+          rewardItem: "iron_ore",
+          rewardAmount: 3,
+          completed: false
         }
       ]
     }
@@ -744,7 +1412,9 @@ const gameState = {
   money: 100,
   quests: [],
   currentScene: SCENES.FOREST,
-  transition: false
+  transition: false,
+  showStats: true,
+  showQuests: false
 };
 
 // แผนที่เกม
@@ -819,8 +1489,14 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
   ctx.fillStyle = character.hairColor;
   if (character.direction === 'left') {
     ctx.fillRect(x + width/4 - 2, yPos - 8, width/2 + 4, 4);
+    // หูด้านขวา (ถูกบัง)
+    ctx.fillStyle = character.skinColor;
+    ctx.fillRect(x + 3*width/4 - 2, yPos - 6, 2, 4);
   } else if (character.direction === 'right') {
     ctx.fillRect(x + width/4 - 2, yPos - 8, width/2 + 4, 4);
+    // หูด้านซ้าย (ถูกบัง)
+    ctx.fillStyle = character.skinColor;
+    ctx.fillRect(x + width/4, yPos - 6, 2, 4);
   } else {
     ctx.fillRect(x + width/4, yPos - 10, width/2, 10);
   }
@@ -832,6 +1508,10 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
   // กางเกง
   ctx.fillStyle = character.pantsColor;
   ctx.fillRect(x, yPos + height - 12, width, 4);
+  
+  // รองเท้า
+  ctx.fillStyle = character.shoesColor;
+  ctx.fillRect(x, yPos + height - 8, width, 8);
   
   // ตา (กระพริบเมื่อเคลื่อนที่)
   const eyeOffset = character.moving ? Math.floor(Date.now() / 200) % 2 : 0;
@@ -852,7 +1532,7 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
   }
   
   // แขนและขา
-  const limbOffset = character.moving ? Math.sin(Date.now() / 200) * 2 : 0;
+  const limbOffset = character.moving ? Math.sin(Date.now() / 100) * 3 : 0;
   
   if (character.direction === 'left') {
     // แขนซ้าย (ด้านหน้า)
@@ -862,6 +1542,10 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
     ctx.fillRect(x + width, yPos + 8, 4, 4);
     // ขา
     ctx.fillStyle = character.pantsColor;
+    ctx.fillRect(x, yPos + height - 12, 8, 4);
+    ctx.fillRect(x + width - 8, yPos + height - 12, 8, 4);
+    // รองเท้า
+    ctx.fillStyle = character.shoesColor;
     ctx.fillRect(x, yPos + height - 8, 8, 8);
     ctx.fillRect(x + width - 8, yPos + height - 8, 8, 8);
   } 
@@ -873,6 +1557,10 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
     ctx.fillRect(x - 4, yPos + 8, 4, 4);
     // ขา
     ctx.fillStyle = character.pantsColor;
+    ctx.fillRect(x, yPos + height - 12, 8, 4);
+    ctx.fillRect(x + width - 8, yPos + height - 12, 8, 4);
+    // รองเท้า
+    ctx.fillStyle = character.shoesColor;
     ctx.fillRect(x, yPos + height - 8, 8, 8);
     ctx.fillRect(x + width - 8, yPos + height - 8, 8, 8);
   } 
@@ -883,8 +1571,12 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
     ctx.fillRect(x + width - 8, yPos + 8 - limbOffset, 8, 4);
     // ขา
     ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 8 - limbOffset, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8 + limbOffset, 8, 8);
+    ctx.fillRect(x, yPos + height - 12 - limbOffset, 8, 4);
+    ctx.fillRect(x + width - 8, yPos + height - 12 + limbOffset, 8, 4);
+    // รองเท้า
+    ctx.fillStyle = character.shoesColor;
+    ctx.fillRect(x, yPos + height - 8 - limbOffset/2, 8, 8);
+    ctx.fillRect(x + width - 8, yPos + height - 8 + limbOffset/2, 8, 8);
   } 
   else { // down
     // แขน
@@ -893,8 +1585,12 @@ function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
     ctx.fillRect(x + width - 8, yPos + 8 + limbOffset, 8, 4);
     // ขา
     ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 8 + limbOffset, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8 - limbOffset, 8, 8);
+    ctx.fillRect(x, yPos + height - 12 + limbOffset, 8, 4);
+    ctx.fillRect(x + width - 8, yPos + height - 12 - limbOffset, 8, 4);
+    // รองเท้า
+    ctx.fillStyle = character.shoesColor;
+    ctx.fillRect(x, yPos + height - 8 + limbOffset/2, 8, 8);
+    ctx.fillRect(x + width - 8, yPos + height - 8 - limbOffset/2, 8, 8);
   }
 }
 
@@ -903,6 +1599,16 @@ function drawTree(x, y) {
   // ลำต้น (ใหญ่ขึ้น)
   ctx.fillStyle = '#8B4513'; // สีน้ำตาล
   ctx.fillRect(x + TILE_SIZE/3, y + TILE_SIZE/2, TILE_SIZE/3, TILE_SIZE);
+  
+  // เปลือกไม้
+  ctx.fillStyle = '#654321';
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_SIZE/3 + 2, y + TILE_SIZE/2);
+  ctx.lineTo(x + TILE_SIZE/3 + 4, y + TILE_SIZE/2 + 2);
+  ctx.lineTo(x + TILE_SIZE/3 + 2, y + TILE_SIZE/2 + 4);
+  ctx.lineTo(x + TILE_SIZE/3, y + TILE_SIZE/2 + 2);
+  ctx.closePath();
+  ctx.fill();
   
   // ใบไม้ (ใหญ่ขึ้น)
   ctx.fillStyle = '#228B22'; // สีเขียว
@@ -927,6 +1633,40 @@ function drawTree(x, y) {
   ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/3);
   ctx.closePath();
   ctx.fill();
+  
+  // ผลไม้ (ถ้ามี)
+  if (Math.random() > 0.7) {
+    ctx.fillStyle = '#FF0000';
+    ctx.beginPath();
+    ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/3, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8B0000';
+    ctx.beginPath();
+    ctx.arc(x + TILE_SIZE/2 + 1, y + TILE_SIZE/3 - 1, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// วาดดอกไม้
+function drawFlower(x, y, color) {
+  ctx.fillStyle = color;
+  // กลีบดอก
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const petalX = x + TILE_SIZE/2 + Math.cos(angle) * 4;
+    const petalY = y + TILE_SIZE/2 + Math.sin(angle) * 4;
+    ctx.beginPath();
+    ctx.arc(petalX, petalY, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // ตรงกลาง
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // ก้าน
+  ctx.fillStyle = '#008000';
+  ctx.fillRect(x + TILE_SIZE/2 - 1, y + TILE_SIZE/2 + 4, 2, 4);
 }
 
 // วาดบ้าน
@@ -934,6 +1674,23 @@ function drawHouse(x, y) {
   // ฐานบ้าน
   ctx.fillStyle = '#B22222';
   ctx.fillRect(x, y + TILE_SIZE/2, TILE_SIZE, TILE_SIZE);
+  
+  // หน้าต่าง
+  ctx.fillStyle = '#87CEEB';
+  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 8, 8);
+  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 8, 8);
+  
+  // กรอบหน้าต่าง
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 8, 1);
+  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 15, 8, 1);
+  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 1, 8);
+  ctx.fillRect(x + 15, y + TILE_SIZE/2 + 8, 1, 8);
+  
+  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 8, 1);
+  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 15, 8, 1);
+  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 1, 8);
+  ctx.fillRect(x + TILE_SIZE - 9, y + TILE_SIZE/2 + 8, 1, 8);
   
   // หลังคา
   ctx.fillStyle = '#8B0000';
@@ -948,10 +1705,103 @@ function drawHouse(x, y) {
   ctx.fillStyle = '#8B4513';
   ctx.fillRect(x + TILE_SIZE/2 - 4, y + TILE_SIZE - 8, 8, 8);
   
-  // หน้าต่าง
+  // ลูกบิดประตู
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE - 4, 1, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // ปล่องไฟ
+  ctx.fillStyle = '#696969';
+  ctx.fillRect(x + 10, y + TILE_SIZE/2 - 4, 4, 4);
+  
+  // ควัน
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.beginPath();
+  ctx.arc(x + 12, y + TILE_SIZE/2 - 8, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + 15, y + TILE_SIZE/2 - 10, 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// วาดร้านค้า
+function drawShop(x, y) {
+  // ฐานร้าน
+  ctx.fillStyle = '#CD5C5C';
+  ctx.fillRect(x, y + TILE_SIZE/2, TILE_SIZE, TILE_SIZE);
+  
+  // หน้าต่างแสดงสินค้า
   ctx.fillStyle = '#87CEEB';
-  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 8, 8);
-  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 8, 8);
+  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, TILE_SIZE - 8, 8);
+  
+  // กรอบหน้าต่าง
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, TILE_SIZE - 8, 1);
+  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 11, TILE_SIZE - 8, 1);
+  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, 1, 8);
+  ctx.fillRect(x + TILE_SIZE - 5, y + TILE_SIZE/2 + 4, 1, 8);
+  
+  // หลังคา
+  ctx.fillStyle = '#A52A2A';
+  ctx.beginPath();
+  ctx.moveTo(x, y + TILE_SIZE/2);
+  ctx.lineTo(x + TILE_SIZE/2, y);
+  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE/2);
+  ctx.closePath();
+  ctx.fill();
+  
+  // ป้ายร้าน
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(x + TILE_SIZE/4, y - 4, TILE_SIZE/2, 4);
+  
+  // ข้อความป้าย
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 8px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('SHOP', x + TILE_SIZE/2, y - 1);
+  
+  // ประตู
+  ctx.fillStyle = '#8B4513';
+  ctx.fillRect(x + TILE_SIZE/2 - 4, y + TILE_SIZE - 8, 8, 8);
+  
+  // ลูกบิดประตู
+  ctx.fillStyle = '#FFD700';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE - 4, 1, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// วาดโคมไฟถนน
+function drawStreetLight(x, y) {
+  // เสา
+  ctx.fillStyle = '#696969';
+  ctx.fillRect(x + TILE_SIZE/2 - 1, y, 2, TILE_SIZE/2);
+  
+  // โคมไฟ
+  ctx.fillStyle = '#D3D3D3';
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_SIZE/2 - 4, y + TILE_SIZE/4);
+  ctx.lineTo(x + TILE_SIZE/2 + 4, y + TILE_SIZE/4);
+  ctx.lineTo(x + TILE_SIZE/2 + 2, y + TILE_SIZE/4 + 4);
+  ctx.lineTo(x + TILE_SIZE/2 - 2, y + TILE_SIZE/4 + 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // แสงไฟ
+  ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_SIZE/2 - 4, y + TILE_SIZE/4 + 4);
+  ctx.lineTo(x + TILE_SIZE/2 + 4, y + TILE_SIZE/4 + 4);
+  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE);
+  ctx.closePath();
+  ctx.fill();
+  
+  // หลอดไฟ
+  ctx.fillStyle = '#FFFF00';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/4 + 2, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // วาดคริสตัล
@@ -972,6 +1822,40 @@ function drawCrystal(x, y) {
   ctx.lineTo(x + TILE_SIZE/2, y + 3*TILE_SIZE/4);
   ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/2);
   ctx.closePath();
+  ctx.fill();
+  
+  // แสงสะท้อน
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_SIZE/4, y + TILE_SIZE/4);
+  ctx.lineTo(x + TILE_SIZE/4 + 4, y + TILE_SIZE/4);
+  ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/4 + 4);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// วาดเห็ด
+function drawMushroom(x, y) {
+  // ก้าน
+  ctx.fillStyle = '#F5DEB3';
+  ctx.fillRect(x + TILE_SIZE/2 - 1, y + TILE_SIZE/2 + 2, 2, 6);
+  
+  // หมวก
+  ctx.fillStyle = '#FF0000';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // จุด
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2 - 2, y + TILE_SIZE/2 - 1, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE/2, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2 + 1, 1, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -1001,8 +1885,24 @@ function drawMap() {
           x * TILE_SIZE - camera.x,
           y * TILE_SIZE - camera.y
         );
+      } else if (tile.feature === 'flower' || tile.feature === 'town_flower') {
+        drawFlower(
+          x * TILE_SIZE - camera.x,
+          y * TILE_SIZE - camera.y,
+          tile.featureColor
+        );
       } else if (tile.feature === 'house') {
         drawHouse(
+          x * TILE_SIZE - camera.x,
+          y * TILE_SIZE - camera.y
+        );
+      } else if (tile.feature === 'shop') {
+        drawShop(
+          x * TILE_SIZE - camera.x,
+          y * TILE_SIZE - camera.y
+        );
+      } else if (tile.feature === 'street_light') {
+        drawStreetLight(
           x * TILE_SIZE - camera.x,
           y * TILE_SIZE - camera.y
         );
@@ -1011,8 +1911,45 @@ function drawMap() {
           x * TILE_SIZE - camera.x,
           y * TILE_SIZE - camera.y
         );
+      } else if (tile.feature === 'mushroom') {
+        drawMushroom(
+          x * TILE_SIZE - camera.x,
+          y * TILE_SIZE - camera.y
+        );
+      } else if (tile.feature === 'lily_pad') {
+        drawLilyPad(
+          x * TILE_SIZE - camera.x,
+          y * TILE_SIZE - camera.y
+        );
       }
     }
+  }
+}
+
+// วาดใบบัว
+function drawLilyPad(x, y) {
+  ctx.fillStyle = '#008000';
+  ctx.beginPath();
+  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // รอยแยก
+  ctx.fillStyle = '#006400';
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_SIZE/2, y + TILE_SIZE/2);
+  ctx.lineTo(x + TILE_SIZE/2 + 6, y + TILE_SIZE/2);
+  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2 + 6);
+  ctx.lineTo(x + TILE_SIZE/2 - 6, y + TILE_SIZE/2);
+  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2 - 6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // ดอกบัว (บางครั้ง)
+  if (Math.random() > 0.7) {
+    ctx.fillStyle = '#FF69B4';
+    ctx.beginPath();
+    ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/4, 3, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -1051,17 +1988,32 @@ function showDialog(npcId, dialogId) {
       
       // ตรวจสอบการกระทำพิเศษ
       if (option.action === 'buy') {
-        if (gameState.money >= option.cost) {
-          gameState.money -= option.cost;
-          gameState.inventory.push(option.item);
+        if (player.money >= option.cost) {
+          player.money -= option.cost;
+          player.inventory.push(option.item);
           updatePlayerStatus();
         } else {
           alert("เงินของคุณไม่พอ!");
         }
       } else if (option.quest) {
-        if (!gameState.quests.includes(option.quest)) {
-          gameState.quests.push(option.quest);
-          updatePlayerStatus();
+        const npcQuests = npc.quests || [];
+        const quest = npcQuests.find(q => q.id === option.quest);
+        if (quest && !player.quests.some(q => q.id === quest.id && q.completed)) {
+          if (!player.quests.some(q => q.id === quest.id)) {
+            player.quests.push({
+              id: quest.id,
+              name: quest.name,
+              description: quest.description,
+              requiredItem: quest.requiredItem,
+              requiredAmount: quest.requiredAmount,
+              currentAmount: 0,
+              reward: quest.reward,
+              rewardItem: quest.rewardItem,
+              rewardAmount: quest.rewardAmount,
+              completed: false
+            });
+          }
+          updateQuestLog();
         }
       }
     });
@@ -1146,6 +2098,7 @@ function updatePlayerStatus() {
   document.getElementById('player-name').textContent = player.name;
   document.getElementById('hp-text').textContent = `${player.hp}/${player.maxHp}`;
   document.getElementById('energy-text').textContent = `${player.energy}/${player.maxEnergy}`;
+  document.getElementById('money-text').textContent = player.money;
   
   const healthPercent = (player.hp / player.maxHp) * 100;
   const energyPercent = (player.energy / player.maxEnergy) * 100;
@@ -1154,25 +2107,61 @@ function updatePlayerStatus() {
   document.getElementById('energy-bar').style.width = `${energyPercent}%`;
 }
 
+// อัพเดทเควสล็อก
+function updateQuestLog() {
+  const questList = document.getElementById('quest-list');
+  questList.innerHTML = '';
+  
+  player.quests.forEach(quest => {
+    if (!quest.completed) {
+      const questItem = document.createElement('div');
+      questItem.className = 'quest-item';
+      
+      const questTitle = document.createElement('div');
+      questTitle.textContent = quest.name;
+      questTitle.style.fontWeight = 'bold';
+      questTitle.style.marginBottom = '3px';
+      
+      const questDesc = document.createElement('div');
+      questDesc.textContent = quest.description;
+      questDesc.style.fontSize = '12px';
+      questDesc.style.marginBottom = '3px';
+      
+      const questProgress = document.createElement('div');
+      questProgress.textContent = `ความคืบหน้า: ${quest.currentAmount}/${quest.requiredAmount}`;
+      questProgress.style.fontSize = '11px';
+      questProgress.style.color = '#AAAAAA';
+      
+      questItem.appendChild(questTitle);
+      questItem.appendChild(questDesc);
+      questItem.appendChild(questProgress);
+      questList.appendChild(questItem);
+    }
+  });
+}
+
 // รีเซ็ตเกม
 function resetGame() {
   player.x = world.width / 2;
   player.y = world.height / 2;
   player.hp = player.maxHp;
   player.energy = player.maxEnergy;
+  player.money = 100;
   player.direction = 'down';
   player.moving = false;
   player.jumping = false;
   player.jumpHeight = 0;
-  gameState.inventory = [];
-  gameState.money = 100;
-  gameState.quests = [];
+  player.inventory = [];
+  player.quests = [];
+  player.experience = 0;
+  player.level = 1;
   gameState.currentScene = SCENES.FOREST;
   
   // สร้างแผนที่ใหม่
   gameMap = generateMap(gameState.currentScene, world.width / TILE_SIZE, world.height / TILE_SIZE);
   
   updatePlayerStatus();
+  updateQuestLog();
 }
 
 // ตั้งค่าควบคุม
@@ -1184,13 +2173,15 @@ function setupControls() {
   const maxDist = 40;
 
   area.addEventListener("touchstart", (e) => {
+    e.preventDefault();
     const touch = e.touches[0];
     joystick.active = true;
     joystick.startX = touch.clientX;
     joystick.startY = touch.clientY;
-  }, { passive: true });
+  }, { passive: false });
 
   area.addEventListener("touchmove", (e) => {
+    e.preventDefault();
     if (!joystick.active) return;
     const touch = e.touches[0];
     const dx = touch.clientX - joystick.startX;
@@ -1216,7 +2207,7 @@ function setupControls() {
 
     stick.style.left = 75 + joystick.dx + "px";
     stick.style.top = 75 + joystick.dy + "px";
-  }, { passive: true });
+  }, { passive: false });
 
   const resetJoystick = () => {
     joystick.active = false;
@@ -1235,12 +2226,12 @@ function setupControls() {
     e.preventDefault();
     actionPressed = true;
     actionButton.style.background = 'rgba(255,80,80,0.9)';
-  });
+  }, { passive: false });
   actionButton.addEventListener('touchend', e => {
     e.preventDefault();
     actionPressed = false;
     actionButton.style.background = 'rgba(255,80,80,0.6)';
-  });
+  }, { passive: false });
 
   // -- Jump Button --
   const jumpButton = document.getElementById('jump-btn');
@@ -1248,12 +2239,12 @@ function setupControls() {
     e.preventDefault();
     keys.jump = true;
     jumpButton.style.background = 'rgba(80,255,80,0.9)';
-  });
+  }, { passive: false });
   jumpButton.addEventListener('touchend', e => {
     e.preventDefault();
     keys.jump = false;
     jumpButton.style.background = 'rgba(80,255,80,0.6)';
-  });
+  }, { passive: false });
 
   // -- Menu Button --
   const menuButton = document.getElementById('menu-btn');
@@ -1261,7 +2252,7 @@ function setupControls() {
     e.preventDefault();
     menuPressed = true;
     menuButton.style.background = 'rgba(80,80,255,0.9)';
-  });
+  }, { passive: false });
   menuButton.addEventListener('touchend', e => {
     e.preventDefault();
     if (menuPressed) {
@@ -1269,7 +2260,7 @@ function setupControls() {
     }
     menuPressed = false;
     menuButton.style.background = 'rgba(80,80,255,0.6)';
-  });
+  }, { passive: false });
 
   // -- Keyboard --
   window.addEventListener('keydown', e => {
@@ -1300,6 +2291,8 @@ function setupControls() {
     }
     if (e.key === 'e') actionPressed = true;
     if (e.key === 'Escape') showGameMenu();
+    if (e.key === 'q') toggleQuestLog();
+    if (e.key === 's') toggleStats();
   });
   
   window.addEventListener('keyup', e => {
@@ -1323,6 +2316,98 @@ function setupControls() {
       keys.jump = false;
     }
     if (e.key === 'e') actionPressed = false;
+  });
+
+  // -- UI Toggle Buttons --
+  document.getElementById('toggle-quest').addEventListener('click', toggleQuestLog);
+  document.getElementById('toggle-stats').addEventListener('click', toggleStats);
+}
+
+function toggleQuestLog() {
+  gameState.showQuests = !gameState.showQuests;
+  document.getElementById('quest-log').style.display = gameState.showQuests ? 'block' : 'none';
+}
+
+function toggleStats() {
+  gameState.showStats = !gameState.showStats;
+  document.getElementById('player-status').style.display = gameState.showStats ? 'block' : 'none';
+}
+
+// เคลื่อนที่ NPC
+function moveNPCs() {
+  const currentNpcs = npcs[gameState.currentScene];
+  if (!currentNpcs) return;
+  
+  currentNpcs.forEach(npc => {
+    if (npc.moveTimer <= 0) {
+      if (npc.movePattern === 'random') {
+        // เคลื่อนที่แบบสุ่ม
+        const dir = randomInt(0, 3);
+        if (dir === 0) npc.direction = 'up';
+        else if (dir === 1) npc.direction = 'down';
+        else if (dir === 2) npc.direction = 'left';
+        else npc.direction = 'right';
+        
+        npc.moving = true;
+        npc.moveTimer = npc.moveInterval;
+      } else if (npc.movePattern === 'patrol' && npc.patrolPoints) {
+        // เคลื่อนที่ตามจุด patrol
+        const target = npc.patrolPoints[npc.currentPatrolIndex];
+        const dx = target.x - npc.x;
+        const dy = target.y - npc.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 5) {
+          npc.currentPatrolIndex = (npc.currentPatrolIndex + 1) % npc.patrolPoints.length;
+        } else {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            npc.direction = dx > 0 ? 'right' : 'left';
+          } else {
+            npc.direction = dy > 0 ? 'down' : 'up';
+          }
+          npc.moving = true;
+        }
+        
+        npc.moveTimer = npc.moveInterval;
+      }
+    } else {
+      npc.moveTimer--;
+      npc.moving = npc.moveTimer > 0;
+    }
+    
+    // ย้ายตำแหน่ง NPC
+    if (npc.moving) {
+      let moveX = 0, moveY = 0;
+      const speed = 1;
+      
+      if (npc.direction === 'up') moveY = -speed;
+      else if (npc.direction === 'down') moveY = speed;
+      else if (npc.direction === 'left') moveX = -speed;
+      else if (npc.direction === 'right') moveX = speed;
+      
+      const newX = npc.x + moveX;
+      const newY = npc.y + moveY;
+      
+      // ตรวจสอบการชนกับสิ่งกีดขวาง
+      const tileX = Math.floor(newX / TILE_SIZE);
+      const tileY = Math.floor(newY / TILE_SIZE);
+      
+      if (tileX >= 0 && tileX < gameMap[0].length && 
+          tileY >= 0 && tileY < gameMap.length) {
+        const tile = gameMap[tileY][tileX];
+        if (tile.walkable !== false) {
+          npc.x = newX;
+          npc.y = newY;
+        } else {
+          npc.moving = false;
+          npc.moveTimer = 0;
+        }
+      }
+      
+      // ตรวจสอบขอบเขต
+      npc.x = Math.max(0, Math.min(world.width - npc.width, npc.x));
+      npc.y = Math.max(0, Math.min(world.height - npc.height, npc.y));
+    }
   });
 }
 
@@ -1404,6 +2489,9 @@ function update() {
   camera.x = Math.max(0, Math.min(world.width - camera.width, camera.x));
   camera.y = Math.max(0, Math.min(world.height - camera.height, camera.y));
 
+  // เคลื่อนที่ NPC
+  moveNPCs();
+
   // ตรวจสอบการโต้ตอบกับ NPC
   if (actionPressed) {
     actionPressed = false;
@@ -1420,6 +2508,35 @@ function update() {
       }
     }
   }
+  
+  // ตรวจสอบการเก็บไอเท็ม
+  checkItemCollection();
+}
+
+// ตรวจสอบการเก็บไอเท็ม
+function checkItemCollection() {
+  const tileX = Math.floor(player.x / TILE_SIZE);
+  const tileY = Math.floor(player.y / TILE_SIZE);
+  
+  if (tileX >= 0 && tileX < gameMap[0].length && 
+      tileY >= 0 && tileY < gameMap.length) {
+    const tile = gameMap[tileY][tileX];
+    
+    if (tile.feature === 'flower' || tile.feature === 'town_flower') {
+      // เก็บดอกไม้
+      player.inventory.push('flower');
+      tile.feature = null;
+      tile.featureColor = null;
+    } else if (tile.feature === 'mushroom') {
+      // เก็บเห็ด
+      player.inventory.push('mushroom');
+      tile.feature = null;
+    } else if (tile.feature === 'crystal_cluster') {
+      // เก็บคริสตัล
+      player.inventory.push('crystal');
+      tile.feature = null;
+    }
+  }
 }
 
 function draw() {
@@ -1433,15 +2550,13 @@ function draw() {
   ctx.translate(-camera.x, -camera.y);
   
   const currentNpcs = npcs[gameState.currentScene];
-  for (const npc of currentNpcs) {
-    drawPixelCharacter(
-      npc.x, npc.y, npc.width, npc.height, 
-      {
-        ...npc,
-        direction: 'down',
-        moving: false
-      }
-    );
+  if (currentNpcs) {
+    for (const npc of currentNpcs) {
+      drawPixelCharacter(
+        npc.x, npc.y, npc.width, npc.height, 
+        npc
+      );
+    }
   }
   
   // วาดผู้เล่น
@@ -1485,6 +2600,12 @@ function initGame() {
   
   // อัพเดทสถานะผู้เล่น
   updatePlayerStatus();
+  
+  // อัพเดทเควสล็อก
+  updateQuestLog();
+  
+  // ซ่อน UI เริ่มต้น
+  document.getElementById('quest-log').style.display = 'none';
   
   // เริ่มเกมลูป
   gameLoop();
