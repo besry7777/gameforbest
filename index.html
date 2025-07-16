@@ -1,235 +1,185 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
-    <style>
-        /* ตั้งค่าให้เกมแสดงเต็มจอและไม่มี scrollbar */
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #000;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        /* ตั้งค่า Canvas ซึ่งเป็นหน้าจอเกมของเรา */
-        canvas {
-            display: block;
-            background-color: #333; /* สีพื้นหลังของเกม */
-        }
-        /* Container สำหรับปุ่มควบคุมทั้งหมด */
-        #controls {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 0 30px;
-            box-sizing: border-box;
-            -webkit-touch-callout: none; /* ป้องกันเมนูขึ้นมาตอนกดค้างบน iOS */
-            -webkit-user-select: none; /* ป้องกันการเลือกข้อความ */
-        }
-        /* กลุ่มปุ่มเดิน (D-pad) */
-        #d-pad {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-        /* ปุ่มแต่ละปุ่ม */
-        .btn {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.5);
-            border: 2px solid rgba(0, 0, 0, 0.7);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: black;
-        }
-        /* จัดตำแหน่งปุ่มเดิน */
-        #up { top: 0; left: 40px; }
-        #down { bottom: 0; left: 40px; }
-        #left { top: 40px; left: 0; }
-        #right { top: 40px; right: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      overflow: hidden;
+      background: #000;
+      height: 100%; width: 100%;
+      display: flex; justify-content: center; align-items: center;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+      background: url('https://i.imgur.com/ihDJe4n.png'); /* พื้นหญ้า */
+      background-size: 64px 64px;
+    }
 
-        /* ปุ่ม Action (คุย/ตี) */
-        #action-button {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 80, 80, 0.6);
-            border-radius: 50%;
-            border: 2px solid rgba(255, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            color: white;
-            font-weight: bold;
-        }
-    </style>
+    /* ปุ่มควบคุมแบบจอยวงกลม */
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .circle-btn {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: black;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    #up    { top: 0; left: 50%; transform: translateX(-50%); }
+    #down  { bottom: 0; left: 50%; transform: translateX(-50%); }
+    #left  { left: 0; top: 50%; transform: translateY(-50%); }
+    #right { right: 0; top: 50%; transform: translateY(-50%); }
+
+    #action-button {
+      position: fixed;
+      bottom: 50px;
+      right: 30px;
+      width: 70px;
+      height: 70px;
+      background: rgba(255, 80, 80, 0.6);
+      border-radius: 50%;
+      border: 2px solid rgba(255, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
 
-    <canvas id="gameCanvas"></canvas>
+<canvas id="gameCanvas"></canvas>
 
-    <div id="controls">
-        <div id="d-pad">
-            <div id="up" class="btn">▲</div>
-            <div id="down" class="btn">▼</div>
-            <div id="left" class="btn">◀</div>
-            <div id="right" class="btn">▶</div>
-        </div>
-        <div id="action-button">คุย/ตี</div>
-    </div>
+<div id="controls">
+  <div id="up" class="circle-btn">▲</div>
+  <div id="down" class="circle-btn">▼</div>
+  <div id="left" class="circle-btn">◀</div>
+  <div id="right" class="circle-btn">▶</div>
+</div>
+<div id="action-button">คุย</div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-        // ตั้งค่าให้ Canvas เต็มจอแนวตั้ง
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+// โหลดภาพพิกเซล
+const playerImg = new Image();
+playerImg.src = 'player.png'; // ใส่ภาพของคุณเอง
 
-        // สถานะของปุ่ม (รองรับการกดหลายปุ่มพร้อมกัน)
-        const keys = {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            action: false
-        };
+const npcImg = new Image();
+npcImg.src = 'npc.png'; // ภาพ NPC
 
-        // ตัวละครผู้เล่น
-        const player = {
-            x: canvas.width / 2 - 15,
-            y: canvas.height / 2 - 15,
-            width: 30,
-            height: 30,
-            speed: 4,
-            color: 'skyblue'
-        };
+const keys = { up: false, down: false, left: false, right: false, action: false };
 
-        // NPC สำหรับทดสอบการคุย
-        const npc = {
-            x: canvas.width / 2 + 100,
-            y: canvas.height / 2,
-            width: 30,
-            height: 30,
-            color: 'lightgreen'
-        };
-        
-        // --- การควบคุม ---
+const player = {
+  x: 100, y: 100,
+  width: 48, height: 48,
+  speed: 3
+};
 
-        // ฟังก์ชันสำหรับจัดการการกดปุ่มบนหน้าจอ (Touch)
-        function setupTouchControls() {
-            const controlsMap = {
-                'up': 'up', 'down': 'down', 'left': 'left', 'right': 'right',
-                'action-button': 'action'
-            };
+const npc = {
+  x: 300, y: 200,
+  width: 48, height: 48
+};
 
-            for (const [elementId, keyName] of Object.entries(controlsMap)) {
-                const element = document.getElementById(elementId);
-                element.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // ป้องกันพฤติกรรมเริ่มต้นของเบราว์เซอร์
-                    keys[keyName] = true;
-                    element.style.background = 'rgba(255, 255, 255, 0.9)'; // ทำให้ปุ่มสว่างขึ้นเมื่อกด
-                    if(elementId === 'action-button') element.style.background = 'rgba(255, 80, 80, 0.9)';
-                });
-                element.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    keys[keyName] = false;
-                    element.style.background = 'rgba(255, 255, 255, 0.5)'; // กลับเป็นสีเดิม
-                     if(elementId === 'action-button') element.style.background = 'rgba(255, 80, 80, 0.6)';
-                });
-            }
-        }
-        setupTouchControls();
+// จอยวงกลม
+const touchMap = {
+  'up': 'up', 'down': 'down', 'left': 'left', 'right': 'right', 'action-button': 'action'
+};
+for (const [id, key] of Object.entries(touchMap)) {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    keys[key] = true;
+    el.style.background = key === 'action' ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.8)';
+  });
+  el.addEventListener('touchend', e => {
+    e.preventDefault();
+    keys[key] = false;
+    el.style.background = key === 'action' ? 'rgba(255,80,80,0.6)' : 'rgba(255,255,255,0.4)';
+  });
+}
 
-        // การควบคุมด้วยคีย์บอร์ด (สำหรับทดสอบบนคอม)
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
-            if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-            if (e.key === ' ') keys.action = true;
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-            if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
-            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-            if (e.key === ' ') keys.action = false;
-        });
+// คีย์บอร์ด
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+  if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+  if (e.key === ' ') keys.action = true;
+});
+window.addEventListener('keyup', e => {
+  if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+  if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+  if (e.key === ' ') keys.action = false;
+});
 
+// Loop
+function update() {
+  if (keys.up) player.y -= player.speed;
+  if (keys.down) player.y += player.speed;
+  if (keys.left) player.x -= player.speed;
+  if (keys.right) player.x += player.speed;
 
-        // --- Game Logic ---
-        function update() {
-            // การเคลื่อนที่
-            if (keys.up) player.y -= player.speed;
-            if (keys.down) player.y += player.speed;
-            if (keys.left) player.x -= player.speed;
-            if (keys.right) player.x += player.speed;
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+  player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
 
-            // ไม่ให้ผู้เล่นตกขอบจอ
-            if (player.x < 0) player.x = 0;
-            if (player.y < 0) player.y = 0;
-            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-            if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+  const dx = player.x - npc.x;
+  const dy = player.y - npc.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  if (keys.action && distance < 60) {
+    alert("ขอบคุณที่มาหาเรา! โลกนี้รอการช่วยเหลือจากเธออยู่!");
+    keys.action = false;
+  }
+}
 
-            // การมีปฏิสัมพันธ์ (คุย)
-            const dx = player.x - npc.x;
-            const dy = player.y - npc.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
+  ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+}
 
-            if (keys.action && distance < 50) {
-                alert("สวัสดีนักเดินทาง! โปรดช่วยหมู่บ้านเราด้วย!");
-                keys.action = false; // ป้องกันการ alert รัวๆ
-            }
-        }
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
 
-        // --- Drawing ---
-        function draw() {
-            // ล้างหน้าจอทั้งหมดในทุกเฟรม
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // วาดพื้นหลัง (ถ้ามี)
-            ctx.fillStyle = '#2d3436';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // วาด NPC
-            ctx.fillStyle = npc.color;
-            ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
-
-            // วาดผู้เล่น
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        // --- Game Loop ---
-        function gameLoop() {
-            update(); // อัปเดตตรรกะของเกม
-            draw();   // วาดภาพใหม่
-            requestAnimationFrame(gameLoop); // วนลูปการทำงานให้ลื่นไหล
-        }
-
-        // เริ่มเกม
-        gameLoop();
-
-    </script>
 </body>
 </html>
