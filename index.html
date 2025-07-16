@@ -11,58 +11,58 @@
       background: #000;
       height: 100%; width: 100%;
       display: flex; justify-content: center; align-items: center;
+      /* ป้องกันการกระทำที่ไม่พึงประสงค์บน body ทั้งหมด */
       touch-action: none;
     }
     canvas {
       display: block;
-      background: url('https://i.imgur.com/ihDJe4n.png'); /* พื้นหญ้า */
-      background-size: 64px 64px;
+      background: #333; /* สีพื้นหลังเผื่อรูปไม่โหลด */
     }
-* {
-  touch-action: manipulation; /* ปิด double tap zoom ในหลายปุ่ม */
-}
 
-#joystick-area,
-#action-button {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: none;
-}
-    /* ปุ่มควบคุมแบบจอยวงกลม */
-    #controls {
+    /* === ป้องกันการซูมเมื่อ Double Tap === */
+    * {
+      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none;   /* Safari */
+      -khtml-user-select: none;    /* Konqueror HTML */
+      -moz-user-select: none;      /* Old versions of Firefox */
+      -ms-user-select: none;       /* Internet Explorer/Edge */
+      user-select: none;           /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
+      touch-action: manipulation;  /* ปิด double tap zoom ที่ standard */
+    }
+
+    /* ปุ่มควบคุมแบบจอยสติ๊ก */
+    #joystick-area {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      bottom: 30px;
+      left: 30px;
       width: 150px;
       height: 150px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
-    .circle-btn {
+    #joystick-bg, #joystick-stick {
       position: absolute;
-      width: 50px;
-      height: 50px;
-      background: rgba(255,255,255,0.4);
       border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      color: black;
-      font-weight: bold;
-      user-select: none;
+      transform: translate(-50%, -50%);
     }
 
-    #up    { top: 0; left: 50%; transform: translateX(-50%); }
-    #down  { bottom: 0; left: 50%; transform: translateX(-50%); }
-    #left  { left: 0; top: 50%; transform: translateY(-50%); }
-    #right { right: 0; top: 50%; transform: translateY(-50%); }
+    #joystick-bg {
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      left: 75px; top: 75px;
+    }
 
+    #joystick-stick {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      left: 75px; top: 75px;
+      transition: all 0.1s linear; /* ทำให้ปุ่มกลับที่เดิมอย่างนุ่มนวล */
+    }
+
+    /* ปุ่ม Action */
     #action-button {
       position: fixed;
       bottom: 50px;
@@ -78,44 +78,12 @@
       font-size: 18px;
       color: white;
       font-weight: bold;
-      user-select: none;
     }
-    #joystick-area {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
-  width: 150px;
-  height: 150px;
-  touch-action: none;
-}
-
-#joystick-bg, #joystick-stick {
-  position: absolute;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-#joystick-bg {
-  width: 120px;
-  height: 120px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  left: 75px; top: 75px;
-}
-
-#joystick-stick {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.4);
-  border: 2px solid rgba(0, 0, 0, 0.3);
-  left: 75px; top: 75px;
-}
   </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
-
 <div id="joystick-area">
   <div id="joystick-bg"></div>
   <div id="joystick-stick"></div>
@@ -123,141 +91,253 @@
 <div id="action-button">คุย</div>
 
 <script>
+// Canvas & Context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-let joystick = {
-  active: false,
-  startX: 0,
-  startY: 0,
-  dx: 0,
-  dy: 0
+
+// --- การตั้งค่าเกม ---
+const TILE_SIZE = 64;
+const world = {
+  width: 2000,
+  height: 1500
 };
 
-const stick = document.getElementById("joystick-stick");
-const area = document.getElementById("joystick-area");
-
-area.addEventListener("touchstart", function (e) {
-  const touch = e.touches[0];
-  joystick.active = true;
-  joystick.startX = touch.clientX;
-  joystick.startY = touch.clientY;
-});
-
-area.addEventListener("touchmove", function (e) {
-  if (!joystick.active) return;
-  const touch = e.touches[0];
-  const dx = touch.clientX - joystick.startX;
-  const dy = touch.clientY - joystick.startY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  const maxDist = 40;
-
-  // จำกัดไม่ให้ลากเกินระยะ
-  const angle = Math.atan2(dy, dx);
-  joystick.dx = Math.cos(angle) * Math.min(dist, maxDist);
-  joystick.dy = Math.sin(angle) * Math.min(dist, maxDist);
-
-  stick.style.left = 75 + joystick.dx + "px";
-  stick.style.top = 75 + joystick.dy + "px";
-});
-
-area.addEventListener("touchend", function () {
-  joystick.active = false;
-  joystick.dx = 0;
-  joystick.dy = 0;
-  stick.style.left = "75px";
-  stick.style.top = "75px";
-});
-// โหลดภาพพิกเซล
-const playerImg = new Image();
-playerImg.src = 'player.png'; // ใส่ภาพของคุณเอง
-
-const npcImg = new Image();
-npcImg.src = 'npc.png'; // ภาพ NPC
-
-const keys = { up: false, down: false, left: false, right: false, action: false };
-
+// --- ตัวละครและ NPC ---
 const player = {
-  x: 100, y: 100,
+  x: world.width / 2, y: world.height / 2, // เริ่มกลางแมพ
   width: 48, height: 48,
-  speed: 3
+  speed: 4,
+  dx: 0, // ทิศทางการเคลื่อนที่แนวนอน
+  dy: 0  // ทิศทางการเคลื่อนที่แนวตั้ง
 };
 
 const npc = {
-  x: 300, y: 200,
+  x: world.width / 2 + 150, y: world.height / 2 - 50,
   width: 48, height: 48
 };
 
-// จอยวงกลม
-const touchMap = {
-  'up': 'up', 'down': 'down', 'left': 'left', 'right': 'right', 'action-button': 'action'
+// --- กล้อง ---
+const camera = {
+  x: 0,
+  y: 0,
+  width: window.innerWidth,
+  height: window.innerHeight
 };
-for (const [id, key] of Object.entries(touchMap)) {
-  const el = document.getElementById(id);
-  el.addEventListener('touchstart', e => {
-    e.preventDefault();
-    keys[key] = true;
-    el.style.background = key === 'action' ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.8)';
-  });
-  el.addEventListener('touchend', e => {
-    e.preventDefault();
-    keys[key] = false;
-    el.style.background = key === 'action' ? 'rgba(255,80,80,0.6)' : 'rgba(255,255,255,0.4)';
+
+// --- การควบคุม ---
+const keys = { up: false, down: false, left: false, right: false };
+let actionPressed = false;
+
+// --- โหลด Assets ---
+let grassPattern;
+const playerImg = new Image();
+const npcImg = new Image();
+const grassImg = new Image();
+
+// ฟังก์ชันโหลดรูปภาพด้วย Promise
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
   });
 }
 
-// คีย์บอร์ด
-window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
-  if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-  if (e.key === ' ') keys.action = true;
-});
-window.addEventListener('keyup', e => {
-  if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-  if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-  if (e.key === ' ') keys.action = false;
-});
+// --- ฟังก์ชันหลัก ---
+async function initializeGame() {
+  // โหลดรูปภาพทั้งหมดก่อนเริ่มเกม
+  try {
+    const [pImg, nImg, gImg] = await Promise.all([
+      loadImage('https://i.imgur.com/your_player_sprite.png'), // *** ใส่ลิงก์รูป Player ของคุณที่นี่ ***
+      loadImage('https://i.imgur.com/your_npc_sprite.png'),   // *** ใส่ลิงก์รูป NPC ของคุณที่นี่ ***
+      loadImage('https://i.imgur.com/ihDJe4n.png')       // รูปพื้นหญ้า
+    ]);
+    playerImg.src = pImg.src;
+    npcImg.src = nImg.src;
+    grassImg.src = gImg.src;
 
-// Loop
+    // สร้าง pattern สำหรับพื้นหลัง
+    grassPattern = ctx.createPattern(grassImg, 'repeat');
+
+    // ตั้งค่าเริ่มต้น
+    setupControls();
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // เริ่ม Game Loop
+    gameLoop();
+  } catch (error) {
+    console.error("ไม่สามารถโหลดรูปภาพได้:", error);
+    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดลองรีเฟรชหน้าอีกครั้ง");
+  }
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  camera.width = canvas.width;
+  camera.height = canvas.height;
+}
+
+function setupControls() {
+  // -- Joystick --
+  const stick = document.getElementById("joystick-stick");
+  const area = document.getElementById("joystick-area");
+  const joystick = { active: false, startX: 0, startY: 0, dx: 0, dy: 0 };
+  const maxDist = 40; // ระยะที่จอยสติ๊กขยับได้
+
+  area.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    joystick.active = true;
+    joystick.startX = touch.clientX;
+    joystick.startY = touch.clientY;
+  }, { passive: true });
+
+  area.addEventListener("touchmove", (e) => {
+    if (!joystick.active) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - joystick.startX;
+    const dy = touch.clientY - joystick.startY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+
+    // จำกัดไม่ให้ลากเกินระยะ และคำนวณทิศทาง
+    const limitedDist = Math.min(dist, maxDist);
+    joystick.dx = Math.cos(angle) * limitedDist;
+    joystick.dy = Math.sin(angle) * limitedDist;
+
+    // ส่งค่าไปยังตัวละคร (ค่าระหว่าง -1 ถึง 1)
+    player.dx = joystick.dx / maxDist;
+    player.dy = joystick.dy / maxDist;
+
+    stick.style.left = 75 + joystick.dx + "px";
+    stick.style.top = 75 + joystick.dy + "px";
+  }, { passive: true });
+
+  const resetJoystick = () => {
+    joystick.active = false;
+    player.dx = 0;
+    player.dy = 0;
+    stick.style.left = "75px";
+    stick.style.top = "75px";
+  };
+  area.addEventListener("touchend", resetJoystick);
+  area.addEventListener("touchcancel", resetJoystick);
+
+  // -- Action Button --
+  const actionButton = document.getElementById('action-button');
+  actionButton.addEventListener('touchstart', e => {
+    e.preventDefault();
+    actionPressed = true;
+    actionButton.style.background = 'rgba(255,80,80,0.9)';
+  });
+  actionButton.addEventListener('touchend', e => {
+    e.preventDefault();
+    actionPressed = false;
+    actionButton.style.background = 'rgba(255,80,80,0.6)';
+  });
+
+  // -- Keyboard --
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+    if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === ' ') actionPressed = true;
+  });
+  window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+    if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === ' ') actionPressed = false;
+  });
+}
+
 function update() {
-  if (keys.up) player.y -= player.speed;
-  if (keys.down) player.y += player.speed;
-  if (keys.left) player.x -= player.speed;
-  if (keys.right) player.x += player.speed;
+  // -- การเคลื่อนที่ --
+  // จากคีย์บอร์ด
+  let moveX = 0;
+  let moveY = 0;
+  if (keys.up) moveY -= 1;
+  if (keys.down) moveY += 1;
+  if (keys.left) moveX -= 1;
+  if (keys.right) moveX += 1;
 
-  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-  player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+  // รวมการเคลื่อนที่จาก Joystick (ถ้ามี)
+  // ให้ Joystick มีความสำคัญกว่า Keyboard ถ้าใช้พร้อมกัน
+  if (player.dx !== 0 || player.dy !== 0) {
+    moveX = player.dx;
+    moveY = player.dy;
+  }
+  
+  // ทำให้การเคลื่อนที่แนวทแยงมีความเร็วเท่าเดิม
+  const length = Math.sqrt(moveX * moveX + moveY * moveY);
+  if (length > 0) {
+    moveX = (moveX / length) * player.speed;
+    moveY = (moveY / length) * player.speed;
+  }
 
+  player.x += moveX;
+  player.y += moveY;
+
+  // จำกัดไม่ให้ผู้เล่นออกจากขอบโลก
+  player.x = Math.max(0, Math.min(world.width - player.width, player.x));
+  player.y = Math.max(0, Math.min(world.height - player.height, player.y));
+
+  // -- กล้องติดตามผู้เล่น --
+  camera.x = player.x - camera.width / 2 + player.width / 2;
+  camera.y = player.y - camera.height / 2 + player.height / 2;
+
+  // จำกัดไม่ให้กล้องเห็นนอกขอบโลก
+  camera.x = Math.max(0, Math.min(world.width - camera.width, camera.x));
+  camera.y = Math.max(0, Math.min(world.height - camera.height, camera.y));
+
+  // -- การปฏิสัมพันธ์ --
   const dx = player.x - npc.x;
   const dy = player.y - npc.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
-  if (keys.action && distance < 60) {
+
+  if (actionPressed && distance < 70) { // เพิ่มระยะตรวจสอบเล็กน้อย
     alert("ขอบคุณที่มาหาเรา! โลกนี้รอการช่วยเหลือจากเธออยู่!");
-    keys.action = false;
+    actionPressed = false; // ป้องกันการ alert รัวๆ
   }
 }
 
 function draw() {
+  // เคลียร์หน้าจอ
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // บันทึกสถานะ context ปัจจุบัน
+  ctx.save();
+
+  // --- วาดทุกอย่างโดยอิงกับตำแหน่งกล้อง ---
+  ctx.translate(-camera.x, -camera.y);
+
+  // วาดพื้นหลัง (Tiled background)
+  ctx.fillStyle = grassPattern;
+  ctx.fillRect(0, 0, world.width, world.height);
+
+  // วาด NPC
   ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
+
+  // วาดผู้เล่น
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  
+  // คืนสถานะ context เดิม
+  ctx.restore();
 }
 
-function loop() {
+function gameLoop() {
   update();
   draw();
-  requestAnimationFrame(loop);
+  requestAnimationFrame(gameLoop);
 }
-loop();
+
+// เริ่มต้นเกม
+initializeGame();
+
 </script>
 
 </body>
