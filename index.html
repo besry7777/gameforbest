@@ -1,95 +1,3 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
-  <style>
-    body, html {
-      margin: 0; padding: 0;
-      overflow: hidden;
-      background: #000;
-      height: 100%; width: 100%;
-      display: flex; justify-content: center; align-items: center;
-      /* ป้องกันการกระทำที่ไม่พึงประสงค์บน body ทั้งหมด */
-      touch-action: none;
-    }
-    canvas {
-      display: block;
-      background: #333; /* สีพื้นหลังเผื่อรูปไม่โหลด */
-    }
-
-    /* === ป้องกันการซูมเมื่อ Double Tap === */
-    * {
-      -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none;   /* Safari */
-      -khtml-user-select: none;    /* Konqueror HTML */
-      -moz-user-select: none;      /* Old versions of Firefox */
-      -ms-user-select: none;       /* Internet Explorer/Edge */
-      user-select: none;           /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
-      touch-action: manipulation;  /* ปิด double tap zoom ที่ standard */
-    }
-
-    /* ปุ่มควบคุมแบบจอยสติ๊ก */
-    #joystick-area {
-      position: fixed;
-      bottom: 30px;
-      left: 30px;
-      width: 150px;
-      height: 150px;
-    }
-
-    #joystick-bg, #joystick-stick {
-      position: absolute;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    #joystick-bg {
-      width: 120px;
-      height: 120px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      left: 75px; top: 75px;
-    }
-
-    #joystick-stick {
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.4);
-      border: 2px solid rgba(0, 0, 0, 0.3);
-      left: 75px; top: 75px;
-      transition: all 0.1s linear; /* ทำให้ปุ่มกลับที่เดิมอย่างนุ่มนวล */
-    }
-
-    /* ปุ่ม Action */
-    #action-button {
-      position: fixed;
-      bottom: 50px;
-      right: 30px;
-      width: 70px;
-      height: 70px;
-      background: rgba(255, 80, 80, 0.6);
-      border-radius: 50%;
-      border: 2px solid rgba(255, 0, 0, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 18px;
-      color: white;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-
-<canvas id="gameCanvas"></canvas>
-<div id="joystick-area">
-  <div id="joystick-bg"></div>
-  <div id="joystick-stick"></div>
-</div>
-<div id="action-button">คุย</div>
-
 <script>
 // Canvas & Context
 const canvas = document.getElementById('gameCanvas');
@@ -130,14 +38,12 @@ let actionPressed = false;
 
 // --- โหลด Assets ---
 let grassPattern;
-const playerImg = new Image();
-const npcImg = new Image();
-const grassImg = new Image();
 
 // ฟังก์ชันโหลดรูปภาพด้วย Promise
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = "Anonymous"; // เพิ่มบรรทัดนี้เพื่อแก้ปัญหา CORS ที่อาจเกิดขึ้นกับ Imgur
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
@@ -148,28 +54,27 @@ function loadImage(src) {
 async function initializeGame() {
   // โหลดรูปภาพทั้งหมดก่อนเริ่มเกม
   try {
-    const [pImg, nImg, gImg] = await Promise.all([
-      loadImage('https://i.imgur.com/your_player_sprite.png'), // *** ใส่ลิงก์รูป Player ของคุณที่นี่ ***
-      loadImage('https://i.imgur.com/your_npc_sprite.png'),   // *** ใส่ลิงก์รูป NPC ของคุณที่นี่ ***
-      loadImage('https://i.imgur.com/ihDJe4n.png')       // รูปพื้นหญ้า
+    const [playerImg, npcImg, grassImg] = await Promise.all([
+      //  vvv  เปลี่ยนเป็นลิงก์รูปที่ใช้งานได้จริงแล้ว  vvv
+      loadImage('https://i.imgur.com/MieLq23.png'), // รูป Player สำรอง
+      loadImage('https://i.imgur.com/V2wNn7g.png'), // รูป NPC สำรอง
+      loadImage('https://i.imgur.com/ihDJe4n.png')  // รูปพื้นหญ้า (ลิงก์เดิม)
     ]);
-    playerImg.src = pImg.src;
-    npcImg.src = nImg.src;
-    grassImg.src = gImg.src;
-
+    
     // สร้าง pattern สำหรับพื้นหลัง
     grassPattern = ctx.createPattern(grassImg, 'repeat');
-
+    
     // ตั้งค่าเริ่มต้น
     setupControls();
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-
+    
     // เริ่ม Game Loop
-    gameLoop();
+    gameLoop(playerImg, npcImg); // ส่งรูปที่โหลดแล้วเข้าไปใน loop
+
   } catch (error) {
     console.error("ไม่สามารถโหลดรูปภาพได้:", error);
-    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดลองรีเฟรชหน้าอีกครั้ง");
+    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดตรวจสอบลิงก์รูปภาพหรือการเชื่อมต่ออินเทอร์เน็ต");
   }
 }
 
@@ -202,12 +107,10 @@ function setupControls() {
     const dist = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx);
 
-    // จำกัดไม่ให้ลากเกินระยะ และคำนวณทิศทาง
     const limitedDist = Math.min(dist, maxDist);
     joystick.dx = Math.cos(angle) * limitedDist;
     joystick.dy = Math.sin(angle) * limitedDist;
 
-    // ส่งค่าไปยังตัวละคร (ค่าระหว่าง -1 ถึง 1)
     player.dx = joystick.dx / maxDist;
     player.dy = joystick.dy / maxDist;
 
@@ -256,8 +159,6 @@ function setupControls() {
 }
 
 function update() {
-  // -- การเคลื่อนที่ --
-  // จากคีย์บอร์ด
   let moveX = 0;
   let moveY = 0;
   if (keys.up) moveY -= 1;
@@ -265,14 +166,11 @@ function update() {
   if (keys.left) moveX -= 1;
   if (keys.right) moveX += 1;
 
-  // รวมการเคลื่อนที่จาก Joystick (ถ้ามี)
-  // ให้ Joystick มีความสำคัญกว่า Keyboard ถ้าใช้พร้อมกัน
   if (player.dx !== 0 || player.dy !== 0) {
     moveX = player.dx;
     moveY = player.dy;
   }
   
-  // ทำให้การเคลื่อนที่แนวทแยงมีความเร็วเท่าเดิม
   const length = Math.sqrt(moveX * moveX + moveY * moveY);
   if (length > 0) {
     moveX = (moveX / length) * player.speed;
@@ -282,63 +180,73 @@ function update() {
   player.x += moveX;
   player.y += moveY;
 
-  // จำกัดไม่ให้ผู้เล่นออกจากขอบโลก
   player.x = Math.max(0, Math.min(world.width - player.width, player.x));
   player.y = Math.max(0, Math.min(world.height - player.height, player.y));
 
-  // -- กล้องติดตามผู้เล่น --
   camera.x = player.x - camera.width / 2 + player.width / 2;
   camera.y = player.y - camera.height / 2 + player.height / 2;
 
-  // จำกัดไม่ให้กล้องเห็นนอกขอบโลก
   camera.x = Math.max(0, Math.min(world.width - camera.width, camera.x));
   camera.y = Math.max(0, Math.min(world.height - camera.height, camera.y));
 
-  // -- การปฏิสัมพันธ์ --
   const dx = player.x - npc.x;
   const dy = player.y - npc.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  if (actionPressed && distance < 70) { // เพิ่มระยะตรวจสอบเล็กน้อย
+  if (actionPressed && distance < 70) {
     alert("ขอบคุณที่มาหาเรา! โลกนี้รอการช่วยเหลือจากเธออยู่!");
-    actionPressed = false; // ป้องกันการ alert รัวๆ
+    actionPressed = false;
   }
 }
 
-function draw() {
-  // เคลียร์หน้าจอ
+function draw(playerImg, npcImg) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // บันทึกสถานะ context ปัจจุบัน
   ctx.save();
-
-  // --- วาดทุกอย่างโดยอิงกับตำแหน่งกล้อง ---
   ctx.translate(-camera.x, -camera.y);
 
-  // วาดพื้นหลัง (Tiled background)
-  ctx.fillStyle = grassPattern;
-  ctx.fillRect(0, 0, world.width, world.height);
+  if (grassPattern) {
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, world.width, world.height);
+  }
 
-  // วาด NPC
   ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
-
-  // วาดผู้เล่น
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
   
-  // คืนสถานะ context เดิม
   ctx.restore();
 }
 
+// สร้างตัวแปร global เพื่อเก็บ instance ของรูปที่โหลดแล้ว
+let loadedPlayerImg, loadedNpcImg;
+
 function gameLoop() {
   update();
-  draw();
+  // ส่งรูปที่โหลดแล้วไปวาด
+  draw(loadedPlayerImg, loadedNpcImg);
   requestAnimationFrame(gameLoop);
 }
 
-// เริ่มต้นเกม
-initializeGame();
+// ปรับปรุงการเรียกฟังก์ชันเริ่มต้น
+async function main() {
+  try {
+    [loadedPlayerImg, loadedNpcImg, grassImg] = await Promise.all([
+      loadImage('https://i.imgur.com/MieLq23.png'), // รูป Player สำรอง
+      loadImage('https://i.imgur.com/V2wNn7g.png'), // รูป NPC สำรอง
+      loadImage('https://i.imgur.com/ihDJe4n.png')  // รูปพื้นหญ้า (ลิงก์เดิม)
+    ]);
+    
+    grassPattern = ctx.createPattern(grassImg, 'repeat');
+    
+    setupControls();
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    gameLoop();
 
+  } catch (error) {
+    console.error("ไม่สามารถโหลดรูปภาพได้:", error);
+    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดตรวจสอบลิงก์รูปภาพหรือการเชื่อมต่ออินเทอร์เน็ต");
+  }
+}
+
+main();
 </script>
-
-</body>
-</html>
