@@ -11,23 +11,23 @@
       background: #000;
       height: 100%; width: 100%;
       display: flex; justify-content: center; align-items: center;
-      /* ป้องกันการกระทำที่ไม่พึงประสงค์บน body ทั้งหมด */
       touch-action: none;
+      font-family: 'Courier New', monospace;
     }
     canvas {
       display: block;
-      background: #333; /* สีพื้นหลังเผื่อรูปไม่โหลด */
+      image-rendering: pixelated;
     }
 
-    /* === ป้องกันการซูมเมื่อ Double Tap === */
+    /* ป้องกันการซูมเมื่อ Double Tap */
     * {
-      -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none;   /* Safari */
-      -khtml-user-select: none;    /* Konqueror HTML */
-      -moz-user-select: none;      /* Old versions of Firefox */
-      -ms-user-select: none;       /* Internet Explorer/Edge */
-      user-select: none;           /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
-      touch-action: manipulation;  /* ปิด double tap zoom ที่ standard */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
     }
 
     /* ปุ่มควบคุมแบบจอยสติ๊ก */
@@ -59,7 +59,7 @@
       background: rgba(255, 255, 255, 0.4);
       border: 2px solid rgba(0, 0, 0, 0.3);
       left: 75px; top: 75px;
-      transition: all 0.1s linear; /* ทำให้ปุ่มกลับที่เดิมอย่างนุ่มนวล */
+      transition: all 0.1s linear;
     }
 
     /* ปุ่ม Action */
@@ -79,44 +79,349 @@
       color: white;
       font-weight: bold;
     }
+
+    /* กล่องข้อความ */
+    #dialog-box {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 4px solid #4a2c12;
+      border-radius: 10px;
+      padding: 15px;
+      color: white;
+      display: none;
+      z-index: 100;
+    }
+
+    #dialog-text {
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    #dialog-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dialog-option {
+      background: #4a2c12;
+      border: 2px solid #6d4a2a;
+      border-radius: 5px;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .dialog-option:hover {
+      background: #6d4a2a;
+    }
+
+    /* เมนูเกม */
+    #game-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      display: none;
+    }
+
+    .menu-title {
+      color: #f8d030;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 0 #b88a00;
+    }
+
+    .menu-button {
+      background: #4a2c12;
+      border: 4px solid #6d4a2a;
+      border-radius: 10px;
+      color: white;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .menu-button:hover {
+      background: #6d4a2a;
+    }
+
+    /* สถานะผู้เล่น */
+    #player-status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 3px solid #4a2c12;
+      border-radius: 8px;
+      padding: 8px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .status-bar {
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+
+    .health-bar {
+      height: 100%;
+      background: #ff4444;
+      width: 100%;
+    }
+
+    .energy-bar {
+      height: 100%;
+      background: #44aaff;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
+
+<!-- ระบบควบคุม -->
 <div id="joystick-area">
   <div id="joystick-bg"></div>
   <div id="joystick-stick"></div>
 </div>
 <div id="action-button">คุย</div>
 
+<!-- กล่องข้อความ -->
+<div id="dialog-box">
+  <div id="dialog-text"></div>
+  <div id="dialog-options"></div>
+</div>
+
+<!-- เมนูเกม -->
+<div id="game-menu">
+  <div class="menu-title">ตำนานแห่งอัญมณีที่ถูกลืม</div>
+  <div class="menu-button" id="continue-btn">เล่นต่อ</div>
+  <div class="menu-button" id="new-game-btn">เกมใหม่</div>
+  <div class="menu-button" id="settings-btn">ตั้งค่า</div>
+  <div class="menu-button" id="quit-btn">ออกจากเกม</div>
+</div>
+
+<!-- สถานะผู้เล่น -->
+<div id="player-status">
+  <div>ชื่อ: <span id="player-name">นักผจญภัย</span></div>
+  <div>HP: <span id="hp-text">100/100</span></div>
+  <div class="status-bar"><div class="health-bar" id="health-bar"></div></div>
+  <div>พลังงาน: <span id="energy-text">50/50</span></div>
+  <div class="status-bar"><div class="energy-bar" id="energy-bar"></div></div>
+</div>
+
 <script>
 // Canvas & Context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- การตั้งค่าเกม ---
-const TILE_SIZE = 64;
+// ขนาดโลกเกม
+const TILE_SIZE = 32;
 const world = {
-  width: 2000,
-  height: 1500
+  width: 50 * TILE_SIZE,  // 1600px
+  height: 40 * TILE_SIZE  // 1280px
 };
 
-// --- ตัวละครและ NPC ---
+// ระบบสุ่ม
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// สร้างแผนที่ด้วย Perlin Noise
+function generateMap(width, height) {
+  const map = [];
+  const noise = new PerlinNoise();
+  
+  for (let y = 0; y < height; y++) {
+    const row = [];
+    for (let x = 0; x < width; x++) {
+      // สร้างค่าความสูงจาก noise
+      const elevation = noise.get(x * 0.1, y * 0.1);
+      
+      if (elevation > 0.6) {
+        // ภูเขา
+        row.push({ type: 'mountain', color: '#8B8B8B' });
+      } else if (elevation > 0.4) {
+        // หิน
+        row.push({ type: 'rock', color: '#A0A0A0' });
+      } else if (elevation > 0.2) {
+        // ดิน
+        row.push({ type: 'dirt', color: '#8B4513' });
+      } else if (elevation > -0.2) {
+        // หญ้า
+        row.push({ type: 'grass', color: '#2E8B57' });
+      } else if (elevation > -0.4) {
+        // ทราย
+        row.push({ type: 'sand', color: '#F4A460' });
+      } else {
+        // น้ำ
+        row.push({ type: 'water', color: '#1E90FF' });
+      }
+    }
+    map.push(row);
+  }
+  
+  // เพิ่มรายละเอียดให้แผนที่
+  addFeatures(map);
+  
+  return map;
+}
+
+// เพิ่มรายละเอียดให้แผนที่ (ต้นไม้, ทางเดิน, ฯลฯ)
+function addFeatures(map) {
+  const width = map[0].length;
+  const height = map.length;
+  
+  // เพิ่มต้นไม้ในพื้นที่หญ้า
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (map[y][x].type === 'grass' && Math.random() < 0.05) {
+        map[y][x].feature = 'tree';
+        map[y][x].featureColor = '#228B22';
+      }
+    }
+  }
+  
+  // สร้างทางเดินแบบสุ่ม
+  createPath(map, width / 2, height / 2, 100);
+}
+
+// สร้างทางเดินแบบสุ่ม
+function createPath(map, startX, startY, steps) {
+  let x = startX;
+  let y = startY;
+  
+  for (let i = 0; i < steps; i++) {
+    // ตรวจสอบขอบเขต
+    x = Math.max(1, Math.min(map[0].length - 2, x));
+    y = Math.max(1, Math.min(map.length - 2, y));
+    
+    // เปลี่ยนพื้นที่เป็นทางเดิน
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (map[y + dy][x + dx].type !== 'water' && map[y + dy][x + dx].type !== 'mountain') {
+          map[y + dy][x + dx].type = 'path';
+          map[y + dy][x + dx].color = '#D2B48C';
+        }
+      }
+    }
+    
+    // เคลื่อนที่แบบสุ่ม
+    const dir = randomInt(0, 3);
+    if (dir === 0) y--;
+    else if (dir === 1) y++;
+    else if (dir === 2) x--;
+    else x++;
+  }
+}
+
+// ตัวละครหลัก
 const player = {
-  x: world.width / 2, y: world.height / 2, // เริ่มกลางแมพ
-  width: 48, height: 48,
-  speed: 4,
-  dx: 0, // ทิศทางการเคลื่อนที่แนวนอน
-  dy: 0  // ทิศทางการเคลื่อนที่แนวตั้ง
+  x: world.width / 2,
+  y: world.height / 2,
+  width: 24,
+  height: 32,
+  speed: 3,
+  dx: 0,
+  dy: 0,
+  name: "นักผจญภัย",
+  hp: 100,
+  maxHp: 100,
+  energy: 50,
+  maxEnergy: 50,
+  direction: 'down', // 'up', 'down', 'left', 'right'
+  moving: false
 };
 
-const npc = {
-  x: world.width / 2 + 150, y: world.height / 2 - 50,
-  width: 48, height: 48
-};
+// NPCs
+const npcs = [
+  {
+    id: 1,
+    x: world.width / 2 + 150,
+    y: world.height / 2 - 50,
+    width: 24,
+    height: 32,
+    name: "พ่อค้า",
+    dialogues: [
+      {
+        id: 1,
+        text: "สวัสดีนักผจญภัย! ต้องการซื้ออะไรไหม?",
+        options: [
+          { text: "แสดงสินค้า", nextDialog: 2 },
+          { text: "ไม่เป็นไร ขอบคุณ", nextDialog: -1 }
+        ]
+      },
+      {
+        id: 2,
+        text: "นี่คือสินค้าของฉัน:",
+        options: [
+          { text: "ซื้อดาบ (50 เงิน)", action: "buy", item: "sword", cost: 50, nextDialog: 3 },
+          { text: "ซื้อเกราะ (80 เงิน)", action: "buy", item: "armor", cost: 80, nextDialog: 3 },
+          { text: "ไม่สนใจ", nextDialog: -1 }
+        ]
+      },
+      {
+        id: 3,
+        text: "ขอบคุณสำหรับการซื้อ!",
+        options: [
+          { text: "ลาก่อน", nextDialog: -1 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    x: world.width / 2 - 200,
+    y: world.height / 2 + 100,
+    width: 24,
+    height: 32,
+    name: "นักบวช",
+    dialogues: [
+      {
+        id: 1,
+        text: "สวัสดีลูก โลกนี้กำลังตกอยู่ในอันตรายจากความมืด...",
+        options: [
+          { text: "เกิดอะไรขึ้น?", nextDialog: 2 },
+          { text: "ฉันไม่สนใจ", nextDialog: -1 }
+        ]
+      },
+      {
+        id: 2,
+        text: "อัญมณีศักดิ์สิทธิ์ที่ปกป้องโลกได้หายไป...",
+        options: [
+          { text: "ฉันจะช่วยหา!", nextDialog: 3, quest: "find_gem" },
+          { text: "นั่นไม่ใช่ปัญหาของฉัน", nextDialog: -1 }
+        ]
+      },
+      {
+        id: 3,
+        text: "ขอบคุณลูก ขอให้พระเจ้าคุ้มครองคุณ",
+        options: [
+          { text: "ลาก่อน", nextDialog: -1 }
+        ]
+      }
+    ]
+  }
+];
 
-// --- กล้อง ---
+// กล้อง
 const camera = {
   x: 0,
   y: 0,
@@ -124,65 +429,293 @@ const camera = {
   height: window.innerHeight
 };
 
-// --- การควบคุม ---
+// การควบคุม
 const keys = { up: false, down: false, left: false, right: false };
 let actionPressed = false;
 
-// --- โหลด Assets ---
-let grassPattern;
+// สถานะเกม
+const gameState = {
+  paused: false,
+  currentDialog: null,
+  currentNpc: null,
+  inventory: [],
+  money: 100,
+  quests: []
+};
 
-// ฟังก์ชันโหลดรูปภาพด้วย Promise
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous"; // เพิ่มบรรทัดนี้เพื่อแก้ปัญหา CORS ที่อาจเกิดขึ้นกับ Imgur
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
+// แผนที่เกม
+let gameMap = [];
 
-// --- ฟังก์ชันหลัก ---
-async function initializeGame() {
-  // โหลดรูปภาพทั้งหมดก่อนเริ่มเกม
-  try {
-    const [playerImg, npcImg, grassImg] = await Promise.all([
-      //  vvv  เปลี่ยนเป็นลิงก์รูปที่ใช้งานได้จริงแล้ว  vvv
-      loadImage('https://i.imgur.com/MieLq23.png'), // รูป Player สำรอง
-      loadImage('https://i.imgur.com/V2wNn7g.png'), // รูป NPC สำรอง
-      loadImage('https://i.imgur.com/ihDJe4n.png')  // รูปพื้นหญ้า (ลิงก์เดิม)
-    ]);
-    
-    // สร้าง pattern สำหรับพื้นหลัง
-    grassPattern = ctx.createPattern(grassImg, 'repeat');
-    
-    // ตั้งค่าเริ่มต้น
-    setupControls();
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    // เริ่ม Game Loop
-    gameLoop(playerImg, npcImg); // ส่งรูปที่โหลดแล้วเข้าไปใน loop
+// Perlin Noise สำหรับสร้างแผนที่
+class PerlinNoise {
+  constructor() {
+    this.gradients = {};
+    this.memory = {};
+  }
 
-  } catch (error) {
-    console.error("ไม่สามารถโหลดรูปภาพได้:", error);
-    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดตรวจสอบลิงก์รูปภาพหรือการเชื่อมต่ออินเทอร์เน็ต");
+  rand_vect() {
+    const theta = Math.random() * 2 * Math.PI;
+    return { x: Math.cos(theta), y: Math.sin(theta) };
+  }
+
+  dot_prod_grid(x, y, vx, vy) {
+    let g_vect;
+    const d_vect = { x: x - vx, y: y - vy };
+    if (this.gradients[[vx, vy]]) {
+      g_vect = this.gradients[[vx, vy]];
+    } else {
+      g_vect = this.rand_vect();
+      this.gradients[[vx, vy]] = g_vect;
+    }
+    return d_vect.x * g_vect.x + d_vect.y * g_vect.y;
+  }
+
+  smootherstep(x) {
+    return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3;
+  }
+
+  interp(x, a, b) {
+    return a + this.smootherstep(x) * (b - a);
+  }
+
+  get(x, y) {
+    if (this.memory[[x, y]]) {
+      return this.memory[[x, y]];
+    }
+    
+    const xf = Math.floor(x);
+    const yf = Math.floor(y);
+    
+    // ค่า noise ที่ 4 มุม
+    const tl = this.dot_prod_grid(x, y, xf, yf);
+    const tr = this.dot_prod_grid(x, y, xf + 1, yf);
+    const bl = this.dot_prod_grid(x, y, xf, yf + 1);
+    const br = this.dot_prod_grid(x, y, xf + 1, yf + 1);
+    
+    // Interpolate
+    const xt = this.interp(x - xf, tl, tr);
+    const xb = this.interp(x - xf, bl, br);
+    const v = this.interp(y - yf, xt, xb);
+    
+    this.memory[[x, y]] = v;
+    return v;
   }
 }
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  camera.width = canvas.width;
-  camera.height = canvas.height;
+// วาดตัวละครแบบพิกเซล
+function drawPixelCharacter(x, y, width, height, color, direction, moving) {
+  // ตัวละคร
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width, height - 8);
+  
+  // ศีรษะ
+  ctx.fillRect(x + width/4, y - 8, width/2, 8);
+  
+  // ตา (กระพริบเมื่อเคลื่อนที่)
+  const eyeOffset = moving ? Math.floor(Date.now() / 200) % 2 : 0;
+  ctx.fillStyle = '#000';
+  if (direction === 'left' || direction === 'right') {
+    ctx.fillRect(x + width/4 + eyeOffset, y - 6, 2, 2);
+    ctx.fillRect(x + 3*width/4 - eyeOffset, y - 6, 2, 2);
+  } else {
+    ctx.fillRect(x + width/4, y - 6 + eyeOffset, 2, 2);
+    ctx.fillRect(x + 3*width/4, y - 6 + eyeOffset, 2, 2);
+  }
+  
+  // แขนและขา
+  const limbOffset = moving ? Math.sin(Date.now() / 200) * 2 : 0;
+  
+  if (direction === 'left' || direction === 'right') {
+    // แขน
+    ctx.fillRect(x - 4, y + 8, 4, 8);
+    ctx.fillRect(x + width, y + 8, 4, 8);
+    
+    // ขา
+    ctx.fillRect(x, y + height - 8, 8, 8);
+    ctx.fillRect(x + width - 8, y + height - 8, 8, 8);
+  } else {
+    // แขน
+    ctx.fillRect(x, y + 8 + limbOffset, 8, 4);
+    ctx.fillRect(x + width - 8, y + 8 - limbOffset, 8, 4);
+    
+    // ขา
+    ctx.fillRect(x, y + height - 8 - limbOffset, 8, 8);
+    ctx.fillRect(x + width - 8, y + height - 8 + limbOffset, 8, 8);
+  }
 }
 
+// วาดแผนที่
+function drawMap() {
+  const startX = Math.max(0, Math.floor(camera.x / TILE_SIZE));
+  const startY = Math.max(0, Math.floor(camera.y / TILE_SIZE));
+  const endX = Math.min(gameMap[0].length, Math.ceil((camera.x + camera.width) / TILE_SIZE));
+  const endY = Math.min(gameMap.length, Math.ceil((camera.y + camera.height) / TILE_SIZE));
+  
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const tile = gameMap[y][x];
+      
+      // วาดพื้น
+      ctx.fillStyle = tile.color;
+      ctx.fillRect(
+        x * TILE_SIZE - camera.x,
+        y * TILE_SIZE - camera.y,
+        TILE_SIZE,
+        TILE_SIZE
+      );
+      
+      // วาดรายละเอียด (ต้นไม้, ฯลฯ)
+      if (tile.feature === 'tree') {
+        ctx.fillStyle = tile.featureColor;
+        // ลำต้น
+        ctx.fillRect(
+          x * TILE_SIZE + TILE_SIZE/3 - camera.x,
+          y * TILE_SIZE + TILE_SIZE/2 - camera.y,
+          TILE_SIZE/3,
+          TILE_SIZE/2
+        );
+        // ใบไม้
+        ctx.beginPath();
+        ctx.moveTo(x * TILE_SIZE + TILE_SIZE/2 - camera.x, y * TILE_SIZE - camera.y);
+        ctx.lineTo(x * TILE_SIZE + TILE_SIZE - camera.x, y * TILE_SIZE + TILE_SIZE/3 - camera.y);
+        ctx.lineTo(x * TILE_SIZE + TILE_SIZE - camera.x, y * TILE_SIZE + TILE_SIZE/2 - camera.y);
+        ctx.lineTo(x * TILE_SIZE + TILE_SIZE/2 - camera.x, y * TILE_SIZE + TILE_SIZE/3 - camera.y);
+        ctx.lineTo(x * TILE_SIZE - camera.x, y * TILE_SIZE + TILE_SIZE/2 - camera.y);
+        ctx.lineTo(x * TILE_SIZE - camera.x, y * TILE_SIZE + TILE_SIZE/3 - camera.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  }
+}
+
+// ระบบบทสนทนา
+function showDialog(npcId, dialogId) {
+  const npc = npcs.find(n => n.id === npcId);
+  if (!npc) return;
+  
+  const dialog = npc.dialogues.find(d => d.id === dialogId);
+  if (!dialog) return;
+  
+  gameState.currentNpc = npcId;
+  gameState.currentDialog = dialogId;
+  gameState.paused = true;
+  
+  const dialogBox = document.getElementById('dialog-box');
+  const dialogText = document.getElementById('dialog-text');
+  const dialogOptions = document.getElementById('dialog-options');
+  
+  dialogText.textContent = `${npc.name}: ${dialog.text}`;
+  dialogOptions.innerHTML = '';
+  
+  dialog.options.forEach(option => {
+    const optionElement = document.createElement('div');
+    optionElement.className = 'dialog-option';
+    optionElement.textContent = option.text;
+    optionElement.addEventListener('click', () => {
+      if (option.nextDialog === -1) {
+        // จบบทสนทนา
+        hideDialog();
+      } else {
+        // แสดงบทสนทนาถัดไป
+        showDialog(npcId, option.nextDialog);
+      }
+      
+      // ตรวจสอบการกระทำพิเศษ
+      if (option.action === 'buy') {
+        if (gameState.money >= option.cost) {
+          gameState.money -= option.cost;
+          gameState.inventory.push(option.item);
+          updatePlayerStatus();
+        } else {
+          alert("เงินของคุณไม่พอ!");
+        }
+      } else if (option.quest) {
+        gameState.quests.push(option.quest);
+        updatePlayerStatus();
+      }
+    });
+    dialogOptions.appendChild(optionElement);
+  });
+  
+  dialogBox.style.display = 'block';
+}
+
+function hideDialog() {
+  document.getElementById('dialog-box').style.display = 'none';
+  gameState.currentNpc = null;
+  gameState.currentDialog = null;
+  gameState.paused = false;
+}
+
+// เมนูเกม
+function showGameMenu() {
+  gameState.paused = true;
+  document.getElementById('game-menu').style.display = 'flex';
+  
+  document.getElementById('continue-btn').addEventListener('click', () => {
+    hideGameMenu();
+  });
+  
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    if (confirm("เริ่มเกมใหม่? ความคืบหน้าปัจจุบันจะหายไป")) {
+      resetGame();
+      hideGameMenu();
+    }
+  });
+  
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    alert("ตั้งค่าเกม (สามารถเพิ่มระบบตั้งค่าที่ซับซ้อนได้ที่นี่)");
+  });
+  
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    if (confirm("ออกจากเกม?")) {
+      window.close();
+    }
+  });
+}
+
+function hideGameMenu() {
+  document.getElementById('game-menu').style.display = 'none';
+  gameState.paused = false;
+}
+
+// อัพเดทสถานะผู้เล่น
+function updatePlayerStatus() {
+  document.getElementById('player-name').textContent = player.name;
+  document.getElementById('hp-text').textContent = `${player.hp}/${player.maxHp}`;
+  document.getElementById('energy-text').textContent = `${player.energy}/${player.maxEnergy}`;
+  
+  const healthPercent = (player.hp / player.maxHp) * 100;
+  const energyPercent = (player.energy / player.maxEnergy) * 100;
+  
+  document.getElementById('health-bar').style.width = `${healthPercent}%`;
+  document.getElementById('energy-bar').style.width = `${energyPercent}%`;
+}
+
+// รีเซ็ตเกม
+function resetGame() {
+  player.x = world.width / 2;
+  player.y = world.height / 2;
+  player.hp = player.maxHp;
+  player.energy = player.maxEnergy;
+  gameState.inventory = [];
+  gameState.money = 100;
+  gameState.quests = [];
+  
+  // สร้างแผนที่ใหม่
+  gameMap = generateMap(world.width / TILE_SIZE, world.height / TILE_SIZE);
+  
+  updatePlayerStatus();
+}
+
+// ตั้งค่าควบคุม
 function setupControls() {
   // -- Joystick --
   const stick = document.getElementById("joystick-stick");
   const area = document.getElementById("joystick-area");
   const joystick = { active: false, startX: 0, startY: 0, dx: 0, dy: 0 };
-  const maxDist = 40; // ระยะที่จอยสติ๊กขยับได้
+  const maxDist = 40;
 
   area.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
@@ -206,6 +739,15 @@ function setupControls() {
     player.dx = joystick.dx / maxDist;
     player.dy = joystick.dy / maxDist;
 
+    // กำหนดทิศทาง
+    if (Math.abs(player.dx) > Math.abs(player.dy)) {
+      player.direction = player.dx > 0 ? 'right' : 'left';
+    } else {
+      player.direction = player.dy > 0 ? 'down' : 'up';
+    }
+    
+    player.moving = true;
+
     stick.style.left = 75 + joystick.dx + "px";
     stick.style.top = 75 + joystick.dy + "px";
   }, { passive: true });
@@ -214,6 +756,7 @@ function setupControls() {
     joystick.active = false;
     player.dx = 0;
     player.dy = 0;
+    player.moving = false;
     stick.style.left = "75px";
     stick.style.top = "75px";
   };
@@ -235,22 +778,56 @@ function setupControls() {
 
   // -- Keyboard --
   window.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (gameState.paused) return;
+    
+    if (e.key === 'ArrowUp' || e.key === 'w') {
+      keys.up = true;
+      player.direction = 'up';
+      player.moving = true;
+    }
+    if (e.key === 'ArrowDown' || e.key === 's') {
+      keys.down = true;
+      player.direction = 'down';
+      player.moving = true;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+      keys.left = true;
+      player.direction = 'left';
+      player.moving = true;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd') {
+      keys.right = true;
+      player.direction = 'right';
+      player.moving = true;
+    }
     if (e.key === ' ') actionPressed = true;
+    if (e.key === 'Escape') showGameMenu();
   });
+  
   window.addEventListener('keyup', e => {
-    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-    if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
-    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === 'ArrowUp' || e.key === 'w') {
+      keys.up = false;
+      player.moving = keys.down || keys.left || keys.right;
+    }
+    if (e.key === 'ArrowDown' || e.key === 's') {
+      keys.down = false;
+      player.moving = keys.up || keys.left || keys.right;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'a') {
+      keys.left = false;
+      player.moving = keys.up || keys.down || keys.right;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'd') {
+      keys.right = false;
+      player.moving = keys.up || keys.down || keys.left;
+    }
     if (e.key === ' ') actionPressed = false;
   });
 }
 
 function update() {
+  if (gameState.paused) return;
+  
   let moveX = 0;
   let moveY = 0;
   if (keys.up) moveY -= 1;
@@ -272,77 +849,102 @@ function update() {
   player.x += moveX;
   player.y += moveY;
 
+  // ตรวจสอบขอบเขต
   player.x = Math.max(0, Math.min(world.width - player.width, player.x));
   player.y = Math.max(0, Math.min(world.height - player.height, player.y));
 
+  // อัพเดทกล้อง
   camera.x = player.x - camera.width / 2 + player.width / 2;
   camera.y = player.y - camera.height / 2 + player.height / 2;
 
   camera.x = Math.max(0, Math.min(world.width - camera.width, camera.x));
   camera.y = Math.max(0, Math.min(world.height - camera.height, camera.y));
 
-  const dx = player.x - npc.x;
-  const dy = player.y - npc.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  if (actionPressed && distance < 70) {
-    alert("ขอบคุณที่มาหาเรา! โลกนี้รอการช่วยเหลือจากเธออยู่!");
+  // ตรวจสอบการโต้ตอบกับ NPC
+  if (actionPressed) {
     actionPressed = false;
+    
+    for (const npc of npcs) {
+      const dx = player.x - npc.x;
+      const dy = player.y - npc.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < 70) {
+        showDialog(npc.id, 1); // เริ่มบทสนทนาด้วย dialog แรก
+        break;
+      }
+    }
   }
 }
 
-function draw(playerImg, npcImg) {
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // วาดแผนที่
+  drawMap();
+  
+  // วาด NPCs
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
-
-  if (grassPattern) {
-    ctx.fillStyle = grassPattern;
-    ctx.fillRect(0, 0, world.width, world.height);
+  
+  for (const npc of npcs) {
+    drawPixelCharacter(
+      npc.x, npc.y, npc.width, npc.height, 
+      npc.id === 1 ? '#FF6347' : '#9370DB', // สี NPC ต่างกัน
+      'down', 
+      false
+    );
   }
-
-  ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
-  ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  
+  // วาดผู้เล่น
+  drawPixelCharacter(
+    player.x, player.y, player.width, player.height, 
+    '#4169E1', 
+    player.direction, 
+    player.moving
+  );
   
   ctx.restore();
 }
 
-// สร้างตัวแปร global เพื่อเก็บ instance ของรูปที่โหลดแล้ว
-let loadedPlayerImg, loadedNpcImg;
+// ปรับขนาด Canvas
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  camera.width = canvas.width;
+  camera.height = canvas.height;
+}
 
+// Game Loop
 function gameLoop() {
-  update();
-  // ส่งรูปที่โหลดแล้วไปวาด
-  draw(loadedPlayerImg, loadedNpcImg);
+  if (!gameState.paused) {
+    update();
+  }
+  draw();
   requestAnimationFrame(gameLoop);
 }
 
-// ปรับปรุงการเรียกฟังก์ชันเริ่มต้น
-async function main() {
-  try {
-    [loadedPlayerImg, loadedNpcImg, grassImg] = await Promise.all([
-      loadImage('https://i.imgur.com/MieLq23.png'), // รูป Player สำรอง
-      loadImage('https://i.imgur.com/V2wNn7g.png'), // รูป NPC สำรอง
-      loadImage('https://i.imgur.com/ihDJe4n.png')  // รูปพื้นหญ้า (ลิงก์เดิม)
-    ]);
-    
-    grassPattern = ctx.createPattern(grassImg, 'repeat');
-    
-    setupControls();
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    gameLoop();
-
-  } catch (error) {
-    console.error("ไม่สามารถโหลดรูปภาพได้:", error);
-    alert("เกิดข้อผิดพลาดในการโหลดไฟล์เกม โปรดตรวจสอบลิงก์รูปภาพหรือการเชื่อมต่ออินเทอร์เน็ต");
-  }
+// เริ่มเกม
+function initGame() {
+  // สร้างแผนที่
+  gameMap = generateMap(world.width / TILE_SIZE, world.height / TILE_SIZE);
+  
+  // ตั้งค่าควบคุม
+  setupControls();
+  
+  // ปรับขนาด Canvas
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // อัพเดทสถานะผู้เล่น
+  updatePlayerStatus();
+  
+  // เริ่มเกมลูป
+  gameLoop();
 }
 
-main();
+// เริ่มเกมเมื่อหน้าเว็บโหลดเสร็จ
+window.addEventListener('load', initGame);
 </script>
-
-
 </body>
 </html>
