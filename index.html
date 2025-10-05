@@ -1,1317 +1,1478 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-   <title>Super XO Game</title>
-   <script src="https://cdn.tailwindcss.com"></script>
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
-   <style>
-       /* CSS for Loading Screen */
-       .loader-overlay {
-           position: fixed;
-           inset: 0;
-           background-color: rgba(255, 255, 255, 0.9);
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           z-index: 9999;
-           transition: opacity 0.3s ease-in-out;
-       }
-       .loader {
-           border: 8px solid #f3f3f3; /* Light grey */
-           border-top: 8px solid #3b82f6; /* Blue */
-           border-radius: 50%;
-           width: 60px;
-           height: 60px;
-           animation: spin 1s linear infinite;
-       }
-       @keyframes spin {
-           0% { transform: rotate(0deg); }
-           100% { transform: rotate(360deg); }
-       }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super XO Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+      /* CSS for Loading Screen */
+      .loader-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(255, 255, 255, 0.9);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          transition: opacity 0.3s ease-in-out;
+      }
+      .loader {
+          border: 8px solid #f3f3f3; /* Light grey */
+          border-top: 8px solid #3b82f6; /* Blue */
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
 
-       :root {
-           --x-color: #ef4444; /* red-500 */
-           --o-color: #3b82f6; /* blue-500 */
-       }
-       body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-       .screen, .modal-overlay { display: none; }
-       .screen.active, .modal-overlay.active { display: flex; }
-       .input-field { @apply w-full px-4 py-3 mb-4 text-center bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors; }
-       .button { @apply w-full max-w-sm px-4 py-3 my-2 text-lg font-semibold text-white transition-transform duration-150 ease-in-out rounded-lg shadow-md transform active:scale-95 flex justify-center items-center gap-2; }
-       .button:disabled { @apply opacity-50 cursor-not-allowed; }
-       .button-primary { @apply bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700; }
-       .button-secondary { @apply bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700; }
-       .button-success { @apply bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700; }
-       .button-danger { @apply bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700; }
-       .button-warning { @apply bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700; }
-       .cell {
-           position: relative;
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           font-size: clamp(3rem, 18vmin, 7rem);
-           font-weight: bold;
-           cursor: pointer;
-           border: 2px solid #e5e7eb; /* gray-200 */
-           transition: background-color 0.2s;
-           line-height: 1; /* Prevents text from affecting cell height */
-       }
-       .cell:hover { background-color: #f9fafb; /* gray-50 */ }
-       .cell.x { color: var(--x-color); }
-       .cell.o { color: var(--o-color); }
-       .cell.fading { animation: fadeOut 0.5s forwards; }
-       @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-       .cell.indicate-fade {
-           animation: pulseFade 1.5s infinite;
-       }
-       @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-       #game-board {
-           display: grid;
-           grid-template-columns: repeat(3, 1fr);
-           width: 90vw;
-           height: 90vw;
-           max-width: 450px;
-           max-height: 450px;
-           aspect-ratio: 1 / 1;
-           position: relative;
-       }
-       .context-menu {
-           position: absolute;
-           display: none;
-           z-index: 1000;
-       }
-       .winning-line {
-           position: absolute;
-           background-color: rgba(255, 215, 0, 0.8);
-           height: 12px;
-           border-radius: 6px;
-           transform-origin: top left;
-           animation: drawLine 0.5s ease-out forwards;
-       }
-       @keyframes drawLine {
-           from { width: 0; }
-           to { width: var(--line-width); }
-       }
-   </style>
+      :root {
+          --x-color: #ef4444; /* red-500 */
+          --o-color: #3b82f6; /* blue-500 */
+      }
+      body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+      .screen, .modal-overlay { display: none; }
+      .screen.active, .modal-overlay.active { display: flex; }
+      .input-field { @apply w-full px-4 py-3 mb-4 text-center bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors; }
+      .button { @apply w-full max-w-sm px-4 py-3 my-2 text-lg font-semibold text-white transition-transform duration-150 ease-in-out rounded-lg shadow-md transform active:scale-95 flex justify-center items-center gap-2; }
+      .button:disabled { @apply bg-gray-400 opacity-70 cursor-not-allowed transform-none; }
+      .button-primary { @apply bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700; }
+      .button-secondary { @apply bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700; }
+      .button-success { @apply bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700; }
+      .button-danger { @apply bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700; }
+      .button-warning { @apply bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700; }
+      .cell {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: clamp(3rem, 18vmin, 7rem);
+          font-weight: bold;
+          cursor: pointer;
+          border: 2px solid #e5e7eb; /* gray-200 */
+          transition: background-color 0.2s;
+          line-height: 1; /* Prevents text from affecting cell height */
+      }
+      .cell:hover { background-color: #f9fafb; /* gray-50 */ }
+      .cell.x { color: var(--x-color); }
+      .cell.o { color: var(--o-color); }
+      .cell.fading { animation: fadeOut 0.5s forwards; }
+      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+      .cell.indicate-fade {
+          animation: pulseFade 1.5s infinite;
+      }
+      @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+      #game-board {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          width: 90vw;
+          height: 90vw;
+          max-width: 450px;
+          max-height: 450px;
+          aspect-ratio: 1 / 1;
+          position: relative;
+      }
+      .context-menu {
+          position: absolute;
+          display: none;
+          z-index: 1000;
+      }
+      .winning-line {
+          position: absolute;
+          background-color: rgba(255, 215, 0, 0.8);
+          height: 12px;
+          border-radius: 6px;
+          transform-origin: top left;
+          animation: drawLine 0.5s ease-out forwards;
+      }
+      @keyframes drawLine {
+          from { width: 0; }
+          to { width: var(--line-width); }
+      }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-   <div id="loading-overlay" class="loader-overlay">
-       <div class="loader"></div>
-   </div>
-   
-   <div id="connection-error-overlay" class="screen fixed inset-0 bg-white flex-col justify-center items-center p-5 text-center" style="z-index: 9998; display: none;">
-       <h2 class="text-2xl font-bold text-red-500 mb-4">เกิดข้อผิดพลาดในการเชื่อมต่อ</h2>
-       <p class="text-lg mb-6">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้<br>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง</p>
-       <button onclick="window.location.reload()" class="button button-primary">โหลดใหม่</button>
-   </div>
+  <div id="loading-overlay" class="loader-overlay">
+      <div class="loader"></div>
+  </div>
+ 
+  <div id="connection-error-overlay" class="screen fixed inset-0 bg-white flex-col justify-center items-center p-5 text-center" style="z-index: 9998; display: none;">
+      <h2 class="text-2xl font-bold text-red-500 mb-4">เกิดข้อผิดพลาดในการเชื่อมต่อ</h2>
+      <p class="text-lg mb-6">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้<br>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง</p>
+      <button onclick="window.location.reload()" class="button button-primary">โหลดใหม่</button>
+  </div>
 
-   <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none" style="z-index: 9997;"></canvas>
+  <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none" style="z-index: 9997;"></canvas>
 
-   <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
-       <p id="toast-message"></p>
-   </div>
+  <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
+      <p id="toast-message"></p>
+  </div>
 
-   <div id="context-menu" class="context-menu bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
-       <button id="view-profile-ctx-btn" class="flex items-center gap-2 text-left w-full px-4 py-2 text-gray-700 hover:bg-gray-100">
-           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-           <span>ดูโปรไฟล์</span>
-       </button>
-   </div>
-   
-   <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
-       <div class="modal-content bg-white p-6 rounded-xl shadow-2xl w-full max-w-md relative">
-            <button id="close-profile-btn" class="absolute top-2 right-4 text-3xl font-bold text-gray-400 hover:text-gray-700">×</button>
-           <h2 id="profile-username" class="text-3xl font-bold mb-4 text-center"></h2>
-           <div class="text-center space-y-2">
-               <div class="flex justify-center items-center gap-2 text-2xl font-semibold">
-                    <span class="text-yellow-500">💰</span>
-                    <span id="profile-coins">0</span>
-               </div>
-               <div>
-                   <p class="font-semibold text-gray-700 text-xl">สถิติ (ออนไลน์)</p>
-                   <p class="text-green-500">ชนะ: <span id="profile-wins" class="font-bold">0</span></p>
-                   <p class="text-red-500">แพ้: <span id="profile-losses" class="font-bold">0</span></p>
-               </div>
-               <div id="profile-medals-container" class="pt-2">
-                   <h3 class="font-semibold text-gray-700 text-xl">เหรียญรางวัล</h3>
-                   <div id="profile-medals-list" class="text-gray-500">ยังไม่มีเหรียญรางวัล</div>
-               </div>
+  <div id="context-menu" class="context-menu bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
+      <button id="view-profile-ctx-btn" class="flex items-center gap-2 text-left w-full px-4 py-2 text-gray-700 hover:bg-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>ดูโปรไฟล์</span>
+      </button>
+  </div>
+ 
+  <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
+      <div class="modal-content bg-white p-6 rounded-xl shadow-2xl w-full max-w-md relative">
+           <button id="close-profile-btn" class="absolute top-2 right-4 text-3xl font-bold text-gray-400 hover:text-gray-700">×</button>
+          <h2 id="profile-username" class="text-3xl font-bold mb-4 text-center"></h2>
+          <div class="text-center space-y-2">
+              <div class="flex justify-center items-center gap-2 text-2xl font-semibold">
+                   <span class="text-yellow-500">💰</span>
+                   <span id="profile-coins">0</span>
+              </div>
+              <div>
+                  <p class="font-semibold text-gray-700 text-xl">สถิติ (ออนไลน์)</p>
+                  <p class="text-green-500">ชนะ: <span id="profile-wins" class="font-bold">0</span></p>
+                  <p class="text-red-500">แพ้: <span id="profile-losses" class="font-bold">0</span></p>
+              </div>
+              <div id="profile-medals-container" class="pt-2">
+                  <h3 class="font-semibold text-gray-700 text-xl">เหรียญรางวัล</h3>
+                  <div id="profile-medals-list" class="text-gray-500">ยังไม่มีเหรียญรางวัล</div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <main id="app-container" class="w-full h-screen overflow-hidden">
+      <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+          <h1 class="text-5xl font-bold mb-2">Super XO</h1>
+           <div class="flex flex-col items-center mb-6">
+              <h2 id="welcome-message" class="text-2xl"></h2>
+              <div class="flex items-center gap-2 text-xl mt-1 font-semibold text-yellow-600">
+                  <span>💰</span>
+                  <span id="user-coins">0</span>
+              </div>
            </div>
-       </div>
-   </div>
+          <button id="play-bot-btn" class="button button-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="12" width="16" height="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 18v-2a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2Z"></path></svg>
+              <span>เล่นกับบอท</span>
+          </button>
+          <button id="play-coop-btn" class="button button-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>เล่นกับเพื่อน (Online)</span>
+          </button>
+           <button id="shop-btn" class="button button-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              <span>ร้านค้า</span>
+          </button>
+          <button id="settings-btn" class="button button-secondary">
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>ตั้งค่า & เพื่อน</span>
+          </button>
+      </div>
 
-   <main id="app-container" class="w-full h-screen overflow-hidden">
-       <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
-           <h1 class="text-5xl font-bold mb-2">Super XO</h1>
-           <h2 id="welcome-message" class="text-2xl mb-8"></h2>
-           <button id="play-bot-btn" class="button button-primary">
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="12" width="16" height="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 18v-2a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2Z"></path></svg>
-               <span>เล่นกับบอท</span>
-           </button>
-           <button id="play-coop-btn" class="button button-success">
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-               <span>เล่นกับเพื่อน (Online)</span>
-           </button>
-            <button id="shop-btn" class="button button-warning" disabled>
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-               <span>ร้านค้า (เร็วๆ นี้)</span>
-           </button>
-           <button id="settings-btn" class="button button-secondary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-               <span>ตั้งค่า & เพื่อน</span>
-           </button>
-       </div>
-
-       <div id="settings-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
-           <h2 class="text-3xl font-bold my-6 text-center w-full">ตั้งค่า & เพื่อน</h2>
-           
-           <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
-               <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
-               <input type="text" id="change-username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, 3-12 ตัว" maxlength="12">
-                <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
-               <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
+       <!-- Shop Screen -->
+      <div id="shop-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
+           <div class="w-full max-w-2xl text-center">
+              <h2 class="text-3xl font-bold mt-6 mb-2">ร้านค้า</h2>
+              <div class="flex items-center justify-center gap-2 text-xl mb-6 font-semibold text-yellow-600 bg-white px-4 py-2 rounded-lg shadow-md">
+                  <span>💰</span>
+                  <span id="shop-user-coins">0</span>
+              </div>
            </div>
+           <div id="shop-items-grid" class="w-full max-w-2xl grid grid-cols-2 sm:grid-cols-3 gap-4">
+               <!-- Shop items will be injected here -->
+           </div>
+           <button id="back-to-main-from-shop-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
+      </div>
 
-           <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-               <h3 class="text-xl font-semibold mb-2">จัดการเพื่อน</h3>
-               <div class="mb-4">
-                   <label for="search-user-input" class="font-semibold">ค้นหาผู้เล่น (ค้นหาเฉพาะชื่อ):</label>
-                   <div class="flex mt-1">
-                       <input type="text" id="search-user-input" class="input-field !mb-0 !rounded-r-none" placeholder="ค้นหาด้วยชื่อ...">
-                       <button id="search-user-btn" class="bg-blue-500 text-white px-4 rounded-r-lg hover:bg-blue-600 flex-shrink-0">ค้นหา</button>
-                   </div>
-                   <div id="search-results" class="mt-2"></div>
+      <div id="settings-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
+          <h2 class="text-3xl font-bold my-6 text-center w-full">ตั้งค่า & เพื่อน</h2>
+         
+          <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
+              <input type="text" id="change-username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, 3-12 ตัว" maxlength="12">
+               <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
+              <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
+          </div>
+
+          <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+              <h3 class="text-xl font-semibold mb-2">จัดการเพื่อน</h3>
+              <div class="mb-4">
+                  <label for="search-user-input" class="font-semibold">ค้นหาผู้เล่น (ค้นหาเฉพาะชื่อ):</label>
+                  <div class="flex mt-1">
+                      <input type="text" id="search-user-input" class="input-field !mb-0 !rounded-r-none" placeholder="ค้นหาด้วยชื่อ...">
+                      <button id="search-user-btn" class="bg-blue-500 text-white px-4 rounded-r-lg hover:bg-blue-600 flex-shrink-0">ค้นหา</button>
+                  </div>
+                  <div id="search-results" class="mt-2"></div>
+              </div>
+              <div id="friend-requests" class="mb-4">
+                  <h4 class="font-semibold">คำขอเป็นเพื่อน:</h4>
+                  <div id="friend-requests-list" class="text-gray-600">ไม่มีคำขอ</div>
+              </div>
+              <div>
+                  <h4 class="font-semibold">รายชื่อเพื่อน:</h4>
+                  <div id="friends-list" class="text-gray-600">ยังไม่มีเพื่อน</div>
+              </div>
+          </div>
+
+          <button id="back-to-main-from-settings-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
+      </div>
+
+      <div id="coop-menu" class="screen w-full h-full flex-col justify-center items-center p-5">
+          <h2 class="text-3xl font-bold mb-8">เล่นกับเพื่อน</h2>
+          <button id="create-room-btn" class="button button-primary">สร้างห้อง</button>
+          <input type="text" id="room-code-input" class="input-field max-w-sm" placeholder="ใส่รหัสห้อง" style="text-transform: uppercase;">
+          <button id="join-room-btn" class="button button-success">เข้าร่วมห้อง</button>
+          <button id="back-to-main-from-coop-btn" class="button button-secondary">กลับ</button>
+      </div>
+
+      <div id="room-lobby" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+          <h2 class="text-2xl mb-2">รหัสห้อง:</h2>
+           <div class="flex items-center justify-center gap-2 mb-6">
+              <span id="room-code-display" class="text-4xl font-bold text-red-500 tracking-widest"></span>
+              <button id="copy-room-code-btn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+          </div>
+          <div id="player-list" class="text-xl mb-6 space-y-2 w-full max-w-sm"></div>
+          <p id="lobby-status" class="mb-6 h-12 text-2xl flex justify-center items-center"></p>
+          <button id="ready-btn" class="button button-success">เตรียมพร้อม</button>
+          <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
+      </div>
+     
+      <div id="game-screen" class="screen w-full h-full flex-col justify-center items-center p-2 sm:p-5">
+          <div id="turn-display" class="text-2xl font-semibold mb-4 h-8"></div>
+          <div id="game-board-container" class="relative">
+              <div id="game-board"></div>
+              <div id="winning-line-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+          </div>
+         
+          <div id="game-screen-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
+               <h2 id="game-over-message" class="text-4xl font-bold mb-2"></h2>
+               <div id="game-rewards" class="mb-4 text-center">
+                  <p id="game-coin-reward" class="text-2xl font-semibold text-yellow-600"></p>
+                  <p id="game-medal-reward" class="text-lg font-semibold text-green-600"></p>
                </div>
-               <div id="friend-requests" class="mb-4">
-                   <h4 class="font-semibold">คำขอเป็นเพื่อน:</h4>
-                   <div id="friend-requests-list" class="text-gray-600">ไม่มีคำขอ</div>
-               </div>
-               <div>
-                   <h4 class="font-semibold">รายชื่อเพื่อน:</h4>
-                   <div id="friends-list" class="text-gray-600">ยังไม่มีเพื่อน</div>
-               </div>
-           </div>
+               <div id="rematch-status" class="h-6 mb-4 text-lg"></div>
+               <button id="rematch-btn" class="button button-primary">เล่นอีกครั้ง</button>
+               <button id="back-to-menu-from-game-btn" class="button button-secondary">กลับเมนูหลัก</button>
+          </div>
 
-           <button id="back-to-main-from-settings-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
-       </div>
+          <button id="leave-game-btn" class="button button-danger mt-6">ยอมแพ้/ออกจากเกม</button>
+      </div>
+  </main>
+ 
+  <script type="module">
+      // Firebase Imports
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, writeBatch, runTransaction, serverTimestamp, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-       <div id="coop-menu" class="screen w-full h-full flex-col justify-center items-center p-5">
-           <h2 class="text-3xl font-bold mb-8">เล่นกับเพื่อน</h2>
-           <button id="create-room-btn" class="button button-primary">สร้างห้อง</button>
-           <input type="text" id="room-code-input" class="input-field max-w-sm" placeholder="ใส่รหัสห้อง" style="text-transform: uppercase;">
-           <button id="join-room-btn" class="button button-success">เข้าร่วมห้อง</button>
-           <button id="back-to-main-from-coop-btn" class="button button-secondary">กลับ</button>
-       </div>
+      // --- Firebase Config & Initialization ---
+      const firebaseConfig = {
+          apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
+          authDomain: "xobybestry777.firebaseapp.com",
+          projectId: "xobybestry777",
+          storageBucket: "xobybestry777.firebasestorage.app",
+          messagingSenderId: "380539937989",
+          appId: "1:380539937989:web:48049ed77f45327e033cac",
+          measurementId: "G-YZWTKXL285"
+      };
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
 
-       <div id="room-lobby" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
-           <h2 class="text-2xl mb-2">รหัสห้อง:</h2>
-            <div class="flex items-center justify-center gap-2 mb-6">
-               <span id="room-code-display" class="text-4xl font-bold text-red-500 tracking-widest"></span>
-               <button id="copy-room-code-btn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-               </button>
-           </div>
-           <div id="player-list" class="text-xl mb-6 space-y-2 w-full max-w-sm"></div>
-           <p id="lobby-status" class="mb-6 h-12 text-2xl flex justify-center items-center"></p>
-           <button id="ready-btn" class="button button-success">เตรียมพร้อม</button>
-           <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
-       </div>
-       
-       <div id="game-screen" class="screen w-full h-full flex-col justify-center items-center p-2 sm:p-5">
-           <div id="turn-display" class="text-2xl font-semibold mb-4 h-8"></div>
-           <div id="game-board-container" class="relative">
-               <div id="game-board"></div>
-               <div id="winning-line-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
-           </div>
-           
-           <div id="game-screen-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
-                <h2 id="game-over-message" class="text-4xl font-bold mb-2"></h2>
-                <div id="game-rewards" class="mb-4 text-center">
-                   <p id="game-coin-reward" class="text-2xl font-semibold text-yellow-600"></p>
-                   <p id="game-medal-reward" class="text-lg font-semibold text-green-600"></p>
-                </div>
-                <div id="rematch-status" class="h-6 mb-4 text-lg"></div>
-                <button id="rematch-btn" class="button button-primary">เล่นอีกครั้ง</button>
-                <button id="back-to-menu-from-game-btn" class="button button-secondary">กลับเมนูหลัก</button>
-           </div>
+      // --- Game Constants ---
+      const CONST = {
+          MAX_MOVE_HISTORY: 6,
+          USER_TAG_LENGTH: 5,
+          ROOM_CODE_LENGTH: 4,
+          CONNECTION_TIMEOUT: 15000, // 15 seconds
+          REWARDS: { WIN: 200, LOSS: 100, DRAW: 50 },
+          MEDALS: {
+              WS_5: { id: "ws_5", name: "ร้อนแรง! 🔥", description: "ชนะติดต่อกัน 5 ครั้ง" }
+          }
+      };
 
-           <button id="leave-game-btn" class="button button-danger mt-6">ยอมแพ้/ออกจากเกม</button>
-       </div>
-   </main>
-   
-   <script type="module">
-       // Firebase Imports
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-       import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-       import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, writeBatch, runTransaction, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      const SHOP_ITEMS = {
+           'symbol_default': { name: 'สัญลักษณ์เริ่มต้น', type: 'symbol', value: 'X', price: 0, default: true },
+           'symbol_sword': { name: 'สัญลักษณ์ดาบไขว้', type: 'symbol', value: '⚔️', price: 500 },
+           'symbol_ghost': { name: 'สัญลักษณ์ผีน้อย', type: 'symbol', value: '👻', price: 500 },
+           'symbol_heart': { name: 'สัญลักษณ์หัวใจ', type: 'symbol', value: '❤️', price: 750 },
+           'symbol_star': { name: 'สัญลักษณ์ดาว', type: 'symbol', value: '⭐', price: 750 },
+      };
+     
+      // --- Audio & Animation ---
+      let audioCtx;
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      const confettiCtx = confettiCanvas.getContext('2d');
+      let confettiParticles = [];
+      const confettiColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#eab308'];
+      let animationFrameId;
+      const GRAVITY = 0.08;
+      const DAMPING = 0.99;
+      const PARTICLE_COUNT = 150;
 
-       // --- Firebase Config & Initialization ---
-       const firebaseConfig = {
-           apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
-           authDomain: "xobybestry777.firebaseapp.com",
-           projectId: "xobybestry777",
-           storageBucket: "xobybestry777.firebasestorage.app",
-           messagingSenderId: "380539937989",
-           appId: "1:380539937989:web:48049ed77f45327e033cac",
-           measurementId: "G-YZWTKXL285"
-       };
-       const app = initializeApp(firebaseConfig);
-       const auth = getAuth(app);
-       const db = getFirestore(app);
+      const playPopSound = () => {
+          if (!audioCtx) return;
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+          gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.3);
+      };
 
-       // --- Game Constants ---
-       const CONST = {
-           MAX_MOVE_HISTORY: 6,
-           USER_TAG_LENGTH: 5,
-           ROOM_CODE_LENGTH: 4,
-           CONNECTION_TIMEOUT: 15000, // 15 seconds
-           REWARDS: { WIN: 200, LOSS: 100 },
-           MEDALS: {
-               WS_5: { id: "ws_5", name: "ร้อนแรง! 🔥", description: "ชนะติดต่อกัน 5 ครั้ง" }
-           }
-       };
-       
-       // --- Audio & Animation ---
-       let audioCtx;
-       const confettiCanvas = document.getElementById('confetti-canvas');
-       const confettiCtx = confettiCanvas.getContext('2d');
-       let confettiParticles = [];
-       const confettiColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#eab308'];
-       let animationFrameId;
-       const GRAVITY = 0.08;
-       const DAMPING = 0.99;
-       const PARTICLE_COUNT = 150; // Optimized particle count
+      const initializeAudio = () => {
+          if (!audioCtx) {
+              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+      };
+      document.body.addEventListener('click', initializeAudio, { once: true });
+     
+      function resizeCanvas() {
+          if (!confettiCanvas) return;
+          confettiCanvas.width = window.innerWidth;
+          confettiCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
 
-       const playPopSound = () => {
-           if (!audioCtx) return;
-           const oscillator = audioCtx.createOscillator();
-           const gainNode = audioCtx.createGain();
-           oscillator.type = 'sine';
-           oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-           gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-           gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-           oscillator.connect(gainNode);
-           gainNode.connect(audioCtx.destination);
-           oscillator.start();
-           oscillator.stop(audioCtx.currentTime + 0.3);
-       };
+      function createConfetti(origin) {
+          const { width, height } = confettiCanvas;
+          for (let i = 0; i < PARTICLE_COUNT; i++) {
+              const angle = Math.random() * Math.PI * 2;
+              const speed = Math.random() * 8 + 2;
+              confettiParticles.push({
+                  x: origin.x,
+                  y: origin.y,
+                  isCircle: Math.random() > 0.5,
+                  size: Math.random() * 8 + 4,
+                  color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+                  vx: Math.cos(angle) * speed,
+                  vy: Math.sin(angle) * speed - 2,
+                  angle: Math.random() * Math.PI * 2,
+                  spin: Math.random() * 0.2 - 0.1,
+                  opacity: 1,
+              });
+          }
+      }
 
-       const initializeAudio = () => {
-           if (!audioCtx) {
-               audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-           }
-       };
-       document.body.addEventListener('click', initializeAudio, { once: true });
-       
-       function resizeCanvas() {
-           if (!confettiCanvas) return;
-           confettiCanvas.width = window.innerWidth;
-           confettiCanvas.height = window.innerHeight;
-       }
-       window.addEventListener('resize', resizeCanvas);
+      function drawConfetti() {
+          if (!confettiCtx) return;
+          confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          confettiParticles.forEach((p, i) => {
+              p.vy += GRAVITY;
+              p.vx *= DAMPING;
+              p.x += p.vx;
+              p.y += p.vy;
+              p.angle += p.spin;
+              p.opacity -= 0.007;
 
-       function createConfetti(origin) {
-           const { width, height } = confettiCanvas;
-           for (let i = 0; i < PARTICLE_COUNT; i++) {
-               const angle = Math.random() * Math.PI * 2;
-               const speed = Math.random() * 8 + 2; // Initial burst speed
-               confettiParticles.push({
-                   x: origin.x,
-                   y: origin.y,
-                   isCircle: Math.random() > 0.5,
-                   size: Math.random() * 8 + 4,
-                   color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-                   vx: Math.cos(angle) * speed,
-                   vy: Math.sin(angle) * speed - 2, // Add a slight upward boost
-                   angle: Math.random() * Math.PI * 2,
-                   spin: Math.random() * 0.2 - 0.1,
-                   opacity: 1,
-               });
-           }
-       }
+              if (p.opacity <= 0) {
+                  confettiParticles.splice(i, 1);
+                  return;
+              }
 
-       function drawConfetti() {
-           if (!confettiCtx) return;
-           confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-           confettiParticles.forEach((p, i) => {
-               p.vy += GRAVITY;
-               p.vx *= DAMPING;
-               p.x += p.vx;
-               p.y += p.vy;
-               p.angle += p.spin;
-               p.opacity -= 0.007; // Fade out
+              confettiCtx.save();
+              confettiCtx.globalAlpha = p.opacity;
+              confettiCtx.translate(p.x, p.y);
+              confettiCtx.rotate(p.angle);
+              confettiCtx.fillStyle = p.color;
+             
+              if (p.isCircle) {
+                  confettiCtx.beginPath();
+                  confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                  confettiCtx.fill();
+              } else {
+                  confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+              }
+             
+              confettiCtx.restore();
+          });
+      }
 
-               if (p.opacity <= 0) {
-                   confettiParticles.splice(i, 1);
-                   return;
-               }
+      function animateConfetti() {
+          if (confettiParticles.length > 0) {
+              drawConfetti();
+              animationFrameId = requestAnimationFrame(animateConfetti);
+          } else {
+              if(confettiCtx) confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+              cancelAnimationFrame(animationFrameId);
+          }
+      }
 
-               confettiCtx.save();
-               confettiCtx.globalAlpha = p.opacity;
-               confettiCtx.translate(p.x, p.y);
-               confettiCtx.rotate(p.angle);
-               confettiCtx.fillStyle = p.color;
-               
-               if (p.isCircle) {
-                   confettiCtx.beginPath();
-                   confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-                   confettiCtx.fill();
-               } else {
-                   confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-               }
-               
-               confettiCtx.restore();
-           });
-       }
+      function startConfetti(origin) {
+          resizeCanvas();
+          confettiParticles = [];
+          createConfetti(origin);
+          if (animationFrameId) cancelAnimationFrame(animationFrameId);
+          animateConfetti();
+      }
 
-       function animateConfetti() {
-           if (confettiParticles.length > 0) {
-               drawConfetti();
-               animationFrameId = requestAnimationFrame(animateConfetti);
-           } else {
-               if(confettiCtx) confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-               cancelAnimationFrame(animationFrameId);
-           }
-       }
+      // --- App State ---
+      let AppState = {
+          currentUser: { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, coins: 0, medals: [], winStreak: 0, lossStreak: 0, inventory: ['symbol_default'], equipped: { symbol: 'symbol_default' } },
+          currentRoom: { id: null, data: null, countdownInterval: null },
+          playerSymbol: '',
+          listeners: { room: null, user: null },
+          game: { state: Array(9).fill(""), history: [], currentPlayer: "X", isActive: false, mode: 'bot', playerSymbols: { X: 'X', O: 'O' } },
+          loadingTimeout: null,
+      };
 
-       function startConfetti(origin) {
-           resizeCanvas();
-           confettiParticles = [];
-           createConfetti(origin);
-           if (animationFrameId) cancelAnimationFrame(animationFrameId);
-           animateConfetti();
-       }
+      // --- DOM Elements ---
+      const DOM = {
+          screens: {
+              mainMenu: document.getElementById('main-menu'),
+              settings: document.getElementById('settings-screen'),
+              shop: document.getElementById('shop-screen'),
+              coopMenu: document.getElementById('coop-menu'),
+              roomLobby: document.getElementById('room-lobby'),
+              game: document.getElementById('game-screen'),
+          },
+          modals: {
+              profile: document.getElementById('profile-modal'),
+          },
+          contextMenu: document.getElementById('context-menu'),
+          gameBoard: document.getElementById('game-board'),
+          winningLineContainer: document.getElementById('winning-line-container'),
+          turnDisplay: document.getElementById('turn-display'),
+      };
 
-       // --- App State ---
-       let AppState = {
-           currentUser: { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, coins: 0, medals: [], winStreak: 0, lossStreak: 0 },
-           currentRoom: { id: null, data: null, countdownInterval: null },
-           playerSymbol: '',
-           listeners: { room: null, user: null },
-           game: { state: Array(9).fill(""), history: [], currentPlayer: "X", isActive: false, mode: 'bot' },
-           loadingTimeout: null,
-       };
+      // --- Utility Functions ---
+      const showToast = (message, type = 'info') => {
+          const toast = document.getElementById('toast-notification');
+          const toastMessage = document.getElementById('toast-message');
+          toastMessage.textContent = message;
+          toast.className = `fixed top-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 z-50 opacity-100 transform translate-y-0 ${type === 'error' ? 'bg-red-600' : 'bg-gray-800'}`;
+          setTimeout(() => {
+              toast.classList.replace('opacity-100', 'opacity-0');
+              toast.classList.replace('translate-y-0', '-translate-y-10');
+          }, 3000);
+      };
+     
+      const showErrorScreen = (show = true) => {
+          const errorOverlay = document.getElementById('connection-error-overlay');
+          if (show) {
+              document.getElementById('loading-overlay').style.display = 'none';
+              errorOverlay.style.display = 'flex';
+          } else {
+              errorOverlay.style.display = 'none';
+          }
+      };
 
-       // --- DOM Elements ---
-       const DOM = {
-           screens: {
-               mainMenu: document.getElementById('main-menu'),
-               settings: document.getElementById('settings-screen'),
-               coopMenu: document.getElementById('coop-menu'),
-               roomLobby: document.getElementById('room-lobby'),
-               game: document.getElementById('game-screen'),
-           },
-           modals: {
-               profile: document.getElementById('profile-modal'),
-           },
-           contextMenu: document.getElementById('context-menu'),
-           gameBoard: document.getElementById('game-board'),
-           winningLineContainer: document.getElementById('winning-line-container'),
-           turnDisplay: document.getElementById('turn-display'),
-       };
+      const showScreen = (screenName) => {
+          Object.values(DOM.screens).forEach(s => s.classList.remove('active'));
+          if(DOM.screens[screenName]) DOM.screens[screenName].classList.add('active');
+      };
 
-       // --- Utility Functions ---
-       const showToast = (message, type = 'info') => {
-           const toast = document.getElementById('toast-notification');
-           const toastMessage = document.getElementById('toast-message');
-           toastMessage.textContent = message;
-           toast.className = `fixed top-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 z-50 opacity-100 transform translate-y-0 ${type === 'error' ? 'bg-red-600' : 'bg-gray-800'}`;
-           setTimeout(() => {
-               toast.classList.replace('opacity-100', 'opacity-0');
-               toast.classList.replace('translate-y-0', '-translate-y-10');
-           }, 3000);
-       };
-       
-       const showErrorScreen = (show = true) => {
-           const errorOverlay = document.getElementById('connection-error-overlay');
-           if (show) {
-               document.getElementById('loading-overlay').style.display = 'none';
-               errorOverlay.style.display = 'flex';
-           } else {
-               errorOverlay.style.display = 'none';
-           }
-       };
+      const showModal = (modalName, show = true) => {
+          if(DOM.modals[modalName]) DOM.modals[modalName].classList.toggle('active', show);
+      };
 
-       const showScreen = (screenName) => {
-           Object.values(DOM.screens).forEach(s => s.classList.remove('active'));
-           if(DOM.screens[screenName]) DOM.screens[screenName].classList.add('active');
-       };
+      const generateRandomName = () => {
+          const randomNumber = Math.floor(1000 + Math.random() * 9000);
+          return `Player${randomNumber}`;
+      };
+     
+      // --- Initialization ---
+      const init = () => {
+          addEventListeners();
+         
+          AppState.loadingTimeout = setTimeout(() => {
+              console.error("Connection timed out.");
+              showErrorScreen(true);
+          }, CONST.CONNECTION_TIMEOUT);
 
-       const showModal = (modalName, show = true) => {
-           if(DOM.modals[modalName]) DOM.modals[modalName].classList.toggle('active', show);
-       };
+          onAuthStateChanged(auth, async (user) => {
+              try {
+                  if (!user) {
+                      await signInAnonymously(auth);
+                      return;
+                  }
+                  AppState.currentUser.uid = user.uid;
+                  await checkUserRegistration();
+                  clearTimeout(AppState.loadingTimeout);
+              } catch (e) {
+                  console.error("Error during authentication or user setup:", e);
+                  clearTimeout(AppState.loadingTimeout);
+                  showErrorScreen(true);
+              }
+          });
+      };
+     
+      // --- User & Profile Management ---
+      const checkUserRegistration = async () => {
+          const loadingOverlay = document.getElementById('loading-overlay');
+          const userRef = doc(db, "users", AppState.currentUser.uid);
+          const userSnap = await getDoc(userRef);
 
-       const generateRandomName = () => {
-           const randomNumber = Math.floor(1000 + Math.random() * 9000);
-           return `Player${randomNumber}`;
-       };
-       
-       // --- Initialization ---
-       const init = () => {
-           addEventListeners();
-           
-           AppState.loadingTimeout = setTimeout(() => {
-               console.error("Connection timed out.");
-               showErrorScreen(true);
-           }, CONST.CONNECTION_TIMEOUT);
-
-           onAuthStateChanged(auth, async (user) => {
-               try {
-                   if (!user) {
-                       await signInAnonymously(auth);
-                       return;
-                   }
-                   AppState.currentUser.uid = user.uid;
-                   await checkUserRegistration();
-                   clearTimeout(AppState.loadingTimeout);
-               } catch (e) {
-                   console.error("Error during authentication or user setup:", e);
-                   clearTimeout(AppState.loadingTimeout);
-                   showErrorScreen(true);
-               }
-           });
-       };
-       
-       // --- User & Profile Management ---
-       const checkUserRegistration = async () => {
-           const loadingOverlay = document.getElementById('loading-overlay');
-           const userRef = doc(db, "users", AppState.currentUser.uid);
-           const userSnap = await getDoc(userRef);
-
-           if (userSnap.exists()) {
-               const userData = userSnap.data();
+          if (userSnap.exists()) {
+              const userData = userSnap.data();
+               // Merge, ensuring defaults for new fields like inventory
                AppState.currentUser = { ...AppState.currentUser, ...userData };
-               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${AppState.currentUser.username}#${AppState.currentUser.userTag}`;
-               showScreen('mainMenu');
-               listenToUserUpdates();
-           } else {
-               const newUsername = generateRandomName();
-               const userTag = AppState.currentUser.uid.substring(0, CONST.USER_TAG_LENGTH);
-               const newUserData = {
-                   username: newUsername,
-                   userTag: userTag,
-                   stats: { wins: 0, losses: 0 },
-                   coins: 0,
-                   winStreak: 0,
-                   lossStreak: 0,
-                   medals: [],
-                   createdAt: serverTimestamp()
-               };
-               await setDoc(userRef, newUserData);
-               AppState.currentUser = { ...AppState.currentUser, ...newUserData };
-               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${userTag}`;
-               showScreen('mainMenu');
-               listenToUserUpdates();
-           }
-           
+          } else {
+              const newUsername = generateRandomName();
+              const userTag = AppState.currentUser.uid.substring(0, CONST.USER_TAG_LENGTH);
+              const newUserData = {
+                  username: newUsername,
+                  userTag: userTag,
+                  stats: { wins: 0, losses: 0 },
+                  coins: 0,
+                  winStreak: 0,
+                  lossStreak: 0,
+                  medals: [],
+                  inventory: ['symbol_default'],
+                  equipped: { symbol: 'symbol_default' },
+                  createdAt: serverTimestamp()
+              };
+              await setDoc(userRef, newUserData);
+              AppState.currentUser = { ...AppState.currentUser, ...newUserData };
+          }
+           updateWelcomeUI();
+           listenToUserUpdates();
+           showScreen('mainMenu');
            loadingOverlay.style.opacity = '0';
            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
-       };
+      };
+
+      function updateWelcomeUI() {
+          document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${AppState.currentUser.username}#${AppState.currentUser.userTag}`;
+          document.getElementById('user-coins').innerText = AppState.currentUser.coins || 0;
+          document.getElementById('shop-user-coins').innerText = AppState.currentUser.coins || 0;
+      }
+   
+      const listenToUserUpdates = () => {
+          if(AppState.listeners.user) AppState.listeners.user();
+          const userRef = doc(db, "users", AppState.currentUser.uid);
+          AppState.listeners.user = onSnapshot(userRef, (docSnap) => {
+              if (docSnap.exists()) {
+                  AppState.currentUser = { ...AppState.currentUser, ...docSnap.data() };
+                  updateWelcomeUI();
+              }
+          });
+      }
+
+      async function handleSaveUsername() {
+          const input = document.getElementById('change-username-input');
+          const errorP = document.getElementById('change-username-error');
+          const newUsername = input.value.trim();
+          const usernameRegex = /^[a-zA-Z0-9]+$/;
+
+          errorP.textContent = '';
+          if (newUsername.length < 3 || newUsername.length > 12) {
+              errorP.textContent = 'ชื่อต้องมี 3-12 ตัวอักษร';
+              return;
+          }
+          if (!usernameRegex.test(newUsername)) {
+              errorP.textContent = 'ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น';
+              return;
+          }
+          if (newUsername === AppState.currentUser.username) {
+              showToast('ชื่อผู้ใช้เหมือนเดิม');
+              showScreen('mainMenu');
+              return;
+          }
+
+          try {
+              await updateDoc(doc(db, "users", AppState.currentUser.uid), { username: newUsername });
+              showToast('เปลี่ยนชื่อสำเร็จ!');
+              updateWelcomeUI();
+              showScreen('mainMenu');
+          } catch (error) {
+              console.error("Error saving username: ", error);
+              showToast("เกิดข้อผิดพลาดในการบันทึกชื่อ", 'error');
+              errorP.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+          }
+      }
+
+      // --- Friend Management ---
+      async function handleSearchUsers() {
+          const searchTerm = document.getElementById('search-user-input').value.trim();
+          const resultsDiv = document.getElementById('search-results');
+          resultsDiv.innerHTML = 'กำลังค้นหา...';
+
+          if (searchTerm.length < 1) {
+              resultsDiv.innerHTML = '<p class="text-gray-500">กรุณาพิมพ์ชื่อที่ต้องการค้นหา</p>';
+              return;
+          }
+
+          const q = query(collection(db, "users"), where("username", "==", searchTerm));
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+              resultsDiv.innerHTML = '<p class="text-gray-500">ไม่พบผู้เล่น</p>';
+          } else {
+              resultsDiv.innerHTML = '';
+              querySnapshot.forEach(docSnap => {
+                  const user = docSnap.data();
+                  const uid = docSnap.id;
+                  if (uid === AppState.currentUser.uid) return;
+
+                  const userDiv = document.createElement('div');
+                  userDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-md mb-1';
+                 
+                  const friendStatus = AppState.currentUser.friends ? AppState.currentUser.friends[uid] : null;
+                  let buttonHtml = '';
+                  if (friendStatus === 'accepted') {
+                      buttonHtml = '<span class="text-green-500">เป็นเพื่อนกันแล้ว</span>';
+                  } else if (friendStatus === 'pending_sent') {
+                      buttonHtml = '<span class="text-gray-500">ส่งคำขอแล้ว</span>';
+                  } else if (friendStatus === 'pending_received') {
+                      buttonHtml = `<button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button>`;
+                  } else {
+                      buttonHtml = `<button data-uid="${uid}" class="add-friend-btn button button-primary !py-1 !px-3 !my-0 !text-sm">เพิ่มเพื่อน</button>`;
+                  }
+
+                  userDiv.innerHTML = `<span>${user.username}#${user.userTag}</span> ${buttonHtml}`;
+                  resultsDiv.appendChild(userDiv);
+              });
+          }
+      }
+
+      async function sendFriendRequest(targetUid) {
+          const batch = writeBatch(db);
+          batch.update(doc(db, "users", AppState.currentUser.uid), { [`friends.${targetUid}`]: 'pending_sent' });
+          batch.update(doc(db, "users", targetUid), { [`friends.${AppState.currentUser.uid}`]: 'pending_received' });
+          await batch.commit();
+          showToast('ส่งคำขอเป็นเพื่อนแล้ว!');
+          handleSearchUsers();
+      }
+
+      async function acceptFriendRequest(targetUid) {
+          const batch = writeBatch(db);
+          batch.update(doc(db, "users", AppState.currentUser.uid), { [`friends.${targetUid}`]: 'accepted' });
+          batch.update(doc(db, "users", targetUid), { [`friends.${AppState.currentUser.uid}`]: 'accepted' });
+          await batch.commit();
+          showToast('รับเป็นเพื่อนแล้ว!');
+      }
+
+      async function updateFriendsUI() {
+          const requestsList = document.getElementById('friend-requests-list');
+          const friendsList = document.getElementById('friends-list');
+         
+          const friendUIDs = Object.keys(AppState.currentUser.friends || {});
+          if (friendUIDs.length === 0) {
+              requestsList.innerHTML = '<p class="text-gray-500">ไม่มีคำขอ</p>';
+              friendsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
+              return;
+          }
+
+          const friendPromises = friendUIDs.map(uid => getDoc(doc(db, "users", uid)));
+          const friendDocs = await Promise.all(friendPromises);
+
+          let requestsHTML = '';
+          let friendsHTML = '';
+
+          friendDocs.forEach(docSnap => {
+              if (!docSnap.exists()) return;
+              const user = docSnap.data();
+              const uid = docSnap.id;
+              const status = AppState.currentUser.friends[uid];
+              const displayName = `${user.username}#${user.userTag}`;
+
+              if (status === 'pending_received') {
+                  requestsHTML += `<div class="flex justify-between items-center p-2"><span>${displayName}</span><button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button></div>`;
+              } else if (status === 'accepted') {
+                  friendsHTML += `<div class="p-2">${displayName}</div>`;
+              }
+          });
+
+          requestsList.innerHTML = requestsHTML || '<p class="text-gray-500">ไม่มีคำขอ</p>';
+          friendsList.innerHTML = friendsHTML || '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
+      }
      
-       const listenToUserUpdates = () => {
-           if(AppState.listeners.user) AppState.listeners.user();
-           const userRef = doc(db, "users", AppState.currentUser.uid);
-           AppState.listeners.user = onSnapshot(userRef, (docSnap) => {
-               if (docSnap.exists()) {
-                   AppState.currentUser = { ...AppState.currentUser, ...docSnap.data() };
-               }
-           });
-       }
+      async function viewProfile(uid) {
+          const userSnap = await getDoc(doc(db, 'users', uid));
+          if (userSnap.exists()) {
+              const user = userSnap.data();
+              document.getElementById('profile-username').textContent = `${user.username}#${user.userTag}`;
+              document.getElementById('profile-coins').textContent = user.coins || 0;
+              document.getElementById('profile-wins').textContent = user.stats?.wins || 0;
+              document.getElementById('profile-losses').textContent = user.stats?.losses || 0;
 
-       async function handleSaveUsername() {
-           const input = document.getElementById('change-username-input');
-           const errorP = document.getElementById('change-username-error');
-           const newUsername = input.value.trim();
-           const usernameRegex = /^[a-zA-Z0-9]+$/;
-
-           errorP.textContent = '';
-           if (newUsername.length < 3 || newUsername.length > 12) {
-               errorP.textContent = 'ชื่อต้องมี 3-12 ตัวอักษร';
-               return;
-           }
-           if (!usernameRegex.test(newUsername)) {
-               errorP.textContent = 'ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น';
-               return;
-           }
-           if (newUsername === AppState.currentUser.username) {
-               showToast('ชื่อผู้ใช้เหมือนเดิม');
-               showScreen('mainMenu');
-               return;
-           }
-
-           try {
-               await updateDoc(doc(db, "users", AppState.currentUser.uid), { username: newUsername });
-               showToast('เปลี่ยนชื่อสำเร็จ!');
-               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${AppState.currentUser.userTag}`;
-               showScreen('mainMenu');
-           } catch (error) {
-               console.error("Error saving username: ", error);
-               showToast("เกิดข้อผิดพลาดในการบันทึกชื่อ", 'error');
-               errorP.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
-           }
-       }
-
-       // --- Friend Management ---
-       async function handleSearchUsers() {
-           const searchTerm = document.getElementById('search-user-input').value.trim();
-           const resultsDiv = document.getElementById('search-results');
-           resultsDiv.innerHTML = 'กำลังค้นหา...';
-
-           if (searchTerm.length < 1) {
-               resultsDiv.innerHTML = '<p class="text-gray-500">กรุณาพิมพ์ชื่อที่ต้องการค้นหา</p>';
-               return;
-           }
-
-           const q = query(collection(db, "users"), where("username", "==", searchTerm));
-           const querySnapshot = await getDocs(q);
-
-           if (querySnapshot.empty) {
-               resultsDiv.innerHTML = '<p class="text-gray-500">ไม่พบผู้เล่น</p>';
-           } else {
-               resultsDiv.innerHTML = '';
-               querySnapshot.forEach(docSnap => {
-                   const user = docSnap.data();
-                   const uid = docSnap.id;
-                   if (uid === AppState.currentUser.uid) return;
-
-                   const userDiv = document.createElement('div');
-                   userDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-md mb-1';
-                   
-                   const friendStatus = AppState.currentUser.friends[uid];
-                   let buttonHtml = '';
-                   if (friendStatus === 'accepted') {
-                       buttonHtml = '<span class="text-green-500">เป็นเพื่อนกันแล้ว</span>';
-                   } else if (friendStatus === 'pending_sent') {
-                       buttonHtml = '<span class="text-gray-500">ส่งคำขอแล้ว</span>';
-                   } else if (friendStatus === 'pending_received') {
-                       buttonHtml = `<button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button>`;
-                   } else {
-                       buttonHtml = `<button data-uid="${uid}" class="add-friend-btn button button-primary !py-1 !px-3 !my-0 !text-sm">เพิ่มเพื่อน</button>`;
-                   }
-
-                   userDiv.innerHTML = `<span>${user.username}#${user.userTag}</span> ${buttonHtml}`;
-                   resultsDiv.appendChild(userDiv);
-               });
-           }
-       }
-
-       async function sendFriendRequest(targetUid) {
-           const batch = writeBatch(db);
-           batch.update(doc(db, "users", AppState.currentUser.uid), { [`friends.${targetUid}`]: 'pending_sent' });
-           batch.update(doc(db, "users", targetUid), { [`friends.${AppState.currentUser.uid}`]: 'pending_received' });
-           await batch.commit();
-           showToast('ส่งคำขอเป็นเพื่อนแล้ว!');
-           handleSearchUsers();
-       }
-
-       async function acceptFriendRequest(targetUid) {
-           const batch = writeBatch(db);
-           batch.update(doc(db, "users", AppState.currentUser.uid), { [`friends.${targetUid}`]: 'accepted' });
-           batch.update(doc(db, "users", targetUid), { [`friends.${AppState.currentUser.uid}`]: 'accepted' });
-           await batch.commit();
-           showToast('รับเป็นเพื่อนแล้ว!');
-       }
-
-       async function updateFriendsUI() {
-           const requestsList = document.getElementById('friend-requests-list');
-           const friendsList = document.getElementById('friends-list');
-           
-           const friendUIDs = Object.keys(AppState.currentUser.friends || {});
-           if (friendUIDs.length === 0) {
-               requestsList.innerHTML = '<p class="text-gray-500">ไม่มีคำขอ</p>';
-               friendsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
-               return;
-           }
-
-           const friendPromises = friendUIDs.map(uid => getDoc(doc(db, "users", uid)));
-           const friendDocs = await Promise.all(friendPromises);
-
-           let requestsHTML = '';
-           let friendsHTML = '';
-
-           friendDocs.forEach(docSnap => {
-               if (!docSnap.exists()) return;
-               const user = docSnap.data();
-               const uid = docSnap.id;
-               const status = AppState.currentUser.friends[uid];
-               const displayName = `${user.username}#${user.userTag}`;
-
-               if (status === 'pending_received') {
-                   requestsHTML += `<div class="flex justify-between items-center p-2"><span>${displayName}</span><button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button></div>`;
-               } else if (status === 'accepted') {
-                   friendsHTML += `<div class="p-2">${displayName}</div>`;
-               }
-           });
-
-           requestsList.innerHTML = requestsHTML || '<p class="text-gray-500">ไม่มีคำขอ</p>';
-           friendsList.innerHTML = friendsHTML || '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
-       }
-       
-       async function viewProfile(uid) {
-           const userSnap = await getDoc(doc(db, 'users', uid));
-           if (userSnap.exists()) {
-               const user = userSnap.data();
-               document.getElementById('profile-username').textContent = `${user.username}#${user.userTag}`;
-               document.getElementById('profile-coins').textContent = user.coins || 0;
-               document.getElementById('profile-wins').textContent = user.stats?.wins || 0;
-               document.getElementById('profile-losses').textContent = user.stats?.losses || 0;
-
-               const medalsList = document.getElementById('profile-medals-list');
-               if (user.medals && user.medals.length > 0) {
-                   medalsList.innerHTML = '';
-                   user.medals.forEach(medalId => {
-                       const medalInfo = CONST.MEDALS[medalId.toUpperCase()];
-                       if (medalInfo) {
-                           const medalDiv = document.createElement('div');
-                           medalDiv.className = 'inline-block bg-gray-100 rounded-lg px-3 py-1 m-1';
-                           medalDiv.textContent = medalInfo.name;
-                           medalsList.appendChild(medalDiv);
-                       }
-                   });
-               } else {
-                   medalsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเหรียญรางวัล</p>';
-               }
-
-               showModal('profile', true);
-           }
-       }
-       
-       // --- Game Logic ---
-       function startGame() {
-           document.getElementById('game-screen-over-overlay').classList.add('hidden');
-           document.getElementById('game-screen-over-overlay').classList.remove('flex');
-           document.getElementById('leave-game-btn').style.display = 'flex';
-
-           AppState.game.state.fill("");
-           AppState.game.history = [];
-           AppState.game.isActive = true;
-           
-           if (AppState.game.mode === 'bot') {
-               const playerStarts = Math.random() < 0.5;
-               AppState.game.currentPlayer = playerStarts ? 'X' : 'O';
-           } else {
-               AppState.game.currentPlayer = "X";
-           }
-
-           DOM.winningLineContainer.innerHTML = '';
-           DOM.gameBoard.innerHTML = '';
-           for (let i = 0; i < 9; i++) {
-               const cell = document.createElement('div');
-               cell.classList.add('cell');
-               cell.dataset.index = i;
-               cell.onclick = handleCellClick;
-               DOM.gameBoard.appendChild(cell);
-           }
-           showScreen('game');
-           updateTurnDisplay();
-           if (AppState.game.mode === 'bot' && AppState.game.currentPlayer === 'O') setTimeout(botMove, 500);
-       }
-
-       function handleCellClick(event) {
-           playPopSound();
-           if (!AppState.game.isActive) return;
-           const index = parseInt(event.target.dataset.index);
-
-           if (AppState.game.mode === 'bot') {
-               if (AppState.game.state[index] !== "" || AppState.game.currentPlayer !== 'X') return;
-               makeMove(index, false);
-               if (AppState.game.isActive) setTimeout(botMove, 500);
-
-           } else if (AppState.game.mode === 'coop') {
-               if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
-               
-               let newBoard = [...AppState.game.state];
-               let newHistory = [...AppState.game.history];
-               if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
-                   const oldestMove = newHistory.shift();
-                   newBoard[oldestMove.index] = "";
-               }
-               newBoard[index] = AppState.game.currentPlayer;
-               newHistory.push({ player: AppState.game.currentPlayer, index: index });
-               const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
-               
-               AppState.game.state = newBoard;
-               AppState.game.history = newHistory;
-               AppState.game.currentPlayer = nextTurn;
-               updateBoardUI();
-               updateTurnDisplay();
-               
-               const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-               const winnerResult = checkWinner(newBoard);
-               
-               updateDoc(roomRef, {
-                   "game.board": newBoard,
-                   "game.history": newHistory,
-                   "game.turn": nextTurn,
-                   "game.winner": winnerResult ? winnerResult.winner : null,
-                   "status": winnerResult ? 'finished' : 'playing'
-               });
-           }
-       }
-       
-       async function makeMove(index, isCoop) { // Coop logic moved to handleCellClick
-           if (AppState.game.state[index] !== "" || !AppState.game.isActive) return;
-           
-           if (AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
-               const oldestMove = AppState.game.history.shift();
-               AppState.game.state[oldestMove.index] = "";
-           }
-           
-           AppState.game.state[index] = AppState.game.currentPlayer;
-           AppState.game.history.push({ player: AppState.game.currentPlayer, index: index });
-           updateBoardUI();
-           
-           const result = checkWinner(AppState.game.state);
-           if (result) {
-               endGame(false, result.winner, result);
-               if (AppState.game.mode === 'bot') {
-                   await updatePostGameStats(AppState.currentUser.uid, null);
-               }
-           } else if (AppState.game.history.length === 9) {
-                endGame(true);
-                if (AppState.game.mode === 'bot') {
-                   await updatePostGameStats(null, null, true); // It's a draw
-               }
-           } else {
-               AppState.game.currentPlayer = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
-               updateTurnDisplay();
-           }
-       }
-
-       function updateBoardUI() {
-           document.querySelectorAll('.cell.indicate-fade').forEach(c => c.classList.remove('indicate-fade'));
-           AppState.game.state.forEach((value, i) => {
-               const cell = document.querySelector(`.cell[data-index='${i}']`);
-               if (cell && cell.innerText !== value) {
-                   cell.innerText = value;
-                   cell.className = 'cell ' + (value ? value.toLowerCase() : '');
-               } else if (cell && !value && cell.innerText) {
-                    cell.innerText = '';
-                    cell.className = 'cell';
-               }
-           });
-           if(AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
-               const nextToFadeIndex = AppState.game.history[0].index;
-               const cellToIndicate = document.querySelector(`.cell[data-index='${nextToFadeIndex}']`);
-               if (cellToIndicate) cellToIndicate.classList.add('indicate-fade');
-           }
-       }
-       
-       function updateTurnDisplay() {
-           if (!AppState.game.isActive) {
-               DOM.turnDisplay.innerText = '';
-               return;
-           }
-           if (AppState.game.mode === 'coop') {
-               DOM.turnDisplay.innerText = (AppState.game.currentPlayer === AppState.playerSymbol) ? "ตาของคุณ!" : `รอตาของฝ่ายตรงข้าม (${AppState.game.currentPlayer})`;
-           } else {
-               DOM.turnDisplay.innerText = AppState.game.currentPlayer === 'X' ? `ตาของคุณ (X)` : `ตาของบอท (O)`;
-           }
-       }
-
-       function checkWinner(board) {
-           const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-           for (const line of lines) {
-               const [a, b, c] = line;
-               if (board[a] && board[a] === board[b] && board[a] === board[c]) return { winner: board[a], line: line };
-           }
-           return null;
-       }
-
-       function drawWinningLine(result) {
-           const lineDiv = document.createElement('div');
-           lineDiv.className = 'winning-line';
-           
-           const line = result.line;
-           const boardSize = DOM.gameBoard.offsetWidth;
-           const cellSize = boardSize / 3;
-           let angle = 0; let top = 0; let left = 0; let width = boardSize;
-           const lineHeightOffset = 6;
-
-           if (line[0] === 0 && line[2] === 2) { top = (cellSize * 0.5) - lineHeightOffset; }
-           else if (line[0] === 3 && line[2] === 5) { top = (cellSize * 1.5) - lineHeightOffset; }
-           else if (line[0] === 6 && line[2] === 8) { top = (cellSize * 2.5) - lineHeightOffset; }
-           else if (line[0] === 0 && line[2] === 6) { top = (boardSize / 2); left = (cellSize * 0.5) - (boardSize / 2); angle = 90; }
-           else if (line[0] === 1 && line[2] === 7) { top = (boardSize / 2); left = (cellSize * 1.5) - (boardSize / 2); angle = 90; }
-           else if (line[0] === 2 && line[2] === 8) { top = (boardSize / 2); left = (cellSize * 2.5) - (boardSize / 2); angle = 90; }
-           else if (line[0] === 0 && line[2] === 8) { top = 0; left = 0; angle = 45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'top left'; }
-           else if (line[0] === 2 && line[2] === 6) { top = boardSize; left = 0; angle = -45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'bottom left'; }
-
-           lineDiv.style.setProperty('--line-width', `${width}px`);
-           lineDiv.style.transform = `translate(${left}px, ${top}px) rotate(${angle}deg)`;
-           DOM.winningLineContainer.appendChild(lineDiv);
-       }
-
-       async function endGame(isDraw, winner = null, result = null) {
-           AppState.game.isActive = false;
-           document.getElementById('leave-game-btn').style.display = 'none';
-           document.getElementById('rematch-btn').disabled = false;
-           
-           const overlay = document.getElementById('game-screen-over-overlay');
-           const message = document.getElementById('game-over-message');
-           const coinRewardEl = document.getElementById('game-coin-reward');
-           const medalRewardEl = document.getElementById('game-medal-reward');
-           coinRewardEl.textContent = '';
-           medalRewardEl.textContent = '';
-
-           let coinsEarned = 0;
-           let newMedal = null;
-           let playerWon = false;
-           
-           if (isDraw) {
-               message.innerText = "เสมอ!";
-               coinsEarned = CONST.REWARDS.LOSS;
-           } else {
-               playerWon = (AppState.game.mode === 'bot' && winner === 'X') || (AppState.game.mode === 'coop' && winner === AppState.playerSymbol);
-               message.innerText = playerWon ? "คุณชนะ!" : "คุณแพ้";
-               coinsEarned = playerWon ? CONST.REWARDS.WIN : CONST.REWARDS.LOSS;
-               if(result) drawWinningLine(result);
-           }
-           
-           coinRewardEl.textContent = `ได้รับ ${coinsEarned} 💰`;
-
-           if (AppState.game.mode === 'coop') {
-               const roomData = AppState.currentRoom.data;
-               const winnerUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol === winner);
-               const loserUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol !== winner);
-                if(winnerUID && loserUID && !isDraw) {
-                   const hostUID = Object.keys(roomData.players)[0];
-                   if(AppState.currentUser.uid === hostUID) { // Only host updates stats to prevent duplicates
-                      const rewards = await updatePostGameStats(winnerUID, loserUID);
-                      if(AppState.currentUser.uid === winnerUID && rewards.newMedal) {
-                          newMedal = rewards.newMedal;
+              const medalsList = document.getElementById('profile-medals-list');
+              if (user.medals && user.medals.length > 0) {
+                  medalsList.innerHTML = '';
+                  user.medals.forEach(medalId => {
+                      const medalInfo = CONST.MEDALS[medalId.toUpperCase()];
+                      if (medalInfo) {
+                          const medalDiv = document.createElement('div');
+                          medalDiv.className = 'inline-block bg-gray-100 rounded-lg px-3 py-1 m-1';
+                          medalDiv.textContent = medalInfo.name;
+                          medalsList.appendChild(medalDiv);
                       }
-                   }
-                } else if (isDraw) {
-                   // Handle draw coins
-                }
-                updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
-           }
+                  });
+              } else {
+                  medalsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเหรียญรางวัล</p>';
+              }
+
+              showModal('profile', true);
+          }
+      }
+
+      // --- Shop Logic ---
+      function renderShop() {
+          const grid = document.getElementById('shop-items-grid');
+          grid.innerHTML = '';
+          const { inventory, equipped, coins } = AppState.currentUser;
+
+          Object.entries(SHOP_ITEMS).forEach(([id, item]) => {
+               if(item.default && id !== equipped.symbol) return; // Hide default unless equipped
+
+              const isOwned = inventory.includes(id);
+              const isEquipped = equipped.symbol === id;
+
+              const card = document.createElement('div');
+              card.className = 'bg-white rounded-lg shadow-md p-4 flex flex-col items-center text-center relative';
+             
+              let buttonHtml;
+              if (isEquipped) {
+                  buttonHtml = `<button class="button button-success !text-sm !py-1 !px-4 mt-2" disabled>ใช้งานอยู่</button>`;
+              } else if (isOwned) {
+                  buttonHtml = `<button data-item-id="${id}" class="equip-item-btn button button-primary !text-sm !py-1 !px-4 mt-2">ใช้งาน</button>`;
+              } else {
+                  buttonHtml = `<button data-item-id="${id}" class="buy-item-btn button button-warning !text-sm !py-1 !px-4 mt-2" ${coins < item.price ? 'disabled' : ''}>💰 ${item.price}</button>`;
+              }
+
+              card.innerHTML = `
+                  <div class="text-5xl mb-2">${item.value}</div>
+                  <h4 class="font-semibold text-gray-700">${item.name}</h4>
+                  ${buttonHtml}
+              `;
+              grid.appendChild(card);
+          });
+      }
+
+      async function handleBuyItem(itemId) {
+           const item = SHOP_ITEMS[itemId];
+           if (!item) return;
+
+           await runTransaction(db, async (transaction) => {
+               const userRef = doc(db, "users", AppState.currentUser.uid);
+               const userDoc = await transaction.get(userRef);
+               if (!userDoc.exists()) throw "User does not exist!";
+
+               const userData = userDoc.data();
+               if (userData.coins < item.price) throw "Not enough coins!";
+               if (userData.inventory.includes(itemId)) throw "Item already owned!";
+
+               transaction.update(userRef, {
+                   coins: increment(-item.price),
+                   inventory: arrayUnion(itemId)
+               });
+           }).then(() => {
+               showToast(`ซื้อ ${item.name} สำเร็จ!`);
+               renderShop();
+           }).catch((error) => {
+               console.error("Buy item transaction failed: ", error);
+               showToast(`ซื้อไม่สำเร็จ: ${error}`, 'error');
+           });
+      }
+
+      async function handleEquipItem(itemId) {
+           const item = SHOP_ITEMS[itemId];
+           if (!item || !AppState.currentUser.inventory.includes(itemId)) return;
            
-           if (newMedal) {
-               medalRewardEl.textContent = `ปลดล็อค: ${CONST.MEDALS[newMedal.toUpperCase()].name}`;
-           }
-
-           setTimeout(() => {
-               overlay.classList.remove('hidden');
-               overlay.classList.add('flex');
-               if (playerWon) {
-                   const boardRect = DOM.gameBoard.getBoundingClientRect();
-                   startConfetti({ x: boardRect.left + boardRect.width / 2, y: boardRect.top + boardRect.height / 2 });
-               }
-           }, 700);
-       }
-
-       // --- Bot Logic ---
-       function botMove() {
-           if (!AppState.game.isActive) return;
-           makeMove(getBestBotMove());
-       }
-       
-       function getBestBotMove() {
-           const board = AppState.game.state;
-           for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'O'; if (checkWinner(b)) return i; } }
-           for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'X'; if (checkWinner(b)) return i; } }
-           if (board[4] === 'O') {
-               if ((board[0] === 'X' && board[8] === 'X') || (board[2] === 'X' && board[6] === 'X')) {
-                   const sides = [1, 3, 5, 7].filter(i => board[i] === '');
-                   if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
-               }
-           }
-           if (board[4] === "") return 4;
-           const cornerMap = { 0: 8, 2: 6, 6: 2, 8: 0 };
-           for(const c in cornerMap) {
-               if(board[c] === 'X' && board[cornerMap[parseInt(c)]] === '') {
-                   return cornerMap[parseInt(c)];
-               }
-           }
-           const corners = [0, 2, 6, 8].filter(i => board[i] === '');
-           if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
-           const sides = [1, 3, 5, 7].filter(i => board[i] === '');
-           if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
-           return board.findIndex(s => s === "");
-       }
-
-       // --- Online (Co-op) Logic ---
-       async function handleCreateRoom(button) {
-           button.disabled = true;
-           button.innerHTML = '<span>กำลังสร้าง...</span>';
-           
-           const roomId = Math.random().toString(36).substring(2, 2 + CONST.ROOM_CODE_LENGTH).toUpperCase();
-           const creatorSymbol = Math.random() < 0.5 ? 'X' : 'O';
-           AppState.currentRoom.id = roomId;
-           AppState.playerSymbol = creatorSymbol;
-           const roomData = {
-               status: 'lobby',
-               players: {
-                   [AppState.currentUser.uid]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: creatorSymbol, ready: false }
-               },
-               game: { board: Array(9).fill(""), history: [], turn: "X", winner: null },
-               createdAt: serverTimestamp()
-           };
            try {
-               await setDoc(doc(db, "rooms", roomId), roomData);
-               listenToRoomUpdates(roomId);
-               showScreen('roomLobby');
+               await updateDoc(doc(db, "users", AppState.currentUser.uid), {
+                   'equipped.symbol': itemId
+               });
+               showToast(`สวมใส่ ${item.name} แล้ว!`);
+               renderShop();
            } catch (error) {
-               console.error("Error creating room:", error);
-               showToast("สร้างห้องไม่สำเร็จ", 'error');
-           } finally {
-               button.disabled = false;
-               button.innerHTML = '<span>สร้างห้อง</span>';
+               console.error("Error equipping item: ", error);
+               showToast("สวมใส่ไม่สำเร็จ", 'error');
            }
-       }
+      }
+     
+      // --- Game Logic ---
+      function startGame() {
+          document.getElementById('game-screen-over-overlay').classList.add('hidden');
+          document.getElementById('game-screen-over-overlay').classList.remove('flex');
+          document.getElementById('leave-game-btn').style.display = 'flex';
+          document.getElementById('rematch-btn').disabled = false;
+          document.getElementById('rematch-status').textContent = '';
 
-       async function handleJoinRoom() {
-           const roomId = document.getElementById('room-code-input').value.trim().toUpperCase();
-           if (!roomId) return showToast("กรุณาใส่รหัสห้อง", 'error');
+          AppState.game.state.fill("");
+          AppState.game.history = [];
+          AppState.game.isActive = true;
+         
+          if (AppState.game.mode === 'bot') {
+              const playerStarts = Math.random() < 0.5;
+              AppState.game.currentPlayer = playerStarts ? 'X' : 'O';
+              const playerEquippedSymbol = SHOP_ITEMS[AppState.currentUser.equipped.symbol]?.value || 'X';
+              AppState.game.playerSymbols = { X: playerEquippedSymbol, O: 'O' };
+          } else { // coop
+              AppState.game.currentPlayer = "X";
+              const roomPlayers = AppState.currentRoom.data.players;
+              const playerX = Object.values(roomPlayers).find(p => p.symbol === 'X');
+              const playerO = Object.values(roomPlayers).find(p => p.symbol === 'O');
+              AppState.game.playerSymbols = {
+                  X: SHOP_ITEMS[playerX.equippedSymbol]?.value || 'X',
+                  O: SHOP_ITEMS[playerO.equippedSymbol]?.value || 'O'
+              };
+          }
+
+          DOM.winningLineContainer.innerHTML = '';
+          DOM.gameBoard.innerHTML = '';
+          for (let i = 0; i < 9; i++) {
+              const cell = document.createElement('div');
+              cell.classList.add('cell');
+              cell.dataset.index = i;
+              cell.onclick = handleCellClick;
+              DOM.gameBoard.appendChild(cell);
+          }
+          showScreen('game');
+          updateTurnDisplay();
+          if (AppState.game.mode === 'bot' && AppState.game.currentPlayer === 'O') setTimeout(botMove, 500);
+      }
+
+      function handleCellClick(event) {
+          playPopSound();
+          if (!AppState.game.isActive) return;
+          const index = parseInt(event.target.dataset.index);
+
+          if (AppState.game.mode === 'bot') {
+              if (AppState.game.state[index] !== "" || AppState.game.currentPlayer !== 'X') return;
+              makeMove(index);
+              if (AppState.game.isActive) setTimeout(botMove, 500);
+          } else if (AppState.game.mode === 'coop') {
+              if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
+             
+              let newBoard = [...AppState.game.state];
+              let newHistory = [...AppState.game.history];
+              if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
+                  const oldestMove = newHistory.shift();
+                  newBoard[oldestMove.index] = "";
+              }
+              newBoard[index] = AppState.game.currentPlayer;
+              newHistory.push({ player: AppState.game.currentPlayer, index: index });
+              const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+             
+              const roomRef = doc(db, "rooms", AppState.currentRoom.id);
+              const winnerResult = checkWinner(newBoard);
+             
+              updateDoc(roomRef, {
+                  "game.board": newBoard,
+                  "game.history": newHistory,
+                  "game.turn": nextTurn,
+                  "game.winner": winnerResult ? winnerResult.winner : null,
+                  "status": winnerResult || newBoard.filter(c => c).length === 9 ? 'finished' : 'playing'
+              });
+          }
+      }
+     
+      async function makeMove(index) {
+          if (AppState.game.state[index] !== "" || !AppState.game.isActive) return;
+         
+          if (AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
+              const oldestMove = AppState.game.history.shift();
+              AppState.game.state[oldestMove.index] = "";
+          }
+         
+          AppState.game.state[index] = AppState.game.currentPlayer;
+          AppState.game.history.push({ player: AppState.game.currentPlayer, index: index });
+          updateBoardUI();
+         
+          const result = checkWinner(AppState.game.state);
+          if (result) {
+              endGame(false, result.winner, result);
+          } else if (!AppState.game.state.includes("")) {
+               endGame(true);
+          } else {
+              AppState.game.currentPlayer = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+              updateTurnDisplay();
+          }
+      }
+
+      function updateBoardUI() {
+          document.querySelectorAll('.cell.indicate-fade').forEach(c => c.classList.remove('indicate-fade'));
+          AppState.game.state.forEach((value, i) => {
+              const cell = document.querySelector(`.cell[data-index='${i}']`);
+              const displaySymbol = value ? AppState.game.playerSymbols[value] : '';
+              if (cell && cell.innerText !== displaySymbol) {
+                  cell.innerText = displaySymbol;
+                  cell.className = 'cell ' + (value ? value.toLowerCase() : '');
+              } else if (cell && !value && cell.innerText) {
+                   cell.innerText = '';
+                   cell.className = 'cell';
+              }
+          });
+          if(AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
+              const nextToFadeIndex = AppState.game.history[0].index;
+              const cellToIndicate = document.querySelector(`.cell[data-index='${nextToFadeIndex}']`);
+              if (cellToIndicate) cellToIndicate.classList.add('indicate-fade');
+          }
+      }
+     
+      function updateTurnDisplay() {
+          if (!AppState.game.isActive) {
+              DOM.turnDisplay.innerText = '';
+              return;
+          }
+          const displaySymbol = AppState.game.playerSymbols[AppState.game.currentPlayer];
+          if (AppState.game.mode === 'coop') {
+              DOM.turnDisplay.innerText = (AppState.game.currentPlayer === AppState.playerSymbol) ? "ตาของคุณ!" : `รอตาของฝ่ายตรงข้าม (${displaySymbol})`;
+          } else {
+              DOM.turnDisplay.innerText = AppState.game.currentPlayer === 'X' ? `ตาของคุณ (${displaySymbol})` : `ตาของบอท (${displaySymbol})`;
+          }
+      }
+
+      function checkWinner(board) {
+          const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+          for (const line of lines) {
+              const [a, b, c] = line;
+              if (board[a] && board[a] === board[b] && board[a] === board[c]) return { winner: board[a], line: line };
+          }
+          return null;
+      }
+
+      function drawWinningLine(result) {
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'winning-line';
+         
+          const line = result.line;
+          const boardSize = DOM.gameBoard.offsetWidth;
+          const cellSize = boardSize / 3;
+          let angle = 0; let top = 0; let left = 0; let width = boardSize;
+          const lineHeightOffset = 6;
+
+          if (line[0] === 0 && line[2] === 2) { top = (cellSize * 0.5) - lineHeightOffset; }
+          else if (line[0] === 3 && line[2] === 5) { top = (cellSize * 1.5) - lineHeightOffset; }
+          else if (line[0] === 6 && line[2] === 8) { top = (cellSize * 2.5) - lineHeightOffset; }
+          else if (line[0] === 0 && line[2] === 6) { top = (boardSize / 2); left = (cellSize * 0.5) - (boardSize / 2); angle = 90; }
+          else if (line[0] === 1 && line[2] === 7) { top = (boardSize / 2); left = (cellSize * 1.5) - (boardSize / 2); angle = 90; }
+          else if (line[0] === 2 && line[2] === 8) { top = (boardSize / 2); left = (cellSize * 2.5) - (boardSize / 2); angle = 90; }
+          else if (line[0] === 0 && line[2] === 8) { top = 0; left = 0; angle = 45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'top left'; }
+          else if (line[0] === 2 && line[2] === 6) { top = boardSize; left = 0; angle = -45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'bottom left'; }
+
+          lineDiv.style.setProperty('--line-width', `${width}px`);
+          lineDiv.style.transform = `translate(${left}px, ${top}px) rotate(${angle}deg)`;
+          DOM.winningLineContainer.appendChild(lineDiv);
+      }
+
+      async function endGame(isDraw, winner = null, result = null) {
+          AppState.game.isActive = false;
+          document.getElementById('leave-game-btn').style.display = 'none';
+         
+          const overlay = document.getElementById('game-screen-over-overlay');
+          const message = document.getElementById('game-over-message');
+          const coinRewardEl = document.getElementById('game-coin-reward');
+          const medalRewardEl = document.getElementById('game-medal-reward');
+          coinRewardEl.textContent = '';
+          medalRewardEl.textContent = '';
+
+          let coinsEarned = 0;
+          let newMedal = null;
+          let playerWon = false;
+         
+          if (isDraw) {
+              message.innerText = "เสมอ!";
+              coinsEarned = CONST.REWARDS.DRAW;
+          } else {
+              playerWon = (AppState.game.mode === 'bot' && winner === 'X') || (AppState.game.mode === 'coop' && winner === AppState.playerSymbol);
+              message.innerText = playerWon ? "คุณชนะ!" : "คุณแพ้";
+              coinsEarned = playerWon ? CONST.REWARDS.WIN : CONST.REWARDS.LOSS;
+              if(result) drawWinningLine(result);
+          }
+         
+          coinRewardEl.textContent = `ได้รับ ${coinsEarned} 💰`;
+
+           const hostUID = AppState.currentRoom.data ? Object.keys(AppState.currentRoom.data.players)[0] : AppState.currentUser.uid;
            
-           const roomRef = doc(db, "rooms", roomId);
-           const roomSnap = await getDoc(roomRef);
-
-           if (roomSnap.exists()) {
-               const roomData = roomSnap.data();
-               if (Object.keys(roomData.players).length >= 2) return showToast("ห้องเต็มแล้ว", 'error');
-               if (roomData.status !== 'lobby') return showToast("เกมเริ่มไปแล้ว", 'error');
+           // Only one player (host in coop, self in bot) updates stats
+           if(AppState.currentUser.uid === hostUID) {
+               let rewards;
+               if (AppState.game.mode === 'coop') {
+                   const winnerUID = Object.keys(AppState.currentRoom.data.players).find(uid => AppState.currentRoom.data.players[uid].symbol === winner);
+                   const loserUID = Object.keys(AppState.currentRoom.data.players).find(uid => uid !== winnerUID);
+                   rewards = await updatePostGameStats(winnerUID, isDraw ? null : loserUID, isDraw);
+               } else { // Bot mode
+                   const winnerUID = playerWon ? AppState.currentUser.uid : null;
+                   const loserUID = playerWon ? null : AppState.currentUser.uid;
+                   rewards = await updatePostGameStats(winnerUID, loserUID, isDraw);
+               }
                
+               if (rewards && rewards.newMedal && rewards.medalWinner === AppState.currentUser.uid) {
+                   newMedal = rewards.newMedal;
+               }
+           }
+         
+          if (newMedal) {
+              medalRewardEl.textContent = `ปลดล็อค: ${CONST.MEDALS[newMedal.toUpperCase()].name}`;
+          }
+
+           // For coop games, set up rematch state
+          if (AppState.game.mode === 'coop') {
+               document.getElementById('rematch-btn').style.display = 'flex';
+               updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
+          } else {
+               document.getElementById('rematch-btn').style.display = 'none';
+          }
+
+          setTimeout(() => {
+              overlay.classList.remove('hidden');
+              overlay.classList.add('flex');
+              if (playerWon) {
+                  const boardRect = DOM.gameBoard.getBoundingClientRect();
+                  startConfetti({ x: boardRect.left + boardRect.width / 2, y: boardRect.top + boardRect.height / 2 });
+              }
+          }, 700);
+      }
+
+      // --- Bot Logic ---
+      function botMove() {
+          if (!AppState.game.isActive) return;
+          makeMove(getBestBotMove());
+      }
+     
+      function getBestBotMove() {
+          const board = AppState.game.state;
+          for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'O'; if (checkWinner(b)) return i; } }
+          for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'X'; if (checkWinner(b)) return i; } }
+          if (board[4] === 'O') {
+              if ((board[0] === 'X' && board[8] === 'X') || (board[2] === 'X' && board[6] === 'X')) {
+                  const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+                  if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
+              }
+          }
+          if (board[4] === "") return 4;
+          const cornerMap = { 0: 8, 2: 6, 6: 2, 8: 0 };
+          for(const c in cornerMap) {
+              if(board[c] === 'X' && board[cornerMap[parseInt(c)]] === '') {
+                  return cornerMap[parseInt(c)];
+              }
+          }
+          const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+          if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+          const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+          if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
+          return board.findIndex(s => s === "");
+      }
+
+      // --- Online (Co-op) Logic ---
+      async function handleCreateRoom(button) {
+          button.disabled = true;
+          button.innerHTML = '<span>กำลังสร้าง...</span>';
+         
+          const roomId = Math.random().toString(36).substring(2, 2 + CONST.ROOM_CODE_LENGTH).toUpperCase();
+          const creatorSymbol = Math.random() < 0.5 ? 'X' : 'O';
+          AppState.currentRoom.id = roomId;
+          AppState.playerSymbol = creatorSymbol;
+          const roomData = {
+              status: 'lobby',
+              players: {
+                  [AppState.currentUser.uid]: {
+                      username: AppState.currentUser.username,
+                      userTag: AppState.currentUser.userTag,
+                      symbol: creatorSymbol,
+                      equippedSymbol: AppState.currentUser.equipped.symbol,
+                      ready: false
+                   }
+              },
+              game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} },
+              createdAt: serverTimestamp()
+          };
+          try {
+              await setDoc(doc(db, "rooms", roomId), roomData);
+              listenToRoomUpdates(roomId);
+              showScreen('roomLobby');
+          } catch (error) {
+              console.error("Error creating room:", error);
+              showToast("สร้างห้องไม่สำเร็จ", 'error');
+          } finally {
+              button.disabled = false;
+              button.innerHTML = '<span>สร้างห้อง</span>';
+          }
+      }
+
+      async function handleJoinRoom() {
+          const roomId = document.getElementById('room-code-input').value.trim().toUpperCase();
+          if (!roomId) return showToast("กรุณาใส่รหัสห้อง", 'error');
+         
+          const roomRef = doc(db, "rooms", roomId);
+         
+          try {
+           await runTransaction(db, async (transaction) => {
+               const roomDoc = await transaction.get(roomRef);
+               if (!roomDoc.exists()) throw "ไม่พบห้องนี้";
+               
+               const roomData = roomDoc.data();
+               if (Object.keys(roomData.players).length >= 2) throw "ห้องเต็มแล้ว";
+               if (roomData.status !== 'lobby') throw "เกมเริ่มไปแล้ว";
+               if (roomData.players[AppState.currentUser.uid]) throw "คุณอยู่ในห้องนี้แล้ว";
+
                const existingPlayerSymbol = Object.values(roomData.players)[0].symbol;
                const joinerSymbol = existingPlayerSymbol === 'X' ? 'O' : 'X';
 
                AppState.currentRoom.id = roomId;
                AppState.playerSymbol = joinerSymbol;
-               await updateDoc(roomRef, {
-                   [`players.${AppState.currentUser.uid}`]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: joinerSymbol, ready: false }
-               });
-               listenToRoomUpdates(roomId);
-               showScreen('roomLobby');
-           } else {
-               showToast("ไม่พบห้องนี้", 'error');
-           }
-       }
 
-       function listenToRoomUpdates(roomId) {
-           if (AppState.listeners.room) AppState.listeners.room();
-           const roomRef = doc(db, "rooms", roomId);
-           AppState.listeners.room = onSnapshot(roomRef, (docSnap) => {
-               if (!docSnap.exists()) {
-                   const activeScreenId = document.querySelector('.screen.active')?.id;
-                   if (['room-lobby', 'game-screen'].includes(activeScreenId)) {
-                       showToast("ห้องถูกปิดแล้ว", 'info');
-                       cleanupAfterRoom();
-                   } else {
-                       if (AppState.listeners.room) AppState.listeners.room();
-                       AppState.listeners.room = null;
-                       AppState.currentRoom = { id: null, data: null };
-                       AppState.playerSymbol = '';
-                   }
-                   return;
-               }
-               const roomData = docSnap.data();
-               const oldData = AppState.currentRoom.data;
-               AppState.currentRoom.data = roomData;
-               
-               if(roomData.status === 'lobby') updateLobbyUI(roomData);
+               const newPlayerData = {
+                   username: AppState.currentUser.username,
+                   userTag: AppState.currentUser.userTag,
+                   symbol: joinerSymbol,
+                   equippedSymbol: AppState.currentUser.equipped.symbol,
+                   ready: false
+               };
 
-               if (roomData.status === 'playing' && (!oldData || oldData.status !== 'playing')) {
-                   AppState.game.mode = 'coop';
-                   startGame();
-               }
-               if (roomData.status === 'lobby' && DOM.screens.roomLobby.style.display === 'none') {
-                   showScreen('roomLobby');
-               }
-
-               if (roomData.game) {
-                   if (JSON.stringify(AppState.game.state) !== JSON.stringify(roomData.game.board || [])) {
-                       AppState.game.state = roomData.game.board || Array(9).fill("");
-                       AppState.game.history = roomData.game.history || [];
-                       updateBoardUI();
-                   }
-                   
-                   if (AppState.game.currentPlayer !== roomData.game.turn) {
-                       AppState.game.currentPlayer = roomData.game.turn;
-                       updateTurnDisplay();
-                   }
-                   
-                   if (roomData.status === 'finished' && roomData.game.winner && AppState.game.isActive) {
-                       AppState.game.isActive = false;
-                       const result = checkWinner(roomData.game.board);
-                       endGame(false, roomData.game.winner, result);
-                   } else if (roomData.status === 'finished' && !roomData.game.winner && AppState.game.isActive) {
-                       AppState.game.isActive = false;
-                       endGame(true);
-                   }
-               }
-
-               if (roomData.game?.rematch) {
-                   updateRematchStatus(roomData.game.rematch);
-               }
-           }, (error) => {
-               console.error("Room listener error:", error);
-               showToast("การเชื่อมต่อห้องมีปัญหา", "error");
-               cleanupAfterRoom();
+               transaction.update(roomRef, { [`players.${AppState.currentUser.uid}`]: newPlayerData });
            });
-       }
-     
-       function updateLobbyUI(data) {
-          document.getElementById('room-code-display').innerText = AppState.currentRoom.id;
-          const playerListDiv = document.getElementById('player-list');
-          playerListDiv.innerHTML = '';
-          const lobbyStatus = document.getElementById('lobby-status');
-          const readyBtn = document.getElementById('ready-btn');
 
-          let allReady = Object.keys(data.players).length === 2;
-          Object.entries(data.players).forEach(([uid, p]) => {
-              const displayName = `${p.username}#${p.userTag}`;
-              const playerDiv = document.createElement('div');
-              playerDiv.dataset.uid = uid;
-              playerDiv.className = 'player-name-lobby cursor-pointer hover:bg-gray-100 p-1 rounded';
-              const statusText = p.ready
-                  ? '<span class="text-green-500 font-semibold">พร้อม</span>'
-                  : '<span class="text-red-500">ยังไม่พร้อม</span>';
-              playerDiv.innerHTML = `<span>${displayName} (${p.symbol}) - ${statusText}</span>`;
-              playerListDiv.appendChild(playerDiv);
-              if (!p.ready) allReady = false;
-          });
-         
-          if (!allReady && AppState.currentRoom.countdownInterval) {
-               clearInterval(AppState.currentRoom.countdownInterval);
-               AppState.currentRoom.countdownInterval = null;
-               lobbyStatus.textContent = "รอผู้เล่นกดพร้อม";
-               readyBtn.style.display = 'flex';
+           listenToRoomUpdates(roomId);
+           showScreen('roomLobby');
+
+          } catch (error) {
+              showToast(error, 'error');
           }
+      }
 
-          if (allReady && !AppState.currentRoom.countdownInterval) {
-               readyBtn.style.display = 'none';
-               startLobbyCountdown();
-          } else if (!allReady) {
-               lobbyStatus.textContent = Object.keys(data.players).length === 2 ? "รอผู้เล่นกดพร้อม" : "รอผู้เล่นอีกคน...";
-          }
-       }
-
-      function startLobbyCountdown() {
-           let countdown = 5;
-           const lobbyStatus = document.getElementById('lobby-status');
-           lobbyStatus.innerHTML = `เกมจะเริ่มใน <span class="font-bold text-xl">${countdown}</span>`;
-
-           AppState.currentRoom.countdownInterval = setInterval(() => {
-               countdown--;
-               if (countdown > 0) {
-                   lobbyStatus.innerHTML = `เกมจะเริ่มใน <span class="font-bold text-xl">${countdown}</span>`;
-               } else {
-                   clearInterval(AppState.currentRoom.countdownInterval);
-                   AppState.currentRoom.countdownInterval = null;
-                   lobbyStatus.textContent = "กำลังเริ่มเกม...";
-                   if (Object.keys(AppState.currentRoom.data.players)[0] === AppState.currentUser.uid) {
-                       const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-                       updateDoc(roomRef, { status: 'playing' });
-                   }
+      function listenToRoomUpdates(roomId) {
+          if (AppState.listeners.room) AppState.listeners.room();
+          const roomRef = doc(db, "rooms", roomId);
+          AppState.listeners.room = onSnapshot(roomRef, (docSnap) => {
+              if (!docSnap.exists()) {
+                  const activeScreenId = document.querySelector('.screen.active')?.id;
+                  if (['roomLobby', 'game'].includes(activeScreenId)) {
+                      showToast("ห้องถูกปิดแล้ว", 'info');
+                      cleanupAfterRoom();
+                  }
+                  return;
+              }
+              const roomData = docSnap.data();
+              const oldData = AppState.currentRoom.data;
+              AppState.currentRoom.data = roomData;
+             
+               if (roomData.status === 'lobby' && oldData?.status !== 'lobby') {
+                   showScreen('roomLobby');
+                   document.getElementById('game-screen-over-overlay').classList.add('hidden');
+                   document.getElementById('game-screen-over-overlay').classList.remove('flex');
                }
-           }, 1000);
+               
+              if(roomData.status === 'lobby') updateLobbyUI(roomData);
+
+              if (roomData.status === 'playing' && oldData?.status !== 'playing') {
+                  AppState.game.mode = 'coop';
+                  startGame();
+              }
+
+              if (roomData.game) {
+                  if (JSON.stringify(AppState.game.state) !== JSON.stringify(roomData.game.board || [])) {
+                      AppState.game.state = roomData.game.board || Array(9).fill("");
+                      AppState.game.history = roomData.game.history || [];
+                      updateBoardUI();
+                  }
+                 
+                  if (AppState.game.currentPlayer !== roomData.game.turn) {
+                      AppState.game.currentPlayer = roomData.game.turn;
+                      updateTurnDisplay();
+                  }
+                 
+                  if (roomData.status === 'finished' && AppState.game.isActive) {
+                      const winnerResult = checkWinner(roomData.game.board);
+                      if (winnerResult) {
+                          endGame(false, winnerResult.winner, winnerResult);
+                      } else {
+                          endGame(true); // Draw
+                      }
+                  }
+              }
+
+              if (roomData.game?.rematch) {
+                  updateRematchStatus(roomData.game.rematch);
+              }
+          }, (error) => {
+              console.error("Room listener error:", error);
+              showToast("การเชื่อมต่อห้องมีปัญหา", "error");
+              cleanupAfterRoom();
+          });
+      }
+   
+      function updateLobbyUI(data) {
+         document.getElementById('room-code-display').innerText = AppState.currentRoom.id;
+         const playerListDiv = document.getElementById('player-list');
+         playerListDiv.innerHTML = '';
+         const lobbyStatus = document.getElementById('lobby-status');
+         const readyBtn = document.getElementById('ready-btn');
+
+         let allReady = Object.keys(data.players).length === 2;
+         Object.entries(data.players).forEach(([uid, p]) => {
+             const displayName = `${p.username}#${p.userTag}`;
+             const playerDiv = document.createElement('div');
+             playerDiv.dataset.uid = uid;
+             playerDiv.className = 'player-name-lobby cursor-pointer hover:bg-gray-100 p-1 rounded';
+             const statusText = p.ready
+                 ? '<span class="text-green-500 font-semibold">พร้อม</span>'
+                 : '<span class="text-red-500">ยังไม่พร้อม</span>';
+             playerDiv.innerHTML = `<span>${displayName} (${p.symbol}) - ${statusText}</span>`;
+             playerListDiv.appendChild(playerDiv);
+             if (!p.ready) allReady = false;
+         });
+       
+         if (!allReady && AppState.currentRoom.countdownInterval) {
+              clearInterval(AppState.currentRoom.countdownInterval);
+              AppState.currentRoom.countdownInterval = null;
+              lobbyStatus.textContent = "รอผู้เล่นกดพร้อม";
+              readyBtn.style.display = 'flex';
+         }
+
+         if (allReady && !AppState.currentRoom.countdownInterval) {
+              readyBtn.style.display = 'none';
+              startLobbyCountdown();
+         } else if (!allReady) {
+              lobbyStatus.textContent = Object.keys(data.players).length === 2 ? "รอผู้เล่นกดพร้อม" : "รอผู้เล่นอีกคน...";
+         }
+      }
+
+     function startLobbyCountdown() {
+          let countdown = 5;
+          const lobbyStatus = document.getElementById('lobby-status');
+          lobbyStatus.innerHTML = `เกมจะเริ่มใน <span class="font-bold text-xl">${countdown}</span>`;
+
+          AppState.currentRoom.countdownInterval = setInterval(() => {
+              countdown--;
+              if (countdown > 0) {
+                  lobbyStatus.innerHTML = `เกมจะเริ่มใน <span class="font-bold text-xl">${countdown}</span>`;
+              } else {
+                  clearInterval(AppState.currentRoom.countdownInterval);
+                  AppState.currentRoom.countdownInterval = null;
+                  lobbyStatus.textContent = "กำลังเริ่มเกม...";
+                  if (Object.keys(AppState.currentRoom.data.players)[0] === AppState.currentUser.uid) {
+                      const roomRef = doc(db, "rooms", AppState.currentRoom.id);
+                      updateDoc(roomRef, { status: 'playing' });
+                  }
+              }
+          }, 1000);
+     }
+   
+      async function handleReadyClick() {
+          if (!AppState.currentRoom.id || !AppState.currentRoom.data || AppState.currentRoom.countdownInterval) return;
+          const currentReadyStatus = AppState.currentRoom.data.players[AppState.currentUser.uid]?.ready || false;
+          await updateDoc(doc(db, "rooms", AppState.currentRoom.id), { [`players.${AppState.currentUser.uid}.ready`]: !currentReadyStatus });
+      }
+
+      async function handleLeaveRoom(button) {
+          if (!AppState.currentRoom.id) return;
+          if(button) button.disabled = true;
+          const roomId = AppState.currentRoom.id;
+          if (AppState.listeners.room) AppState.listeners.room();
+          AppState.listeners.room = null;
+
+          try {
+              await runTransaction(db, async (transaction) => {
+                  const roomRef = doc(db, "rooms", roomId);
+                  const roomDoc = await transaction.get(roomRef);
+                  if (!roomDoc.exists()) return;
+
+                  const roomData = roomDoc.data();
+                  const players = roomData.players;
+                  const wasInGame = roomData.status === 'playing';
+                  const opponentUID = Object.keys(players).find(uid => uid !== AppState.currentUser.uid);
+                  delete players[AppState.currentUser.uid];
+
+                  if (Object.keys(players).length > 0) {
+                      let updates = { players };
+                      if (wasInGame) {
+                          updates['status'] = 'finished';
+                          updates['game.winner'] = roomData.players[opponentUID].symbol;
+                          // The winner will handle updating stats
+                      }
+                      transaction.update(roomRef, updates);
+                  } else {
+                      transaction.delete(roomRef);
+                  }
+              });
+          } catch (error) {
+              console.error("Error leaving room:", error);
+          } finally {
+              cleanupAfterRoom();
+          }
+      }
+
+      function cleanupAfterRoom() {
+          if (AppState.currentRoom.countdownInterval) {
+              clearInterval(AppState.currentRoom.countdownInterval);
+          }
+          AppState.currentRoom = { id: null, data: null, countdownInterval: null };
+          AppState.playerSymbol = '';
+          showScreen('mainMenu');
+         
+          ['leave-room-btn', 'leave-game-btn', 'back-to-menu-from-game-btn', 'rematch-btn'].forEach(id => {
+              const btn = document.getElementById(id);
+              if (btn) btn.disabled = false;
+          });
+          document.getElementById('ready-btn').style.display = 'flex';
+      }
+
+      async function updatePostGameStats(winnerUID, loserUID, isDraw = false) {
+          const batch = writeBatch(db);
+          let newMedal = null;
+          let medalWinner = null;
+
+          if (isDraw) {
+              // In coop, update both players for a draw
+              if(AppState.game.mode === 'coop') {
+                  const uids = Object.keys(AppState.currentRoom.data.players);
+                  uids.forEach(uid => {
+                      batch.update(doc(db, "users", uid), { coins: increment(CONST.REWARDS.DRAW), winStreak: 0, lossStreak: 0 });
+                  });
+              } else { // Bot mode draw
+                  batch.update(doc(db, "users", AppState.currentUser.uid), { coins: increment(CONST.REWARDS.DRAW), winStreak: 0, lossStreak: 0 });
+              }
+          } else {
+              const winnerRef = doc(db, "users", winnerUID);
+              const loserRef = doc(db, "users", loserUID);
+              const winnerDoc = await getDoc(winnerRef);
+              const winnerData = winnerDoc.data();
+
+              const newWinStreak = (winnerData.winStreak || 0) + 1;
+              let winnerMedals = winnerData.medals || [];
+              if (newWinStreak === 5 && !winnerMedals.includes(CONST.MEDALS.WS_5.id)) {
+                  winnerMedals.push(CONST.MEDALS.WS_5.id);
+                  newMedal = CONST.MEDALS.WS_5.id;
+                  medalWinner = winnerUID;
+              }
+
+              batch.update(winnerRef, {
+                  'stats.wins': increment(1),
+                  coins: increment(CONST.REWARDS.WIN),
+                  winStreak: increment(1),
+                  lossStreak: 0,
+                  medals: winnerMedals
+              });
+
+              batch.update(loserRef, {
+                  'stats.losses': increment(1),
+                  coins: increment(CONST.REWARDS.LOSS),
+                  winStreak: 0,
+                  lossStreak: increment(1)
+              });
+          }
+          await batch.commit();
+          return { newMedal, medalWinner };
       }
      
-       async function handleReadyClick() {
-           if (!AppState.currentRoom.id || !AppState.currentRoom.data || AppState.currentRoom.countdownInterval) return;
-           const currentReadyStatus = AppState.currentRoom.data.players[AppState.currentUser.uid]?.ready || false;
-           await updateDoc(doc(db, "rooms", AppState.currentRoom.id), { [`players.${AppState.currentUser.uid}.ready`]: !currentReadyStatus });
-       }
+      async function handleRematchRequest(button) {
+          if (!AppState.currentRoom.id) return;
+          button.disabled = true;
+          const roomRef = doc(db, "rooms", AppState.currentRoom.id);
+          await updateDoc(roomRef, { [`game.rematch.${AppState.currentUser.uid}`]: true });
+      }
 
-       async function handleLeaveRoom(button) {
-           if (!AppState.currentRoom.id) return;
-           if(button) button.disabled = true;
-           const roomId = AppState.currentRoom.id;
-           if (AppState.listeners.room) AppState.listeners.room();
-           AppState.listeners.room = null;
+      function updateRematchStatus(rematchData) {
+          const rematchStatusEl = document.getElementById('rematch-status');
+          const uids = Object.keys(AppState.currentRoom.data.players);
+          if(uids.length < 2) return; // Opponent left
+          const myUid = AppState.currentUser.uid;
+          const opponentUid = uids.find(uid => uid !== myUid);
 
-           try {
-               await runTransaction(db, async (transaction) => {
-                   const roomRef = doc(db, "rooms", roomId);
-                   const roomDoc = await transaction.get(roomRef);
-                   if (!roomDoc.exists()) return;
+          if (rematchData[myUid] && rematchData[opponentUid]) {
+               if (uids[0] === myUid) { // Host handles reset
+                  const roomRef = doc(db, "rooms", AppState.currentRoom.id);
+                  const players = AppState.currentRoom.data.players;
+                  Object.keys(players).forEach(uid => { players[uid].ready = false; });
+                 
+                  // Swap symbols for the new game
+                  const p1Symbol = players[uids[0]].symbol;
+                  players[uids[0]].symbol = players[uids[1]].symbol;
+                  players[uids[1]].symbol = p1Symbol;
 
-                   const roomData = roomDoc.data();
-                   const players = roomData.players;
-                   const wasInGame = roomData.status === 'playing';
-                   delete players[AppState.currentUser.uid];
+                  updateDoc(roomRef, { status: "lobby", players: players, game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} } });
+              }
+          } else if (rematchData[myUid]) {
+              rematchStatusEl.textContent = "คุณต้องการเล่นอีกครั้ง รออีกฝ่าย...";
+          } else if (rematchData[opponentUid]) {
+              rematchStatusEl.textContent = "อีกฝ่ายต้องการเล่นอีกครั้ง!";
+          } else {
+              rematchStatusEl.textContent = "";
+          }
+      }
+   
+      // --- Event Listeners Setup ---
+      function addEventListeners() {
+          document.getElementById('play-bot-btn').onclick = () => { AppState.game.mode = 'bot'; startGame(); };
+          document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
+          document.getElementById('shop-btn').onclick = () => {
+              renderShop();
+              showScreen('shop');
+          };
+          document.getElementById('back-to-main-from-shop-btn').onclick = () => showScreen('mainMenu');
+          document.getElementById('shop-items-grid').addEventListener('click', e => {
+               if(e.target.closest('.buy-item-btn')) handleBuyItem(e.target.closest('.buy-item-btn').dataset.itemId);
+               if(e.target.closest('.equip-item-btn')) handleEquipItem(e.target.closest('.equip-item-btn').dataset.itemId);
+          });
+          document.getElementById('settings-btn').onclick = () => {
+              document.getElementById('change-username-input').value = AppState.currentUser.username;
+              updateFriendsUI();
+              showScreen('settings');
+          };
+          document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
+          document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
+          document.getElementById('save-settings-btn').onclick = handleSaveUsername;
+          document.getElementById('search-user-btn').onclick = handleSearchUsers;
+          document.getElementById('search-results').addEventListener('click', e => {
+              if (e.target.closest('.add-friend-btn')) sendFriendRequest(e.target.closest('.add-friend-btn').dataset.uid);
+              if (e.target.closest('.accept-friend-btn')) acceptFriendRequest(e.target.closest('.accept-friend-btn').dataset.uid);
+          });
+          document.getElementById('friend-requests-list').addEventListener('click', e => {
+              if (e.target.closest('.accept-friend-btn')) acceptFriendRequest(e.target.closest('.accept-friend-btn').dataset.uid);
+          });
+          document.getElementById('create-room-btn').onclick = (e) => handleCreateRoom(e.currentTarget);
+          document.getElementById('join-room-btn').onclick = handleJoinRoom;
+          document.getElementById('ready-btn').onclick = handleReadyClick;
+          document.getElementById('leave-room-btn').onclick = (e) => handleLeaveRoom(e.currentTarget);
+          document.getElementById('copy-room-code-btn').onclick = () => {
+              if (AppState.currentRoom.id) {
+                  navigator.clipboard.writeText(AppState.currentRoom.id);
+                  showToast('คัดลอกรหัสห้องแล้ว!');
+              }
+          };
+          document.getElementById('leave-game-btn').onclick = (e) => {
+              if (AppState.game.mode === 'coop') handleLeaveRoom(e.currentTarget);
+              else showScreen('mainMenu');
+          };
+         
+          document.getElementById('rematch-btn').onclick = (e) => handleRematchRequest(e.currentTarget);
 
-                   if (Object.keys(players).length > 0) {
-                       let updates = { players };
-                       if (wasInGame) {
-                           updates['status'] = 'finished';
-                           updates['game.winner'] = Object.values(players)[0].symbol;
-                       }
-                       transaction.update(roomRef, updates);
-                   } else {
-                       transaction.delete(roomRef);
-                   }
-               });
-           } catch (error) {
-               console.error("Error leaving room:", error);
-           } finally {
-               cleanupAfterRoom();
-           }
-       }
-
-       function cleanupAfterRoom() {
-           if (AppState.currentRoom.countdownInterval) {
-               clearInterval(AppState.currentRoom.countdownInterval);
-           }
-           AppState.currentRoom = { id: null, data: null, countdownInterval: null };
-           AppState.playerSymbol = '';
-           showScreen('mainMenu');
-           
-           ['leave-room-btn', 'leave-game-btn', 'back-to-menu-from-game-btn', 'rematch-btn'].forEach(id => {
-               const btn = document.getElementById(id);
-               if (btn) btn.disabled = false;
-           });
-           document.getElementById('ready-btn').style.display = 'flex';
-       }
-
-       async function updatePostGameStats(winnerUID, loserUID, isDraw = false) {
-           const batch = writeBatch(db);
-           let newMedal = null;
-
-           if (isDraw) {
-               const playerRef = doc(db, "users", AppState.currentUser.uid);
-               batch.update(playerRef, {
-                   coins: increment(CONST.REWARDS.LOSS),
-                   winStreak: 0,
-                   lossStreak: 0
-               });
-           } else {
-               const winnerRef = doc(db, "users", winnerUID);
-               const loserRef = doc(db, "users", loserUID);
-               const winnerDoc = await getDoc(winnerRef);
-               const winnerData = winnerDoc.data();
-
-               const newWinStreak = (winnerData.winStreak || 0) + 1;
-               let winnerMedals = winnerData.medals || [];
-               if (newWinStreak === 5 && !winnerMedals.includes(CONST.MEDALS.WS_5.id)) {
-                   winnerMedals.push(CONST.MEDALS.WS_5.id);
-                   newMedal = CONST.MEDALS.WS_5.id;
-               }
-
-               batch.update(winnerRef, {
-                   'stats.wins': increment(1),
-                   coins: increment(CONST.REWARDS.WIN),
-                   winStreak: increment(1),
-                   lossStreak: 0,
-                   medals: winnerMedals
-               });
-
-               batch.update(loserRef, {
-                   'stats.losses': increment(1),
-                   coins: increment(CONST.REWARDS.LOSS),
-                   winStreak: 0,
-                   lossStreak: increment(1)
-               });
-           }
-           await batch.commit();
-           return { newMedal };
-       }
-       
-       async function handleRematchRequest(button) {
-           if (!AppState.currentRoom.id) return;
-           button.disabled = true;
-           const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-           await updateDoc(roomRef, { [`game.rematch.${AppState.currentUser.uid}`]: true });
-       }
-
-       function updateRematchStatus(rematchData) {
-           const rematchStatusEl = document.getElementById('rematch-status');
-           const uids = Object.keys(AppState.currentRoom.data.players);
-           const myUid = AppState.currentUser.uid;
-           const opponentUid = uids.find(uid => uid !== myUid);
-
-           if (rematchData[myUid] && rematchData[opponentUid]) {
-                if (uids[0] === myUid) { // Host handles reset
-                   const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-                   const players = AppState.currentRoom.data.players;
-                   Object.keys(players).forEach(uid => { players[uid].ready = false; });
-                   updateDoc(roomRef, { status: "lobby", players: players, game: { board: Array(9).fill(""), history: [], turn: "X", winner: null } });
-               }
-           } else if (rematchData[myUid]) {
-               rematchStatusEl.textContent = "คุณต้องการเล่นอีกครั้ง รออีกฝ่าย...";
-           } else if (rematchData[opponentUid]) {
-               rematchStatusEl.textContent = "อีกฝ่ายต้องการเล่นอีกครั้ง!";
-           } else {
-               rematchStatusEl.textContent = "";
-           }
-       }
-     
-       // --- Event Listeners Setup ---
-       function addEventListeners() {
-           document.getElementById('play-bot-btn').onclick = () => { AppState.game.mode = 'bot'; startGame(); };
-           document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
-           document.getElementById('settings-btn').onclick = () => {
-               document.getElementById('change-username-input').value = AppState.currentUser.username;
-               updateFriendsUI();
-               showScreen('settings');
-           };
-           document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
-           document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
-           document.getElementById('save-settings-btn').onclick = handleSaveUsername;
-           document.getElementById('search-user-btn').onclick = handleSearchUsers;
-           document.getElementById('search-results').addEventListener('click', e => {
-               if (e.target.closest('.add-friend-btn')) sendFriendRequest(e.target.closest('.add-friend-btn').dataset.uid);
-               if (e.target.closest('.accept-friend-btn')) acceptFriendRequest(e.target.closest('.accept-friend-btn').dataset.uid);
-           });
-           document.getElementById('friend-requests-list').addEventListener('click', e => {
-               if (e.target.closest('.accept-friend-btn')) acceptFriendRequest(e.target.closest('.accept-friend-btn').dataset.uid);
-           });
-           document.getElementById('create-room-btn').onclick = (e) => handleCreateRoom(e.currentTarget);
-           document.getElementById('join-room-btn').onclick = handleJoinRoom;
-           document.getElementById('ready-btn').onclick = handleReadyClick;
-           document.getElementById('leave-room-btn').onclick = (e) => handleLeaveRoom(e.currentTarget);
-           document.getElementById('copy-room-code-btn').onclick = () => {
-               if (AppState.currentRoom.id) {
-                   navigator.clipboard.writeText(AppState.currentRoom.id);
-                   showToast('คัดลอกรหัสห้องแล้ว!');
-               }
-           };
-           document.getElementById('leave-game-btn').onclick = (e) => {
-               if (AppState.game.mode === 'coop') handleLeaveRoom(e.currentTarget);
+          document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
+               if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
                else showScreen('mainMenu');
-           };
-           
-           document.getElementById('rematch-btn').onclick = (e) => handleRematchRequest(e.currentTarget);
+          };
 
-           document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
-                if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
-                else showScreen('mainMenu');
-           };
-
-           document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
-           document.getElementById('player-list').addEventListener('click', (e) => {
-               const playerDiv = e.target.closest('.player-name-lobby');
-               if (playerDiv) {
-                   e.stopPropagation();
-                   const targetUid = playerDiv.dataset.uid;
-                   const rect = playerDiv.getBoundingClientRect();
-                   DOM.contextMenu.style.left = `${rect.left}px`;
-                   DOM.contextMenu.style.top = `${rect.bottom + 5}px`;
-                   DOM.contextMenu.style.display = 'block';
-                   document.getElementById('view-profile-ctx-btn').dataset.uid = targetUid;
-               }
-           });
-           document.getElementById('view-profile-ctx-btn').onclick = (e) => {
-               const targetUid = e.target.dataset.uid;
-               if (targetUid) viewProfile(targetUid);
-               DOM.contextMenu.style.display = 'none';
-           };
-           document.addEventListener('click', (e) => {
-               if (!e.target.closest('.context-menu')) {
-                   DOM.contextMenu.style.display = 'none';
-               }
-           });
-       }
-       
-       // --- Start the App ---
-       init();
-   </script>
+          document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
+          document.getElementById('player-list').addEventListener('click', (e) => {
+              const playerDiv = e.target.closest('.player-name-lobby');
+              if (playerDiv) {
+                  e.stopPropagation();
+                  const targetUid = playerDiv.dataset.uid;
+                  const rect = playerDiv.getBoundingClientRect();
+                  DOM.contextMenu.style.left = `${rect.left}px`;
+                  DOM.contextMenu.style.top = `${rect.bottom + 5}px`;
+                  DOM.contextMenu.style.display = 'block';
+                  document.getElementById('view-profile-ctx-btn').dataset.uid = targetUid;
+              }
+          });
+          document.getElementById('view-profile-ctx-btn').onclick = (e) => {
+              const targetUid = e.currentTarget.dataset.uid;
+              if (targetUid) viewProfile(targetUid);
+              DOM.contextMenu.style.display = 'none';
+          };
+          document.addEventListener('click', (e) => {
+              if (!e.target.closest('.context-menu') && !e.target.closest('.player-name-lobby')) {
+                  DOM.contextMenu.style.display = 'none';
+              }
+          });
+      }
+     
+      // --- Start the App ---
+      init();
+  </script>
 </body>
 </html>
