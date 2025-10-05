@@ -9,6 +9,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS สำหรับ Loading Screen */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .loader {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         :root {
             --x-color: #ef4444; /* red-500 */
             --o-color: #3b82f6; /* blue-500 */
@@ -53,6 +77,10 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
+    <div id="loading-overlay" class="loader-overlay">
+        <div class="loader"></div>
+    </div>
+
     <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
         <p id="toast-message"></p>
     </div>
@@ -61,7 +89,7 @@
         <button id="view-profile-ctx-btn" class="button button-primary text-sm py-2 px-4">ดูโปรไฟล์</button>
     </div>
     
-    <div id="username-prompt-modal" class="modal-overlay active fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center p-4">
+    <div id="username-prompt-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center p-4">
         <div class="modal-content bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center w-full max-w-md">
             <h2 class="text-2xl font-bold mb-4">ตั้งชื่อผู้ใช้ของคุณ</h2>
             <p id="username-error" class="text-red-500 mb-2 h-5"></p>
@@ -254,6 +282,10 @@
                 } else {
                     AppState.currentUser = { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, friends: {} };
                     if(AppState.listeners.user) AppState.listeners.user();
+                    
+                    const loadingOverlay = document.getElementById('loading-overlay');
+                    loadingOverlay.style.opacity = '0';
+                    setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
                     showModal('usernamePrompt', true);
                 }
             });
@@ -261,18 +293,28 @@
         
         // --- User & Profile Management ---
         const checkUserRegistration = async () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
             const userRef = doc(db, "users", AppState.currentUser.uid);
             const userSnap = await getDoc(userRef);
+
             if (userSnap.exists()) {
                 const userData = userSnap.data();
                 AppState.currentUser = { ...AppState.currentUser, ...userData };
                 document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${AppState.currentUser.username}#${AppState.currentUser.userTag}`;
-                showModal('usernamePrompt', false);
+                
                 showScreen('mainMenu');
                 listenToUserUpdates();
+                localStorage.setItem('usernameWasSet', 'true');
             } else {
-                showModal('usernamePrompt', true);
+                if (localStorage.getItem('usernameWasSet')) {
+                    showModal('usernamePrompt', true);
+                } else {
+                    showModal('usernamePrompt', true);
+                }
             }
+            
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
         };
        
         const listenToUserUpdates = () => {
@@ -327,6 +369,8 @@
                         createdAt: serverTimestamp()
                     };
                     await setDoc(userRef, newUserData);
+
+                    localStorage.setItem('usernameWasSet', 'true');
 
                     AppState.currentUser = { ...AppState.currentUser, ...newUserData };
                     document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${userTag}`;
@@ -786,8 +830,10 @@
             document.getElementById('ready-btn').onclick = handleReadyClick;
             document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
             document.getElementById('copy-room-code-btn').onclick = () => {
-                navigator.clipboard.writeText(AppState.currentRoom.id);
-                showToast('คัดลอกรหัสห้องแล้ว!');
+                if (AppState.currentRoom.id) {
+                    navigator.clipboard.writeText(AppState.currentRoom.id);
+                    showToast('คัดลอกรหัสห้องแล้ว!');
+                }
             };
             document.getElementById('leave-game-btn').onclick = () => {
                 if (AppState.game.mode === 'coop') handleLeaveRoom();
@@ -836,7 +882,7 @@
                 DOM.contextMenu.style.display = 'none';
             };
             document.addEventListener('click', (e) => {
-                if (!DOM.contextMenu.contains(e.target)) {
+                if (e.target !== DOM.contextMenu && !DOM.contextMenu.contains(e.target)) {
                     DOM.contextMenu.style.display = 'none';
                 }
             });
