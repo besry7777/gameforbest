@@ -53,11 +53,12 @@
            display: flex;
            justify-content: center;
            align-items: center;
-           font-size: clamp(3rem, 20vw, 8rem);
+           font-size: clamp(3rem, 18vmin, 7rem);
            font-weight: bold;
            cursor: pointer;
            border: 2px solid #e5e7eb; /* gray-200 */
            transition: background-color 0.2s;
+           line-height: 1; /* Prevents text from affecting cell height */
        }
        .cell:hover { background-color: #f9fafb; /* gray-50 */ }
        .cell.x { color: var(--x-color); }
@@ -73,7 +74,15 @@
            animation: pulse-border 1.5s ease-in-out infinite;
        }
        @keyframes pulse-border { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.97); } }
-       #game-board-container { width: 100%; max-width: 450px; aspect-ratio: 1 / 1; }
+       
+       #game-board-container {
+           width: 90vmin;
+           height: 90vmin;
+           max-width: 450px;
+           max-height: 450px;
+       }
+
+       .board-locked { pointer-events: none; opacity: 0.7; }
        #winning-line-container { position: absolute; inset: 0; pointer-events: none; }
        .winning-line {
            position: absolute;
@@ -106,13 +115,7 @@
        <button id="view-profile-ctx-btn" class="button button-primary text-sm py-2 px-4">ดูโปรไฟล์</button>
    </div>
    
-   <div id="game-over-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
-       <div class="modal-content bg-white p-8 rounded-xl shadow-2xl text-center w-full max-w-md">
-           <h2 id="game-over-message" class="text-3xl font-bold mb-6"></h2>
-           <button id="play-again-btn" class="button button-primary">เล่นอีกครั้ง</button>
-           <button id="modal-back-to-menu-btn" class="button button-secondary">กลับเมนูหลัก</button>
-       </div>
-   </div>
+   <canvas id="confetti-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-50"></canvas>
 
    <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
        <div class="modal-content bg-white p-8 rounded-xl shadow-2xl text-center w-full max-w-md relative">
@@ -201,13 +204,19 @@
            <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
        </div>
        
-       <div id="game-screen" class="screen w-full h-full flex-col justify-center items-center p-2 sm:p-5">
-           <div id="turn-display" class="text-2xl font-semibold mb-4 h-8"></div>
+       <div id="game-screen" class="screen w-full h-full flex-col justify-center items-center p-2 sm:p-5 gap-y-4">
+           <div id="turn-display" class="text-2xl font-semibold h-8"></div>
            <div id="game-board-container" class="relative">
-               <div id="game-board" class="grid grid-cols-3 bg-white rounded-lg shadow-xl overflow-hidden"></div>
+               <div id="game-board" class="grid grid-cols-3 w-full h-full bg-white rounded-lg shadow-xl overflow-hidden"></div>
                <div id="winning-line-container"></div>
+               <!-- This will overlay the board when game ends -->
+               <div id="game-screen-over-overlay" class="absolute inset-0 bg-white/70 backdrop-blur-sm flex-col justify-center items-center gap-4 hidden">
+                   <h2 id="game-screen-over-message" class="text-3xl font-bold text-gray-800"></h2>
+                   <button id="restart-game-btn" class="button button-primary max-w-[280px]">เล่นอีกครั้ง</button>
+                   <button id="back-to-menu-from-game-btn" class="button button-secondary max-w-[280px]">กลับเมนูหลัก</button>
+               </div>
            </div>
-           <button id="leave-game-btn" class="button button-danger mt-6">ยอมแพ้/ออกจากเกม</button>
+           <button id="leave-game-btn" class="button button-danger mt-4">ยอมแพ้/ออกจากเกม</button>
        </div>
    </main>
    
@@ -238,8 +247,14 @@
            ROOM_CODE_LENGTH: 4
        };
        
-       // --- Audio Context for Sound Effects ---
+       // --- Audio & Animation ---
        let audioCtx;
+       const confettiCanvas = document.getElementById('confetti-canvas');
+       const confettiCtx = confettiCanvas.getContext('2d');
+       let confettiParticles = [];
+       const confettiColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#eab308'];
+       let animationFrameId;
+
        const playPopSound = () => {
            if (!audioCtx) return;
            const oscillator = audioCtx.createOscillator();
@@ -260,6 +275,69 @@
            }
        }, { once: true });
 
+       // --- Confetti Functions ---
+       function resizeCanvas() {
+           if (!confettiCanvas) return;
+           confettiCanvas.width = window.innerWidth;
+           confettiCanvas.height = window.innerHeight;
+       }
+       window.addEventListener('resize', resizeCanvas);
+
+       function createConfetti() {
+           const count = 200;
+           const { width, height } = confettiCanvas;
+           for (let i = 0; i < count; i++) {
+               confettiParticles.push({
+                   x: Math.random() * width,
+                   y: Math.random() * height - height,
+                   size: Math.random() * 10 + 5,
+                   color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+                   vx: Math.random() * 4 - 2,
+                   vy: Math.random() * 5 + 2,
+                   angle: Math.random() * Math.PI * 2,
+                   spin: Math.random() * 0.2 - 0.1,
+               });
+           }
+       }
+
+       function drawConfetti() {
+           if (!confettiCtx) return;
+           confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+           confettiParticles.forEach((p, i) => {
+               p.x += p.vx;
+               p.y += p.vy;
+               p.angle += p.spin;
+
+               confettiCtx.save();
+               confettiCtx.translate(p.x, p.y);
+               confettiCtx.rotate(p.angle);
+               confettiCtx.fillStyle = p.color;
+               confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+               confettiCtx.restore();
+
+               if (p.y > confettiCanvas.height) {
+                   confettiParticles.splice(i, 1);
+               }
+           });
+       }
+
+       function animateConfetti() {
+           if (confettiParticles.length > 0) {
+               drawConfetti();
+               animationFrameId = requestAnimationFrame(animateConfetti);
+           } else {
+               if(confettiCtx) confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+               cancelAnimationFrame(animationFrameId);
+           }
+       }
+
+       function startConfetti() {
+           resizeCanvas();
+           confettiParticles = [];
+           createConfetti();
+           if (animationFrameId) cancelAnimationFrame(animationFrameId);
+           animateConfetti();
+       }
 
        // --- App State ---
        let AppState = {
@@ -280,7 +358,7 @@
                game: document.getElementById('game-screen'),
            },
            modals: {
-               gameOver: document.getElementById('game-over-modal'),
+               // gameOver: document.getElementById('game-over-modal'), // Removed
                profile: document.getElementById('profile-modal'),
            },
            contextMenu: document.getElementById('context-menu'),
@@ -386,33 +464,41 @@
            const newUsername = input.value.trim();
            const usernameRegex = /^[a-zA-Z0-9]+$/;
 
-           button.disabled = true;
-           button.innerHTML = '<span>กำลังบันทึก...</span>';
-           errorP.textContent = '';
+           errorP.textContent = ''; // Reset error message
 
+           // Validation
            if (newUsername.length < 3 || newUsername.length > 12) {
                errorP.textContent = 'ชื่อต้องมี 3-12 ตัวอักษร';
-           } else if (!usernameRegex.test(newUsername)) {
-               errorP.textContent = 'ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น';
-           } else if (newUsername === AppState.currentUser.username) {
-               showToast('ชื่อผู้ใช้เหมือนเดิม');
-           } else {
-               const userRef = doc(db, "users", AppState.currentUser.uid);
-               try {
-                   await updateDoc(userRef, { username: newUsername });
-                   showToast('เปลี่ยนชื่อสำเร็จ!');
-                   document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${AppState.currentUser.userTag}`;
-               } catch (error) {
-                   console.error("Error saving username: ", error);
-                   showToast("เกิดข้อผิดพลาดในการบันทึกชื่อ", 'error');
-                   errorP.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
-               }
+               return;
            }
+           if (!usernameRegex.test(newUsername)) {
+               errorP.textContent = 'ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น';
+               return;
+           }
+           if (newUsername === AppState.currentUser.username) {
+               showToast('ชื่อผู้ใช้เหมือนเดิม');
+               showScreen('mainMenu'); // Navigate back if name is unchanged
+               return;
+           }
+
+           // Proceed with saving
+           button.disabled = true;
+           button.innerHTML = '<span>กำลังบันทึก...</span>';
            
-           setTimeout(() => { // Add a small delay for user to see the result
+           const userRef = doc(db, "users", AppState.currentUser.uid);
+           try {
+               await updateDoc(userRef, { username: newUsername });
+               showToast('เปลี่ยนชื่อสำเร็จ!');
+               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${AppState.currentUser.userTag}`;
+               showScreen('mainMenu'); // Navigate back on success
+           } catch (error) {
+               console.error("Error saving username: ", error);
+               showToast("เกิดข้อผิดพลาดในการบันทึกชื่อ", 'error');
+               errorP.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+                // Re-enable button on error
                button.disabled = false;
                button.innerHTML = '<span>บันทึกชื่อใหม่</span>';
-           }, 500);
+           }
        }
 
        // --- Friend Management ---
@@ -524,10 +610,21 @@
        
        // --- Game Logic ---
        function startGame() {
+           document.getElementById('game-screen-over-overlay').classList.add('hidden');
+           document.getElementById('game-screen-over-overlay').classList.remove('flex');
+           document.getElementById('leave-game-btn').style.display = 'flex';
+
            AppState.game.state.fill("");
            AppState.game.history = [];
            AppState.game.isActive = true;
-           AppState.game.currentPlayer = "X";
+           
+           if (AppState.game.mode === 'bot') {
+               const playerStarts = Math.random() < 0.5;
+               AppState.game.currentPlayer = playerStarts ? 'X' : 'O'; // Player is X, Bot is O
+           } else {
+               AppState.game.currentPlayer = "X"; // Coop always starts with X
+           }
+
            DOM.winningLineContainer.innerHTML = '';
            DOM.gameBoard.innerHTML = '';
            for (let i = 0; i < 9; i++) {
@@ -554,6 +651,9 @@
            } else if (AppState.game.mode === 'coop') {
                if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
                
+               // Lock the board to prevent spam clicks while waiting for Firestore update
+               DOM.gameBoard.classList.add('board-locked');
+
                const roomRef = doc(db, "rooms", AppState.currentRoom.id);
                runTransaction(db, async (transaction) => {
                    const roomDoc = await transaction.get(roomRef);
@@ -637,7 +737,7 @@
            if (AppState.game.mode === 'coop') {
                DOM.turnDisplay.innerText = (AppState.game.currentPlayer === AppState.playerSymbol) ? "ตาของคุณ!" : `รอตาของฝ่ายตรงข้าม (${AppState.game.currentPlayer})`;
            } else {
-               DOM.turnDisplay.innerText = `ตาของ: ${AppState.game.currentPlayer}`;
+               DOM.turnDisplay.innerText = AppState.game.currentPlayer === 'X' ? `ตาของคุณ (X)` : `ตาของบอท (O)`;
            }
        }
 
@@ -658,20 +758,20 @@
            const boardSize = DOM.gameBoard.offsetWidth;
            const cellSize = boardSize / 3;
            let angle = 0; let top = 0; let left = 0; let width = boardSize;
+           const lineHeightOffset = 6; // Half of the line's height (12px)
 
-           if (line[0] === 0 && line[2] === 2) { top = cellSize * 0.5; left = 0; angle = 0; } // Row 1
-           else if (line[0] === 3 && line[2] === 5) { top = cellSize * 1.5; left = 0; angle = 0; } // Row 2
-           else if (line[0] === 6 && line[2] === 8) { top = cellSize * 2.5; left = 0; angle = 0; } // Row 3
-           else if (line[0] === 0 && line[2] === 6) { top = 0; left = cellSize * 0.5; angle = 90; } // Col 1
-           else if (line[0] === 1 && line[2] === 7) { top = 0; left = cellSize * 1.5; angle = 90; } // Col 2
-           else if (line[0] === 2 && line[2] === 8) { top = 0; left = cellSize * 2.5; angle = 90; } // Col 3
-           else if (line[0] === 0 && line[2] === 8) { top = 0; left = 0; angle = 45; width = boardSize * 1.414; } // Diag 1
-           else if (line[0] === 2 && line[2] === 6) { top = boardSize; left = 0; angle = -45; width = boardSize * 1.414; } // Diag 2
+           // Horizontal
+           if (line[0] === 0 && line[2] === 2) { top = (cellSize * 0.5) - lineHeightOffset; left = 0; angle = 0; }
+           else if (line[0] === 3 && line[2] === 5) { top = (cellSize * 1.5) - lineHeightOffset; left = 0; angle = 0; }
+           else if (line[0] === 6 && line[2] === 8) { top = (cellSize * 2.5) - lineHeightOffset; left = 0; angle = 0; }
+           // Vertical
+           else if (line[0] === 0 && line[2] === 6) { top = 0; left = (cellSize * 0.5) - lineHeightOffset; angle = 90; }
+           else if (line[0] === 1 && line[2] === 7) { top = 0; left = (cellSize * 1.5) - lineHeightOffset; angle = 90; }
+           else if (line[0] === 2 && line[2] === 8) { top = 0; left = (cellSize * 2.5) - lineHeightOffset; angle = 90; }
+           // Diagonal
+           else if (line[0] === 0 && line[2] === 8) { top = 0; left = 0; angle = 45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'top left'; }
+           else if (line[0] === 2 && line[2] === 6) { top = boardSize; left = 0; angle = -45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'bottom left'; }
 
-           if (angle === 90) { [top, left] = [left, top]; }
-           if (angle === 45) { left += 10; top += 10; width -= 20;}
-           if (angle === -45) { left += 10; top -= 10; width -=20; }
-         
            lineDiv.style.setProperty('--line-width', `${width}px`);
            lineDiv.style.transform = `translate(${left}px, ${top}px) rotate(${angle}deg)`;
            DOM.winningLineContainer.appendChild(lineDiv);
@@ -679,8 +779,31 @@
 
        function endGame(isDraw, winner = null) {
            AppState.game.isActive = false;
-           document.getElementById('game-over-message').innerText = isDraw ? "เสมอ!" : `ผู้เล่น ${winner} ชนะ!`;
-           showModal('gameOver', true);
+
+           const overlay = document.getElementById('game-screen-over-overlay');
+           const messageEl = document.getElementById('game-screen-over-message');
+           const leaveBtn = document.getElementById('leave-game-btn');
+           const restartBtn = document.getElementById('restart-game-btn');
+
+           messageEl.innerText = isDraw ? "เสมอ!" : `ผู้เล่น ${winner} ชนะ!`;
+           leaveBtn.style.display = 'none'; // Hide the original leave button
+
+           // For coop, only host sees play again button
+           if (AppState.game.mode === 'coop') {
+               const isHost = AppState.currentRoom.data && Object.keys(AppState.currentRoom.data.players)[0] === AppState.currentUser.uid;
+               restartBtn.style.display = isHost ? 'flex' : 'none';
+           } else {
+               restartBtn.style.display = 'flex';
+           }
+
+           setTimeout(() => { // Delay overlay to see winning line
+               overlay.classList.remove('hidden');
+               overlay.classList.add('flex');
+
+               if (!isDraw) {
+                   startConfetti();
+               }
+           }, 700);
        }
 
        // --- Bot Logic ---
@@ -691,11 +814,41 @@
        
        function getBestBotMove() {
            const board = AppState.game.state;
+
+           // 1. Win: If bot can win, it takes the winning move.
            for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'O'; if (checkWinner(b)) return i; } }
+           
+           // 2. Block: If player is about to win, block them.
            for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'X'; if (checkWinner(b)) return i; } }
-           const moves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
-           for(const m of moves){ if(board[m] === "") return m; }
-           return board.findIndex(s => s === "");
+
+           // 3. Anti-Fork Strategy: If player takes opposite corners and bot has the center, play a side to block a fork.
+           if (board[4] === 'O') {
+               if ((board[0] === 'X' && board[8] === 'X') || (board[2] === 'X' && board[6] === 'X')) {
+                   const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+                   if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
+               }
+           }
+
+           // 4. Center: Take the center if it's available.
+           if (board[4] === "") return 4;
+
+           // 5. Opposite Corner: If the opponent is in a corner, take the opposite one.
+           const cornerMap = { 0: 8, 2: 6, 6: 2, 8: 0 };
+           for(const c in cornerMap) {
+               if(board[c] === 'X' && board[cornerMap[parseInt(c)]] === '') {
+                   return cornerMap[parseInt(c)];
+               }
+           }
+           
+           // 6. Empty Corner: Take any available corner.
+           const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+           if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+
+           // 7. Empty Side: Take any available side.
+           const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+           if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
+
+           return board.findIndex(s => s === ""); // Failsafe
        }
 
        // --- Online (Co-op) Logic ---
@@ -704,12 +857,13 @@
            button.innerHTML = '<span>กำลังสร้าง...</span>';
            
            const roomId = Math.random().toString(36).substring(2, 2 + CONST.ROOM_CODE_LENGTH).toUpperCase();
+           const creatorSymbol = Math.random() < 0.5 ? 'X' : 'O'; // Randomize symbol
            AppState.currentRoom.id = roomId;
-           AppState.playerSymbol = 'X';
+           AppState.playerSymbol = creatorSymbol; // Set for creator
            const roomData = {
                status: 'lobby',
                players: {
-                   [AppState.currentUser.uid]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: 'X', ready: false }
+                   [AppState.currentUser.uid]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: creatorSymbol, ready: false }
                },
                game: { board: Array(9).fill(""), history: [], turn: "X", winner: null },
                createdAt: serverTimestamp()
@@ -738,10 +892,13 @@
                if (Object.keys(roomData.players).length >= 2) return showToast("ห้องเต็มแล้ว", 'error');
                if (roomData.status !== 'lobby') return showToast("เกมเริ่มไปแล้ว", 'error');
                
+               const existingPlayerSymbol = Object.values(roomData.players)[0].symbol;
+               const joinerSymbol = existingPlayerSymbol === 'X' ? 'O' : 'X';
+
                AppState.currentRoom.id = roomId;
-               AppState.playerSymbol = 'O';
+               AppState.playerSymbol = joinerSymbol; // Set for joiner
                await updateDoc(roomRef, {
-                   [`players.${AppState.currentUser.uid}`]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: 'O', ready: false }
+                   [`players.${AppState.currentUser.uid}`]: { username: AppState.currentUser.username, userTag: AppState.currentUser.userTag, symbol: joinerSymbol, ready: false }
                });
                listenToRoomUpdates(roomId);
                showScreen('roomLobby');
@@ -755,12 +912,27 @@
            const roomRef = doc(db, "rooms", roomId);
            AppState.listeners.room = onSnapshot(roomRef, (docSnap) => {
                if (!docSnap.exists()) {
-                   showToast("ห้องถูกปิดแล้ว", 'info');
-                   cleanupAfterRoom();
+                   // Only force navigate if the user is still in a room-related screen.
+                   // This prevents getting kicked to main menu from e.g. the settings screen.
+                   const activeScreenId = document.querySelector('.screen.active')?.id;
+                   if (activeScreenId === 'room-lobby' || activeScreenId === 'game-screen') {
+                       showToast("ห้องถูกปิดแล้ว", 'info');
+                       cleanupAfterRoom();
+                   } else {
+                       // If user is on another screen, just silently detach listener
+                       if (AppState.listeners.room) AppState.listeners.room();
+                       AppState.listeners.room = null;
+                       AppState.currentRoom = { id: null, data: null };
+                       AppState.playerSymbol = '';
+                   }
                    return;
                }
                const roomData = docSnap.data();
                AppState.currentRoom.data = roomData;
+               
+               // When we get an update from the server, unlock the board.
+               // The turn check logic will handle if the user can actually make a move.
+               DOM.gameBoard.classList.remove('board-locked');
                
                updateLobbyUI(roomData);
 
@@ -800,7 +972,7 @@
                            }, 1000);
                        }
                    }
-                   if (roomData.status === 'finished' && roomData.game.winner && !DOM.modals.gameOver.classList.contains('active')) {
+                   if (roomData.status === 'finished' && roomData.game.winner && !document.getElementById('game-screen-over-overlay').classList.contains('flex')) {
                        endGame(false, roomData.game.winner);
                    }
                }
@@ -839,34 +1011,55 @@
            await updateDoc(doc(db, "rooms", AppState.currentRoom.id), { [`players.${AppState.currentUser.uid}.ready}`]: !currentReadyStatus });
        }
 
-       async function handleLeaveRoom() {
+       async function handleLeaveRoom(button) {
            if (!AppState.currentRoom.id) return;
+
+           if(button) button.disabled = true; // Prevent spam clicking
+
+           const roomId = AppState.currentRoom.id;
            
-           const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-           await runTransaction(db, async (transaction) => {
-               const roomDoc = await transaction.get(roomRef);
-               if (!roomDoc.exists()) return;
+           // Immediately detach listener to prevent race conditions from server updates
+           if (AppState.listeners.room) AppState.listeners.room();
+           AppState.listeners.room = null;
 
-               const roomData = roomDoc.data();
-               const players = roomData.players;
-               delete players[AppState.currentUser.uid];
+           const roomRef = doc(db, "rooms", roomId);
+           try {
+               await runTransaction(db, async (transaction) => {
+                   const roomDoc = await transaction.get(roomRef);
+                   if (!roomDoc.exists()) return;
 
-               if (Object.keys(players).length > 0) {
-                   transaction.update(roomRef, { players });
-               } else {
-                   transaction.delete(roomRef);
-               }
-           });
+                   const roomData = roomDoc.data();
+                   const players = roomData.players;
+                   delete players[AppState.currentUser.uid];
 
-           cleanupAfterRoom();
+                   if (Object.keys(players).length > 0) {
+                       transaction.update(roomRef, { players });
+                   } else {
+                       transaction.delete(roomRef);
+                   }
+               });
+           } catch (error) {
+               console.error("Error leaving room:", error);
+           } finally {
+               // Reset state and navigate AFTER firestore operation
+               cleanupAfterRoom();
+           }
        }
 
        function cleanupAfterRoom() {
-           if (AppState.listeners.room) AppState.listeners.room();
-           AppState.listeners.room = null;
+           // This function is now only for resetting state and navigating.
+           // Listener detachment should happen before this is called.
            AppState.currentRoom = { id: null, data: null };
            AppState.playerSymbol = '';
            showScreen('mainMenu');
+
+           // Re-enable any potentially disabled buttons after leaving a room
+           const leaveRoomBtn = document.getElementById('leave-room-btn');
+           if(leaveRoomBtn) leaveRoomBtn.disabled = false;
+           const leaveGameBtn = document.getElementById('leave-game-btn');
+           if(leaveGameBtn) leaveGameBtn.disabled = false;
+           const backToMenuBtn = document.getElementById('back-to-menu-from-game-btn');
+           if(backToMenuBtn) backToMenuBtn.disabled = false;
        }
 
        async function updatePlayerStats(winnerUID, loserUID) {
@@ -912,24 +1105,19 @@
            document.getElementById('create-room-btn').onclick = (e) => handleCreateRoom(e.currentTarget);
            document.getElementById('join-room-btn').onclick = handleJoinRoom;
            document.getElementById('ready-btn').onclick = handleReadyClick;
-           document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
+           document.getElementById('leave-room-btn').onclick = (e) => handleLeaveRoom(e.currentTarget);
            document.getElementById('copy-room-code-btn').onclick = () => {
                if (AppState.currentRoom.id) {
                    navigator.clipboard.writeText(AppState.currentRoom.id);
                    showToast('คัดลอกรหัสห้องแล้ว!');
                }
            };
-           document.getElementById('leave-game-btn').onclick = () => {
-               if (AppState.game.mode === 'coop') handleLeaveRoom();
+           document.getElementById('leave-game-btn').onclick = (e) => {
+               if (AppState.game.mode === 'coop') handleLeaveRoom(e.currentTarget);
                else showScreen('mainMenu');
            };
-           document.getElementById('modal-back-to-menu-btn').onclick = () => {
-                showModal('gameOver', false);
-                if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom();
-                else showScreen('mainMenu');
-           };
-           document.getElementById('play-again-btn').onclick = () => {
-               showModal('gameOver', false);
+           
+           document.getElementById('restart-game-btn').onclick = () => {
                if (AppState.game.mode === 'bot') {
                    startGame();
                } else if (AppState.game.mode === 'coop') {
@@ -947,6 +1135,12 @@
                    });
                }
            };
+
+           document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
+                if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
+                else showScreen('mainMenu');
+           };
+
            document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
            document.getElementById('player-list').addEventListener('click', (e) => {
                const playerDiv = e.target.closest('.player-name-lobby');
