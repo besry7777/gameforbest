@@ -3,36 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bangkok XO Game - Pro</title>
+    <title>Simple XO Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0c0a1a;
-            --primary-color: #ff00ff; /* Magenta Neon */
-            --secondary-color: #00ffff; /* Cyan Neon */
-            --text-color: #f0f0f0;
-            --border-color: rgba(0, 255, 255, 0.3);
-            --glow-primary: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
-            --glow-secondary: 0 0 5px var(--secondary-color), 0 0 10px var(--secondary-color), 0 0 20px var(--secondary-color);
+            --bg-color: #f0f0f0;
+            --board-color: #ffffff;
+            --border-color: #cccccc;
+            --text-color: #333333;
+            --x-color: #ff4136; /* Red */
+            --o-color: #000000; /* Black */
+            --button-primary-bg: #007bff;
+            --button-secondary-bg: #6c757d;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* ป้องกันการเลื่อน */
+            overflow: hidden;
             font-family: 'Kanit', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            touch-action: manipulation; /* ป้องกัน double-tap to zoom */
+            touch-action: manipulation;
         }
 
         .screen {
@@ -44,89 +40,44 @@
             align-items: center;
             padding: 20px;
             position: absolute;
-            top: 0;
-            left: 0;
-            animation: fadeIn 0.5s ease-in-out;
+            top: 0; left: 0;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .screen.active {
-            display: flex;
-        }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        h1, h2 {
-            text-shadow: var(--glow-secondary);
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        h1 {
-            font-size: 3rem;
-        }
+        h1, h2 { text-align: center; margin-bottom: 1.5rem; }
+        h1 { font-size: 3rem; }
 
         .button {
-            background: transparent;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
+            background-color: var(--button-primary-bg);
+            color: white;
+            border: none;
             padding: 15px 30px;
             margin: 10px;
             font-size: 1.2rem;
             font-family: 'Kanit', sans-serif;
             cursor: pointer;
             border-radius: 8px;
-            transition: all 0.3s ease;
-            text-shadow: var(--glow-primary);
-            box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.5), 0 0 10px rgba(255, 0, 255, 0.5);
+            transition: background-color 0.2s;
+            min-width: 250px;
         }
-
-        .button:hover {
-            background: var(--primary-color);
-            color: var(--bg-color);
-            box-shadow: var(--glow-primary);
-        }
-
-        .button.secondary {
-            border-color: var(--secondary-color);
-            color: var(--secondary-color);
-            text-shadow: var(--glow-secondary);
-            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.5), 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
-        .button.secondary:hover {
-            background: var(--secondary-color);
-            color: var(--bg-color);
-            box-shadow: var(--glow-secondary);
-        }
-        
-        .button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        
-        #game-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .button:hover { background-color: #0056b3; }
+        .button.secondary { background-color: var(--button-secondary-bg); }
+        .button.secondary:hover { background-color: #5a6268; }
 
         #game-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
             width: 90vw;
             height: 90vw;
-            max-width: 400px;
-            max-height: 400px;
-            border: 2px solid var(--border-color);
+            max-width: 450px;
+            max-height: 450px;
+            background-color: var(--board-color);
+            border: 2px solid #333;
             border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .cell {
@@ -135,181 +86,87 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 5vw;
-            border: 1px solid var(--border-color);
+            font-size: 20vw; /* ตัวใหญ่ขึ้น */
+            font-weight: bold;
+            border: 2px solid var(--border-color);
             cursor: pointer;
-            transition: background-color 0.3s;
         }
-        
-        @media (min-width: 600px) {
-            .cell {
-                font-size: 3rem;
-            }
-        }
+        @media (min-width: 600px) { .cell { font-size: 8rem; } }
 
-        .cell:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+        .cell.x { color: var(--x-color); }
+        .cell.o { color: var(--o-color); }
+        .cell.fading { animation: fadeOut 0.5s forwards; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        .cell.x {
-            color: var(--primary-color);
-            text-shadow: var(--glow-primary);
-        }
+        #turn-display, #status-display { margin: 20px 0; font-size: 1.5rem; text-align: center; }
 
-        .cell.o {
-            color: var(--secondary-color);
-            text-shadow: var(--glow-secondary);
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center; align-items: center;
+            display: none;
         }
-        
-        .cell.fading {
-            animation: fadeOut 0.5s forwards;
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.5); }
-        }
-
-        #status-display, #turn-display {
-            margin-top: 20px;
-            font-size: 1.5rem;
-            min-height: 2.2rem;
-            text-align: center;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-field {
-            padding: 10px;
-            font-size: 1.2rem;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid var(--secondary-color);
-            border-radius: 5px;
-            color: var(--text-color);
-            text-align: center;
-            width: 200px;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            box-shadow: var(--glow-secondary);
-        }
-        
-        #room-lobby .room-code {
-            font-size: 2rem;
-            background: #1a1a2e;
-            padding: 15px 25px;
-            border-radius: 10px;
-            border: 1px dashed var(--primary-color);
-            letter-spacing: 5px;
-            margin-bottom: 20px;
-        }
-        
-        #room-lobby .player-status {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-        
-        .ready-status {
-            color: #ff5555;
-        }
-        
-        .ready-status.ready {
-            color: #55ff55;
-        }
-        
-        /* Loading Animation */
-        #loading-screen .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid var(--primary-color);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        #game-over-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            display: none; /* Initially hidden */
-        }
-        
-        #game-over-modal.active {
-            display: flex;
-        }
+        .modal-overlay.active { display: flex; }
         
         .modal-content {
-            background: var(--bg-color);
-            padding: 40px;
-            border-radius: 10px;
-            border: 2px solid var(--primary-color);
-            text-align: center;
-            box-shadow: var(--glow-primary);
-            animation: fadeIn 0.3s;
+            background: white; padding: 30px; border-radius: 10px;
+            text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%; max-width: 400px;
         }
-
+        
+        .input-field {
+            padding: 12px; font-size: 1.1rem; border: 1px solid #ccc;
+            border-radius: 5px; text-align: center; width: 100%; margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="main-menu" class="screen active">
-        <h1>Bangkok XO</h1>
-        <button id="play-bot-btn" class="button">เล่นกับบอท (โหดสุดๆ)</button>
-        <button id="play-coop-btn" class="button secondary">เล่นกับเพื่อน (Co-op)</button>
+    <div id="name-prompt-screen" class="modal-overlay active">
+        <div class="modal-content">
+            <h2>ตั้งชื่อผู้ใช้</h2>
+            <input type="text" id="username-input" class="input-field" placeholder="ใส่ชื่อของคุณ..." maxlength="15">
+            <button id="save-username-btn" class="button">บันทึก</button>
+        </div>
     </div>
 
-    <div id="loading-screen" class="screen">
-        <div class="loader"></div>
+    <div id="main-menu" class="screen">
+        <h1 id="welcome-message">XO Game</h1>
+        <button id="play-bot-btn" class="button">เล่นกับบอท</button>
+        <button id="play-coop-btn" class="button">เล่นกับเพื่อน (Online)</button>
+        <button id="settings-btn" class="button secondary">ตั้งค่า</button>
+    </div>
+
+    <div id="settings-screen" class="screen">
+        <h2>ตั้งค่า</h2>
+        <input type="text" id="change-username-input" class="input-field" placeholder="เปลี่ยนชื่อ...">
+        <button id="save-settings-btn" class="button">บันทึก</button>
+        <button id="back-to-main-from-settings-btn" class="button secondary">กลับ</button>
     </div>
 
     <div id="coop-menu" class="screen">
-        <h2>โหมดเล่นกับเพื่อน</h2>
+        <h2>เล่นกับเพื่อน</h2>
         <button id="create-room-btn" class="button">สร้างห้อง</button>
-        <div class="input-group">
-            <input type="number" id="room-code-input" class="input-field" placeholder="ใส่รหัสห้อง 4 หลัก">
-        </div>
-        <button id="join-room-btn" class="button secondary">เข้าร่วมห้อง</button>
-        <button id="back-to-main-btn" class="button">กลับ</button>
+        <input type="text" id="room-code-input" class="input-field" placeholder="ใส่รหัสห้อง" style="width: 250px; text-transform: uppercase;">
+        <button id="join-room-btn" class="button">เข้าร่วมห้อง</button>
+        <button id="back-to-main-from-coop-btn" class="button secondary">กลับ</button>
     </div>
     
     <div id="room-lobby" class="screen">
-        <h2>รหัสห้อง:</h2>
-        <div id="room-code-display" class="room-code">----</div>
-        <div class="player-status">
-            ผู้เล่น 1: <span id="player1-status" class="ready-status">ยังไม่พร้อม</span>
-        </div>
-        <div class="player-status">
-            ผู้เล่น 2: <span id="player2-status" class="ready-status">ยังไม่พร้อม</span>
-        </div>
-        <p id="lobby-message" style="margin-bottom: 20px;">รอผู้เล่นอีกคน...</p>
+        <h2>รหัสห้อง: <span id="room-code-display" style="color: var(--x-color);"></span></h2>
+        <div id="player-list"></div>
+        <p id="lobby-status" style="margin: 20px 0;"></p>
         <button id="ready-btn" class="button">เตรียมพร้อม</button>
-        <button id="cancel-lobby-btn" class="button secondary">ยกเลิก</button>
+        <button id="leave-room-btn" class="button secondary">ออกจากห้อง</button>
     </div>
 
     <div id="game-screen" class="screen">
-        <div id="game-container">
-            <div id="turn-display"></div>
-            <div id="game-board"></div>
-            <div id="status-display"></div>
-            <button id="back-to-menu-game-btn" class="button" style="margin-top: 20px;">กลับเมนูหลัก</button>
-        </div>
+        <div id="turn-display"></div>
+        <div id="game-board"></div>
+        <button id="leave-game-btn" class="button secondary" style="margin-top: 20px;">ยอมแพ้/ออกจากเกม</button>
     </div>
     
-    <div id="game-over-modal" class="modal-content-wrapper">
+    <div id="game-over-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="game-over-message"></h2>
             <button id="play-again-btn" class="button">เล่นอีกครั้ง</button>
@@ -317,125 +174,212 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
+  authDomain: "xobybestry777.firebaseapp.com",
+  projectId: "xobybestry777",
+  storageBucket: "xobybestry777.firebasestorage.app",
+  messagingSenderId: "380539937989",
+  appId: "1:380539937989:web:771f477f3aefb963033cac",
+};
+        // Initialize Firebase
+        if (Object.keys(firebaseConfig).length > 1) { // Check if config is filled
+            firebase.initializeApp(firebaseConfig);
+            window.db = firebase.database();
+        } else {
+            console.error("กรุณาใส่ Firebase Config ของคุณในโค้ด");
+            alert("Firebase ไม่ได้ถูกตั้งค่า! โหมด Co-op จะไม่ทำงาน");
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
-            // DOM Elements
+            // --- State and Variables ---
+            let username = '';
+            let currentRoomId = null;
+            let playerSymbol = ''; // 'X' or 'O'
+            let roomUnsubscribe = null; // Function to stop listening to room updates
+
+            let gameState = Array(9).fill("");
+            let currentPlayer = "X";
+            let gameActive = false;
+            let gameMode = 'bot'; // 'bot' or 'coop'
+            let moveHistory = []; 
+
+            // --- DOM Elements ---
             const screens = {
+                namePrompt: document.getElementById('name-prompt-screen'),
                 mainMenu: document.getElementById('main-menu'),
-                loading: document.getElementById('loading-screen'),
+                settings: document.getElementById('settings-screen'),
                 coopMenu: document.getElementById('coop-menu'),
                 roomLobby: document.getElementById('room-lobby'),
                 game: document.getElementById('game-screen'),
             };
-            const buttons = {
-                playBot: document.getElementById('play-bot-btn'),
-                playCoop: document.getElementById('play-coop-btn'),
-                createRoom: document.getElementById('create-room-btn'),
-                joinRoom: document.getElementById('join-room-btn'),
-                backToMain: document.getElementById('back-to-main-btn'),
-                ready: document.getElementById('ready-btn'),
-                cancelLobby: document.getElementById('cancel-lobby-btn'),
-                backToMenuFromGame: document.getElementById('back-to-menu-game-btn'),
-                playAgain: document.getElementById('play-again-btn'),
-                modalBackToMenu: document.getElementById('modal-back-to-menu-btn'),
-            };
-            const gameElements = {
-                board: document.getElementById('game-board'),
-                turnDisplay: document.getElementById('turn-display'),
-                statusDisplay: document.getElementById('status-display'),
-            };
-            const coopElements = {
-                roomCodeInput: document.getElementById('room-code-input'),
-                roomCodeDisplay: document.getElementById('room-code-display'),
-                player1Status: document.getElementById('player1-status'),
-                player2Status: document.getElementById('player2-status'),
-                lobbyMessage: document.getElementById('lobby-message'),
-            };
-            const modalElements = {
-                container: document.getElementById('game-over-modal'),
-                message: document.getElementById('game-over-message'),
-            };
+            const gameOverModal = document.getElementById('game-over-modal');
 
-            // Game State
-            let gameState = ["", "", "", "", "", "", "", "", ""];
-            let currentPlayer;
-            let gameActive = false;
-            let gameMode = 'bot'; // 'bot' or 'coop'
-            let moveHistory = []; // For FIFO rule
-            const humanPlayer = 'X';
-            const botPlayer = 'O';
+            // --- Initialization ---
+            function init() {
+                loadUsername();
+                addEventListeners();
+            }
 
-            const winningConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-                [0, 4, 8], [2, 4, 6]  // Diagonals
-            ];
-
-            // --- Navigation ---
+            function loadUsername() {
+                const savedName = localStorage.getItem('xo_username');
+                if (savedName) {
+                    username = savedName;
+                    document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${username}`;
+                    screens.namePrompt.classList.remove('active');
+                    screens.mainMenu.classList.add('active');
+                } else {
+                    screens.namePrompt.classList.add('active');
+                }
+            }
+            
             function showScreen(screenName) {
-                Object.values(screens).forEach(screen => screen.classList.remove('active'));
-                screens[screenName].classList.add('active');
+                Object.values(screens).forEach(s => s.classList.remove('active'));
+                if(screens[screenName]) screens[screenName].classList.add('active');
+            }
+
+            // --- Event Listeners ---
+            function addEventListeners() {
+                // Username
+                document.getElementById('save-username-btn').onclick = () => {
+                    const nameInput = document.getElementById('username-input');
+                    if (nameInput.value.trim()) {
+                        username = nameInput.value.trim();
+                        localStorage.setItem('xo_username', username);
+                        loadUsername();
+                    }
+                };
+
+                // Main Menu
+                document.getElementById('play-bot-btn').onclick = () => {
+                    gameMode = 'bot';
+                    startGame();
+                };
+                document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
+                document.getElementById('settings-btn').onclick = () => {
+                    document.getElementById('change-username-input').value = username;
+                    showScreen('settings');
+                };
+
+                // Settings
+                document.getElementById('save-settings-btn').onclick = () => {
+                    const nameInput = document.getElementById('change-username-input');
+                    if (nameInput.value.trim()) {
+                        username = nameInput.value.trim();
+                        localStorage.setItem('xo_username', username);
+                        loadUsername();
+                        showScreen('mainMenu');
+                    }
+                };
+                document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
+
+                // Co-op Menu
+                document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
+                document.getElementById('create-room-btn').onclick = handleCreateRoom;
+                document.getElementById('join-room-btn').onclick = handleJoinRoom;
+
+                // Lobby
+                document.getElementById('ready-btn').onclick = handleReadyClick;
+                document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
+
+                // In-Game
+                 document.getElementById('leave-game-btn').onclick = () => {
+                    if (gameMode === 'coop') {
+                        handleLeaveRoom(); // Also handles leaving the game
+                    } else {
+                        showScreen('mainMenu');
+                    }
+                };
+
+                // Game Over Modal
+                document.getElementById('play-again-btn').onclick = () => {
+                    gameOverModal.classList.remove('active');
+                    if(gameMode === 'bot') startGame();
+                    else if (gameMode === 'coop') {
+                        // In coop, only host can restart. For simplicity, just go back to lobby
+                         window.db.ref(`rooms/${currentRoomId}/status`).set('lobby');
+                    }
+                };
+                 document.getElementById('modal-back-to-menu-btn').onclick = () => {
+                     gameOverModal.classList.remove('active');
+                     if(gameMode === 'coop' && currentRoomId) {
+                         handleLeaveRoom();
+                     }
+                     showScreen('mainMenu');
+                 };
             }
 
             // --- Game Logic ---
             function startGame() {
-                gameState = ["", "", "", "", "", "", "", "", ""];
-                
-                // *** NEW: Randomize starting player ***
+                gameState.fill("");
+                moveHistory = [];
+                gameActive = true;
                 currentPlayer = Math.random() < 0.5 ? "X" : "O";
                 
-                gameActive = true;
-                moveHistory = [];
-                gameElements.board.innerHTML = '';
+                const board = document.getElementById('game-board');
+                board.innerHTML = '';
                 for (let i = 0; i < 9; i++) {
                     const cell = document.createElement('div');
                     cell.classList.add('cell');
                     cell.dataset.index = i;
-                    cell.addEventListener('click', handleCellClick);
-                    gameElements.board.appendChild(cell);
+                    cell.onclick = handleCellClick;
+                    board.appendChild(cell);
                 }
-                updateTurnDisplay();
-                showScreen('game');
                 
-                // *** NEW: If bot starts, it makes the first move ***
-                if (gameMode === 'bot' && currentPlayer === botPlayer) {
+                showScreen('game');
+                updateTurnDisplay();
+
+                if (gameMode === 'bot' && currentPlayer === 'O') {
                     setTimeout(botMove, 500);
                 }
             }
 
             function handleCellClick(event) {
-                const clickedCell = event.target;
-                const clickedCellIndex = parseInt(clickedCell.dataset.index);
+                if (!gameActive) return;
+                const index = parseInt(event.target.dataset.index);
 
-                if (gameState[clickedCellIndex] !== "" || !gameActive) {
-                    return;
-                }
-                
-                // In bot mode, prevent human from playing on bot's turn
-                if (gameMode === 'bot' && currentPlayer === botPlayer) {
-                    return;
-                }
-                
-                handleMove(clickedCellIndex);
+                if (gameMode === 'bot') {
+                    if (gameState[index] !== "" || currentPlayer !== 'X') return;
+                    makeMove(index);
+                    if (gameActive) setTimeout(botMove, 500);
+                } else if (gameMode === 'coop') {
+                    if (currentPlayer !== playerSymbol || gameState[index] !== "") return;
+                    // In Co-op, we update Firebase, which then triggers update for all players
+                    const newGameState = [...gameState];
+                    const newMoveHistory = [...moveHistory];
 
-                if (gameActive && gameMode === 'bot' && currentPlayer === botPlayer) {
-                    setTimeout(botMove, 500);
+                     if (newMoveHistory.length >= 6) {
+                        const oldestMove = newMoveHistory.shift();
+                        newGameState[oldestMove.index] = "";
+                    }
+                    newGameState[index] = currentPlayer;
+                    newMoveHistory.push({ player: currentPlayer, index: index });
+                    
+                    const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    
+                    window.db.ref(`rooms/${currentRoomId}/game`).update({
+                        board: newGameState,
+                        history: newMoveHistory,
+                        turn: nextPlayer
+                    });
                 }
             }
             
-            function handleMove(index) {
+            function makeMove(index) {
                 if (gameState[index] !== "" || !gameActive) return;
 
-                // FIFO Rule Implementation
                 if (moveHistory.length >= 6) {
-                    const oldestMove = moveHistory.shift(); 
-                    gameState[oldestMove.index] = ""; 
-                    
-                    const cellToClear = gameElements.board.querySelector(`[data-index='${oldestMove.index}']`);
+                    const oldestMove = moveHistory.shift();
+                    gameState[oldestMove.index] = "";
+                    const cellToClear = document.querySelector(`.cell[data-index='${oldestMove.index}']`);
                     cellToClear.classList.add('fading');
                     setTimeout(() => {
                         cellToClear.innerText = "";
-                        cellToClear.classList.remove('x', 'o', 'fading');
+                        cellToClear.className = 'cell';
                     }, 500);
                 }
 
@@ -443,205 +387,233 @@
                 moveHistory.push({ player: currentPlayer, index: index });
                 
                 updateBoardUI();
-                if (checkWinner(gameState, currentPlayer)) {
-                    endGame(false);
-                    return;
-                }
-                switchPlayer();
+                checkResult();
             }
 
             function updateBoardUI() {
-                 const cells = gameElements.board.children;
-                 for (let i = 0; i < gameState.length; i++) {
-                     const cell = cells[i];
-                     if (gameState[i] && cell.innerText !== gameState[i]) {
-                         cell.innerText = gameState[i];
-                         cell.classList.remove('x', 'o'); // remove previous classes
-                         cell.classList.add(gameState[i].toLowerCase());
-                     }
-                 }
-            }
-
-            function switchPlayer() {
-                currentPlayer = currentPlayer === "X" ? "O" : "X";
-                updateTurnDisplay();
-            }
-            
-            function endGame(isDraw) {
-                gameActive = false;
-                modalElements.container.classList.add('active');
-                if (isDraw) {
-                    modalElements.message.innerText = "คุณทำได้ดีมาก!\nเสมอกัน!";
-                } else {
-                    modalElements.message.innerText = `ผู้เล่น ${currentPlayer} ชนะ!`;
-                }
+                gameState.forEach((value, i) => {
+                    const cell = document.querySelector(`.cell[data-index='${i}']`);
+                    if(cell) {
+                        cell.innerText = value;
+                        cell.className = 'cell'; // Reset classes
+                        if (value) cell.classList.add(value.toLowerCase());
+                    }
+                });
             }
 
             function updateTurnDisplay() {
-                gameElements.turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
+                const turnDisplay = document.getElementById('turn-display');
+                if (!gameActive) {
+                    turnDisplay.innerText = '';
+                    return;
+                }
+                if (gameMode === 'coop') {
+                     turnDisplay.innerText = (currentPlayer === playerSymbol) ? "ตาของคุณ!" : `รอตาของ ${currentPlayer}`;
+                } else {
+                     turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
+                }
             }
 
-            // --- Unbeatable Bot AI (Minimax) ---
+            function checkResult() {
+                let roundWon = false;
+                for (const condition of [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]) {
+                    const [a, b, c] = condition;
+                    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                        roundWon = true;
+                        break;
+                    }
+                }
+
+                if (roundWon) {
+                    endGame(false);
+                    return;
+                }
+                
+                if (gameMode === 'bot') {
+                     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                     updateTurnDisplay();
+                }
+            }
+
+            function endGame(isDraw) {
+                gameActive = false;
+                document.getElementById('game-over-message').innerText = isDraw ? "เสมอ!" : `ผู้เล่น ${currentPlayer} ชนะ!`;
+                gameOverModal.classList.add('active');
+            }
+
+            // --- Improved Bot AI ---
             function botMove() {
                 if (!gameActive) return;
-                const bestMove = findBestMove(gameState);
-                handleMove(bestMove.index);
-            }
-
-            function findBestMove(board) {
-                let bestVal = -Infinity;
-                let bestMove = {index: -1};
-
-                for (let i = 0; i < board.length; i++) {
-                    if (board[i] === "") {
-                        board[i] = botPlayer;
-                        let moveVal = minimax(board, 0, false);
-                        board[i] = ""; // backtrack
-                        if (moveVal > bestVal) {
-                            bestMove.index = i;
-                            bestVal = moveVal;
+                // Priority 1: Check if bot can win in the next move.
+                for (let i = 0; i < 9; i++) {
+                    if (gameState[i] === "") {
+                        let boardCopy = [...gameState];
+                        boardCopy[i] = 'O'; // Bot is 'O'
+                        if (checkWinner(boardCopy, 'O')) {
+                            makeMove(i);
+                            return;
                         }
                     }
                 }
-                return bestMove;
-            }
-
-            function minimax(board, depth, isMax) {
-                let score = evaluate(board);
-                if (score === 10) return score - depth;
-                if (score === -10) return score + depth;
-                if (!isMovesLeft(board)) return 0;
-
-                if (isMax) { // Bot's turn (Maximizer)
-                    let best = -Infinity;
-                    for (let i = 0; i < board.length; i++) {
-                        if (board[i] === "") {
-                            board[i] = botPlayer;
-                            best = Math.max(best, minimax(board, depth + 1, !isMax));
-                            board[i] = "";
+                
+                // Priority 2: Check if player can win, and block them.
+                for (let i = 0; i < 9; i++) {
+                    if (gameState[i] === "") {
+                        let boardCopy = [...gameState];
+                        boardCopy[i] = 'X'; // Player is 'X'
+                        if (checkWinner(boardCopy, 'X')) {
+                            makeMove(i);
+                            return;
                         }
                     }
-                    return best;
-                } else { // Human's turn (Minimizer)
-                    let best = Infinity;
-                    for (let i = 0; i < board.length; i++) {
-                        if (board[i] === "") {
-                            board[i] = humanPlayer;
-                            best = Math.min(best, minimax(board, depth + 1, !isMax));
-                            board[i] = "";
-                        }
-                    }
-                    return best;
                 }
-            }
-            
-            function evaluate(board) {
-                if (checkWinner(board, botPlayer)) return 10;
-                if (checkWinner(board, humanPlayer)) return -10;
-                return 0; // No winner yet
+
+                // Priority 3: Fallback to a simple strategy (center, corners, etc.)
+                const strategicMoves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+                for(const move of strategicMoves){
+                    if(gameState[move] === ""){
+                        makeMove(move);
+                        return;
+                    }
+                }
             }
 
             function checkWinner(board, player) {
-                for (let i = 0; i < winningConditions.length; i++) {
-                    const [a, b, c] = winningConditions[i];
-                    if (board[a] === player && board[b] === player && board[c] === player) {
-                        return true;
-                    }
+                for (const c of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]) {
+                    if (board[c[0]] === player && board[c[1]] === player && board[c[2]] === player) return true;
                 }
                 return false;
             }
 
-            function isMovesLeft(board) {
-                return board.some(cell => cell === "");
+            // --- Real-time Co-op (Firebase) ---
+            async function handleCreateRoom() {
+                const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+                currentRoomId = roomId;
+                playerSymbol = 'X'; // Creator is always X
+                
+                const roomData = {
+                    status: 'lobby', // lobby, playing, finished
+                    players: {
+                        [username]: { symbol: 'X', ready: false }
+                    },
+                    game: {
+                        board: Array(9).fill(""),
+                        history: [],
+                        turn: "X",
+                        winner: null
+                    }
+                };
+
+                await window.db.ref(`rooms/${roomId}`).set(roomData);
+                listenToRoomUpdates(roomId);
+                showScreen('roomLobby');
             }
 
-            // --- Event Listeners & Co-op Simulation ---
-            buttons.playBot.addEventListener('click', () => {
-                gameMode = 'bot';
-                showScreen('loading');
-                setTimeout(startGame, 1000);
-            });
+            async function handleJoinRoom() {
+                const roomId = document.getElementById('room-code-input').value.toUpperCase();
+                if (!roomId) return alert("กรุณาใส่รหัสห้อง");
+                
+                const roomRef = window.db.ref(`rooms/${roomId}`);
+                const snapshot = await roomRef.get();
 
-            buttons.playCoop.addEventListener('click', () => {
-                showScreen('coopMenu');
-            });
-            
-            buttons.backToMain.addEventListener('click', () => showScreen('mainMenu'));
-            buttons.cancelLobby.addEventListener('click', () => showScreen('coopMenu'));
-            buttons.backToMenuFromGame.addEventListener('click', () => showScreen('mainMenu'));
+                if (snapshot.exists()) {
+                    const roomData = snapshot.val();
+                    if (Object.keys(roomData.players).length >= 2) {
+                        return alert("ห้องเต็มแล้ว");
+                    }
+                     if (roomData.status !== 'lobby') {
+                        return alert("ไม่สามารถเข้าร่วมห้องที่กำลังเล่นอยู่ได้");
+                    }
 
-            let player1Ready = false;
-            let player2Ready = false; 
-
-            buttons.createRoom.addEventListener('click', () => {
-                const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-                coopElements.roomCodeDisplay.innerText = roomCode;
-                resetLobby();
-                showScreen('roomLobby');
-                setTimeout(() => { coopElements.lobbyMessage.innerText = "มีผู้เล่นเข้าร่วมแล้ว!"; }, 2000);
-            });
-            
-            buttons.joinRoom.addEventListener('click', () => {
-                const code = coopElements.roomCodeInput.value;
-                if (code.length === 4 && !isNaN(code)) {
-                    coopElements.roomCodeDisplay.innerText = code;
-                    resetLobby();
-                    coopElements.lobbyMessage.innerText = "เข้าร่วมห้องสำเร็จ!";
+                    currentRoomId = roomId;
+                    playerSymbol = 'O'; // Joiner is always O
+                    await roomRef.child(`players/${username}`).set({ symbol: 'O', ready: false });
+                    
+                    listenToRoomUpdates(roomId);
                     showScreen('roomLobby');
                 } else {
-                    alert("กรุณาใส่รหัสห้อง 4 หลักให้ถูกต้อง");
+                    alert("ไม่พบห้องนี้");
                 }
-            });
+            }
 
-            buttons.ready.addEventListener('click', () => {
-                player1Ready = !player1Ready;
-                updateLobbyStatus();
-                if (player1Ready && !player2Ready) {
-                    setTimeout(() => {
-                        player2Ready = true;
-                        updateLobbyStatus();
-                        checkIfBothReady();
-                    }, 1500);
-                }
-                 checkIfBothReady();
-            });
+            function listenToRoomUpdates(roomId) {
+                const roomRef = window.db.ref(`rooms/${roomId}`);
+                roomUnsubscribe = roomRef.on('value', (snapshot) => {
+                    if (!snapshot.exists()) {
+                        alert("ห้องถูกปิดแล้ว กลับสู่เมนูหลัก");
+                        handleLeaveRoom(false); // Don't write to DB if room is gone
+                        return;
+                    }
+
+                    const data = snapshot.val();
+                    updateLobbyUI(data.players);
+                    
+                    // Check if game starts
+                    if (data.status === 'playing' && screens.game.style.display === 'none') {
+                        gameActive = true;
+                        document.getElementById('play-again-btn').style.display = 'none'; // hide for coop
+                        showScreen('game');
+                    }
+                    
+                    if (data.status === 'lobby' && screens.roomLobby.style.display === 'none') {
+                        showScreen('roomLobby');
+                    }
+
+                    // Update game state if playing
+                    if (data.game) {
+                        gameState = data.game.board || Array(9).fill("");
+                        moveHistory = data.game.history || [];
+                        currentPlayer = data.game.turn;
+                        updateBoardUI();
+                        updateTurnDisplay();
+                         if (data.game.winner) {
+                            gameActive = false;
+                            document.getElementById('game-over-message').innerText = data.game.winner === 'draw' ? 'เสมอ!' : `ผู้เล่น ${data.game.winner} ชนะ!`;
+                            gameOverModal.classList.add('active');
+                        }
+                    }
+                });
+            }
             
-            function resetLobby() {
-                player1Ready = false;
-                player2Ready = false;
-                coopElements.lobbyMessage.innerText = "รอผู้เล่นอีกคน...";
-                updateLobbyStatus();
-            }
-
-            function updateLobbyStatus() {
-                coopElements.player1Status.innerText = player1Ready ? "พร้อมแล้ว" : "ยังไม่พร้อม";
-                coopElements.player1Status.classList.toggle('ready', player1Ready);
-                coopElements.player2Status.innerText = player2Ready ? "พร้อมแล้ว" : "ยังไม่พร้อม";
-                coopElements.player2Status.classList.toggle('ready', player2Ready);
-            }
-
-            function checkIfBothReady() {
-                if (player1Ready && player2Ready) {
-                    coopElements.lobbyMessage.innerText = "กำลังเริ่มเกม...";
-                    setTimeout(() => {
-                        gameMode = 'coop';
-                        startGame();
-                    }, 1000);
+             function updateLobbyUI(players) {
+                document.getElementById('room-code-display').innerText = currentRoomId;
+                const playerListDiv = document.getElementById('player-list');
+                playerListDiv.innerHTML = '';
+                let allReady = Object.keys(players).length === 2;
+                
+                for (const name in players) {
+                    const p = players[name];
+                    playerListDiv.innerHTML += `<div>${name} (${p.symbol}) - <span style="color:${p.ready ? 'green' : 'red'}">${p.ready ? 'พร้อม' : 'ยังไม่พร้อม'}</span></div>`;
+                    if(!p.ready) allReady = false;
+                }
+                
+                // Start game if all ready
+                if(allReady){
+                    window.db.ref(`rooms/${currentRoomId}/status`).set('playing');
                 }
             }
             
-            buttons.playAgain.addEventListener('click', () => {
-                modalElements.container.classList.remove('active');
-                startGame();
-            });
+            async function handleReadyClick() {
+                const readyRef = window.db.ref(`rooms/${currentRoomId}/players/${username}/ready`);
+                const snapshot = await readyRef.get();
+                await readyRef.set(!snapshot.val());
+            }
 
-            buttons.modalBackToMenu.addEventListener('click', () => {
-                modalElements.container.classList.remove('active');
+            function handleLeaveRoom(writeToDb = true) {
+                if (roomUnsubscribe) {
+                    window.db.ref(`rooms/${currentRoomId}`).off('value', roomUnsubscribe);
+                    roomUnsubscribe = null;
+                }
+                if (currentRoomId && writeToDb) {
+                     window.db.ref(`rooms/${currentRoomId}/players/${username}`).remove();
+                }
+                currentRoomId = null;
+                playerSymbol = '';
                 showScreen('mainMenu');
-            });
-
-            // Initial call
-            showScreen('mainMenu');
+            }
+            
+            // Start the app
+            init();
         });
     </script>
 </body>
