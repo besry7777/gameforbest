@@ -65,7 +65,7 @@
        <div class="modal-content bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center w-full max-w-md animate-fade-in-up">
            <h2 class="text-2xl font-bold mb-4">ตั้งชื่อผู้ใช้ของคุณ</h2>
            <p id="username-error" class="text-red-500 mb-2 h-5"></p>
-           <input type="text" id="username-input" class="input-field" placeholder="ใส่ชื่อที่ไม่ซ้ำใคร..." maxlength="15">
+           <input type="text" id="username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, ไม่เกิน 12 ตัว" maxlength="12">
            <button id="save-username-btn" class="button button-primary">บันทึก</button>
        </div>
    </div>
@@ -105,7 +105,7 @@
            
            <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
                <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
-               <input type="text" id="change-username-input" class="input-field" placeholder="เปลี่ยนชื่อ...">
+               <input type="text" id="change-username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, ไม่เกิน 12 ตัว" maxlength="12">
                 <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
                <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
            </div>
@@ -113,7 +113,7 @@
            <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
                <h3 class="text-xl font-semibold mb-2">จัดการเพื่อน</h3>
                <div class="mb-4">
-                   <label for="search-user-input" class="font-semibold">ค้นหาผู้เล่น:</label>
+                   <label for="search-user-input" class="font-semibold">ค้นหาผู้เล่น (ค้นหาเฉพาะชื่อ):</label>
                    <div class="flex mt-1">
                        <input type="text" id="search-user-input" class="input-field !mb-0 !rounded-r-none" placeholder="ค้นหาด้วยชื่อ...">
                        <button id="search-user-btn" class="bg-blue-500 text-white px-4 rounded-r-lg hover:bg-blue-600">ค้นหา</button>
@@ -165,10 +165,9 @@
    <script type="module">
        // Firebase Imports
        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-       import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+       import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, writeBatch, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-       // ========== START: CODE EDITED ==========
        // --- Firebase Config & Initialization ---
        const firebaseConfig = {
          apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
@@ -181,19 +180,16 @@
        };
 
        let app, auth, db;
-       // Check if config object is valid
        if (firebaseConfig && firebaseConfig.apiKey) {
            app = initializeApp(firebaseConfig);
            auth = getAuth(app);
            db = getFirestore(app);
        } else {
            console.error("Firebase config is missing or incomplete.");
-           showToast("Firebase ไม่ได้ถูกตั้งค่า! โหมดออนไลน์จะไม่ทำงาน", 'error');
        }
-       // ========== END: CODE EDITED ==========
 
        // --- App State ---
-       let currentUser = { uid: null, username: null, stats: { wins: 0, losses: 0 }, friends: {} };
+       let currentUser = { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, friends: {} };
        let currentRoomId = null;
        let playerSymbol = '';
        let roomUnsubscribe = null;
@@ -246,15 +242,14 @@
        
        // --- Initialization ---
        const init = async () => {
-           if (!db) return; // Stop if firebase isn't configured
+           if (!db) {
+                showToast("Firebase ไม่ได้ถูกตั้งค่า! โหมดออนไลน์จะไม่ทำงาน", 'error');
+                return;
+           }
            addEventListeners();
            
            try {
-               if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                   await signInWithCustomToken(auth, __initial_auth_token);
-               } else {
-                   await signInAnonymously(auth);
-               }
+               await signInAnonymously(auth);
            } catch (error) {
                console.error("Authentication failed:", error);
                showToast("การยืนยันตัวตนล้มเหลว", 'error');
@@ -265,23 +260,24 @@
                    currentUser.uid = user.uid;
                    await checkUserRegistration();
                } else {
-                   // Handle user being signed out
-                   currentUser = { uid: null, username: null, stats: { wins: 0, losses: 0 }, friends: {} };
+                   currentUser = { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, friends: {} };
                    if(userUnsubscribe) userUnsubscribe();
                    showModal('usernamePrompt', true);
                }
            });
        };
        
+        // ===== START: EDITED SECTION (checkUserRegistration) =====
        const checkUserRegistration = async () => {
            const userRef = doc(db, "users", currentUser.uid);
            const userSnap = await getDoc(userRef);
            if (userSnap.exists()) {
                const userData = userSnap.data();
                currentUser.username = userData.username;
+               currentUser.userTag = userData.userTag;
                currentUser.stats = userData.stats || { wins: 0, losses: 0 };
                currentUser.friends = userData.friends || {};
-               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}`;
+               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}#${currentUser.userTag}`;
                showModal('usernamePrompt', false);
                showScreen('mainMenu');
                listenToUserUpdates();
@@ -289,6 +285,7 @@
                showModal('usernamePrompt', true);
            }
        };
+        // ===== END: EDITED SECTION (checkUserRegistration) =====
        
        const listenToUserUpdates = () => {
             if(userUnsubscribe) userUnsubscribe();
@@ -296,20 +293,18 @@
                if (docSnap.exists()) {
                    const userData = docSnap.data();
                    currentUser.username = userData.username;
+                   currentUser.userTag = userData.userTag;
                    currentUser.stats = userData.stats || { wins: 0, losses: 0 };
                    currentUser.friends = userData.friends || {};
-                   updateFriendsUI(); // Update UI whenever friend data changes
+                   updateFriendsUI();
                }
             });
        }
 
        // --- Event Listeners ---
        function addEventListeners() {
-           // Username Registration
            document.getElementById('save-username-btn').onclick = handleSaveUsername;
            document.getElementById('save-settings-btn').onclick = () => handleSaveUsername(true);
-
-           // Main Menu
            document.getElementById('play-bot-btn').onclick = () => { gameMode = 'bot'; startGame(); };
            document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
            document.getElementById('settings-btn').onclick = () => {
@@ -317,43 +312,28 @@
                updateFriendsUI();
                showScreen('settings');
            };
-           
-           // Settings
            document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
            document.getElementById('search-user-btn').onclick = handleSearchUsers;
-           
-           // Coop Menu
            document.getElementById('create-room-btn').onclick = handleCreateRoom;
            document.getElementById('join-room-btn').onclick = handleJoinRoom;
            document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
-           
-           // Lobby
            document.getElementById('ready-btn').onclick = handleReadyClick;
            document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
            document.getElementById('copy-room-code-btn').onclick = () => {
                navigator.clipboard.writeText(currentRoomId);
                showToast('คัดลอกรหัสห้องแล้ว!');
            };
-
-           // In-Game
            document.getElementById('leave-game-btn').onclick = () => {
                if (gameMode === 'coop') handleLeaveRoom();
                else showScreen('mainMenu');
            };
-
-           // Modals
            document.getElementById('play-again-btn').onclick = () => {
                showModal('gameOver', false);
                if (gameMode === 'bot') startGame();
                else if (gameMode === 'coop') {
-                   // Only host can restart. A better approach is resetting the game state in Firestore.
                    const roomRef = doc(db, "rooms", currentRoomId);
                    updateDoc(roomRef, {
-                       "game.board": Array(9).fill(""),
-                       "game.history": [],
-                       "game.turn": "X",
-                       "game.winner": null,
-                       "status": "lobby"
+                       "game.board": Array(9).fill(""), "game.history": [], "game.turn": "X", "game.winner": null, "status": "lobby"
                    }).then(() => {
                        Object.keys(currentUserInRoom.players).forEach(uid => {
                            updateDoc(roomRef, {[`players.${uid}.ready`]: false});
@@ -367,8 +347,6 @@
                 showScreen('mainMenu');
            };
            document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
-           
-            // Context Menu
            document.getElementById('view-profile-ctx-btn').onclick = async (e) => {
                const targetUid = e.target.dataset.uid;
                if (targetUid) await viewProfile(targetUid);
@@ -381,42 +359,41 @@
            });
        }
        
-       // --- User and Friends Logic ---
+       // ===== START: EDITED SECTION (handleSaveUsername) =====
        async function handleSaveUsername(isUpdate = false) {
            const inputId = isUpdate ? 'change-username-input' : 'username-input';
            const errorId = isUpdate ? 'change-username-error' : 'username-error';
            const input = document.getElementById(inputId);
            const errorP = document.getElementById(errorId);
            const newUsername = input.value.trim();
+           const usernameRegex = /^[a-zA-Z0-9]+$/;
 
            errorP.textContent = '';
-           if (newUsername.length < 3 || newUsername.length > 15) {
-               errorP.textContent = 'ชื่อต้องมี 3-15 ตัวอักษร';
+           if (newUsername.length < 3 || newUsername.length > 12) {
+               errorP.textContent = 'ชื่อต้องมี 3-12 ตัวอักษร';
                return;
            }
-            if (newUsername === currentUser.username) { // No change
-               if (isUpdate) showScreen('mainMenu');
+           if (!usernameRegex.test(newUsername)) {
+               errorP.textContent = 'ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น';
                return;
            }
-
-           // Check for uniqueness
-           const q = query(collection(db, "users"), where("username", "==", newUsername));
-           const querySnapshot = await getDocs(q);
-           if (!querySnapshot.empty) {
-               errorP.textContent = 'ชื่อนี้ถูกใช้แล้ว';
+           if (isUpdate && newUsername === currentUser.username) {
+               showScreen('mainMenu');
                return;
            }
 
            const userRef = doc(db, "users", currentUser.uid);
-           if(isUpdate) {
+           if (isUpdate) {
                await updateDoc(userRef, { username: newUsername });
                currentUser.username = newUsername;
-               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}`;
+               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}#${currentUser.userTag}`;
                showToast('เปลี่ยนชื่อสำเร็จ!');
                showScreen('mainMenu');
            } else {
+               const userTag = currentUser.uid.substring(0, 5); // สร้าง Tag 5 ตัวจาก UID
                await setDoc(userRef, {
                    username: newUsername,
+                   userTag: userTag,
                    stats: { wins: 0, losses: 0 },
                    friends: {},
                    createdAt: serverTimestamp()
@@ -424,14 +401,16 @@
                await checkUserRegistration();
            }
        }
-       
+       // ===== END: EDITED SECTION (handleSaveUsername) =====
+
+       // ===== START: EDITED SECTION (handleSearchUsers) =====
        async function handleSearchUsers() {
            const searchTerm = document.getElementById('search-user-input').value.trim();
            const resultsDiv = document.getElementById('search-results');
            resultsDiv.innerHTML = 'กำลังค้นหา...';
 
-           if (searchTerm.length < 3) {
-               resultsDiv.innerHTML = '<p class="text-gray-500">กรุณาพิมพ์อย่างน้อย 3 ตัวอักษร</p>';
+           if (searchTerm.length < 1) {
+               resultsDiv.innerHTML = '<p class="text-gray-500">กรุณาพิมพ์ชื่อที่ต้องการค้นหา</p>';
                return;
            }
 
@@ -449,7 +428,7 @@
 
                    const userDiv = document.createElement('div');
                    userDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-md';
-                   userDiv.innerHTML = `<span>${user.username}</span>`;
+                   userDiv.innerHTML = `<span>${user.username}#${user.userTag}</span>`; // แสดงชื่อพร้อม Tag
                    
                    const friendStatus = currentUser.friends[uid];
                    let buttonHtml = '';
@@ -458,55 +437,42 @@
                    } else if (friendStatus === 'pending_sent') {
                        buttonHtml = '<span class="text-gray-500">ส่งคำขอแล้ว</span>';
                    } else if (friendStatus === 'pending_received') {
-                        buttonHtml = `<button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button>`;
+                       buttonHtml = `<button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button>`;
                    } else {
-                       buttonHtml = `<button data-uid="${uid}" data-username="${user.username}" class="add-friend-btn button button-primary !py-1 !px-3 !my-0 !text-sm">เพิ่มเพื่อน</button>`;
+                       buttonHtml = `<button data-uid="${uid}" class="add-friend-btn button button-primary !py-1 !px-3 !my-0 !text-sm">เพิ่มเพื่อน</button>`;
                    }
                    userDiv.innerHTML += buttonHtml;
                    resultsDiv.appendChild(userDiv);
                });
            }
        }
+       // ===== END: EDITED SECTION (handleSearchUsers) =====
        
        document.getElementById('search-results').addEventListener('click', e => {
-           if(e.target.classList.contains('add-friend-btn')) {
-               const targetUid = e.target.dataset.uid;
-               sendFriendRequest(targetUid);
-           }
-           if(e.target.classList.contains('accept-friend-btn')) {
-                const targetUid = e.target.dataset.uid;
-               acceptFriendRequest(targetUid);
-           }
+           if(e.target.classList.contains('add-friend-btn')) sendFriendRequest(e.target.dataset.uid);
+           if(e.target.classList.contains('accept-friend-btn')) acceptFriendRequest(e.target.dataset.uid);
        });
        document.getElementById('friend-requests-list').addEventListener('click', e => {
-           if(e.target.classList.contains('accept-friend-btn')) {
-                const targetUid = e.target.dataset.uid;
-               acceptFriendRequest(targetUid);
-           }
+           if(e.target.classList.contains('accept-friend-btn')) acceptFriendRequest(e.target.dataset.uid);
        });
-
 
        async function sendFriendRequest(targetUid) {
            const batch = writeBatch(db);
            const currentUserRef = doc(db, "users", currentUser.uid);
            const targetUserRef = doc(db, "users", targetUid);
-
            batch.update(currentUserRef, { [`friends.${targetUid}`]: 'pending_sent' });
            batch.update(targetUserRef, { [`friends.${currentUser.uid}`]: 'pending_received' });
-
            await batch.commit();
            showToast('ส่งคำขอเป็นเพื่อนแล้ว!');
-           handleSearchUsers(); // Refresh search results
+           handleSearchUsers();
        }
 
        async function acceptFriendRequest(targetUid) {
             const batch = writeBatch(db);
            const currentUserRef = doc(db, "users", currentUser.uid);
            const targetUserRef = doc(db, "users", targetUid);
-
            batch.update(currentUserRef, { [`friends.${targetUid}`]: 'accepted' });
            batch.update(targetUserRef, { [`friends.${currentUser.uid}`]: 'accepted' });
-
            await batch.commit();
            showToast('รับเป็นเพื่อนแล้ว!');
        }
@@ -516,54 +482,46 @@
            const friendsList = document.getElementById('friends-list');
            requestsList.innerHTML = '';
            friendsList.innerHTML = '';
-           
-           let hasRequests = false;
-           let hasFriends = false;
+           let hasRequests = false, hasFriends = false;
 
-           for (const uid in currentUser.friends) {
-               const status = currentUser.friends[uid];
-               if (status === 'pending_received') {
-                   hasRequests = true;
-                    // We need to get username for this UID
-                   getDoc(doc(db, "users", uid)).then(docSnap => {
-                       if (docSnap.exists()) {
-                           const user = docSnap.data();
-                           requestsList.innerHTML += `<div class="flex justify-between items-center p-2"><span>${user.username}</span><button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับเป็นเพื่อน</button></div>`;
-                       }
-                   });
-               } else if (status === 'accepted') {
-                   hasFriends = true;
-                    getDoc(doc(db, "users", uid)).then(docSnap => {
-                       if (docSnap.exists()) {
-                           const user = docSnap.data();
-                           friendsList.innerHTML += `<div class="p-2">${user.username}</div>`;
-                       }
-                   });
-               }
-           }
+           Object.entries(currentUser.friends).forEach(([uid, status]) => {
+                getDoc(doc(db, "users", uid)).then(docSnap => {
+                    if (docSnap.exists()) {
+                        const user = docSnap.data();
+                        const displayName = `${user.username}#${user.userTag}`;
+                        if (status === 'pending_received') {
+                            hasRequests = true;
+                            requestsList.innerHTML += `<div class="flex justify-between items-center p-2"><span>${displayName}</span><button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับเป็นเพื่อน</button></div>`;
+                        } else if (status === 'accepted') {
+                            hasFriends = true;
+                            friendsList.innerHTML += `<div class="p-2">${displayName}</div>`;
+                        }
+                    }
+                });
+           });
 
-           if (!hasRequests) requestsList.innerHTML = '<p class="text-gray-500">ไม่มีคำขอ</p>';
-           if (!hasFriends) friendsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
+           setTimeout(() => { // หน่วงเวลาเล็กน้อยเพื่อให้ getDoc ทำงานเสร็จ
+              if (!hasRequests) requestsList.innerHTML = '<p class="text-gray-500">ไม่มีคำขอ</p>';
+              if (!hasFriends) friendsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
+           }, 500);
        }
 
        async function viewProfile(uid) {
            const userSnap = await getDoc(doc(db, 'users', uid));
            if (userSnap.exists()) {
                const user = userSnap.data();
-               document.getElementById('profile-username').textContent = user.username;
+               document.getElementById('profile-username').textContent = `${user.username}#${user.userTag}`;
                document.getElementById('profile-wins').textContent = user.stats?.wins || 0;
                document.getElementById('profile-losses').textContent = user.stats?.losses || 0;
                showModal('profile', true);
            }
        }
        
-       // --- Game Logic ---
        function startGame() {
            gameState.fill("");
            moveHistory = [];
            gameActive = true;
            currentPlayer = "X";
-           
            const board = document.getElementById('game-board');
            board.innerHTML = '';
            for (let i = 0; i < 9; i++) {
@@ -573,13 +531,9 @@
                cell.onclick = handleCellClick;
                board.appendChild(cell);
            }
-           
            showScreen('game');
            updateTurnDisplay();
-
-           if (gameMode === 'bot' && currentPlayer === 'O') {
-               setTimeout(botMove, 500);
-           }
+           if (gameMode === 'bot' && currentPlayer === 'O') setTimeout(botMove, 500);
        }
 
        function handleCellClick(event) {
@@ -592,59 +546,42 @@
                if (gameActive) setTimeout(botMove, 500);
            } else if (gameMode === 'coop') {
                if (currentPlayer !== playerSymbol || gameState[index] !== "") return;
-               
                const roomRef = doc(db, "rooms", currentRoomId);
                runTransaction(db, async (transaction) => {
                    const roomDoc = await transaction.get(roomRef);
                    if (!roomDoc.exists()) throw "Room does not exist!";
-
                    const roomData = roomDoc.data();
                    const newBoard = [...roomData.game.board];
-                   const newHistory = [...(roomData.game.history || [])];
-
-                   if (newBoard[index] !== "") return; // Cell already taken
-
+                   let newHistory = [...(roomData.game.history || [])];
+                   if (newBoard[index] !== "") return;
                    if (newHistory.length >= 6) {
                        const oldestMove = newHistory.shift();
                        newBoard[oldestMove.index] = "";
                    }
                    newBoard[index] = currentPlayer;
                    newHistory.push({ player: currentPlayer, index: index });
-
-                   const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                   
-                   transaction.update(roomRef, {
-                       "game.board": newBoard,
-                       "game.history": newHistory,
-                       "game.turn": nextPlayer
-                   });
+                   transaction.update(roomRef, { "game.board": newBoard, "game.history": newHistory, "game.turn": currentPlayer === 'X' ? 'O' : 'X' });
                });
            }
        }
        
        function makeMove(index) {
            if (gameState[index] !== "" || !gameActive) return;
-
            if (moveHistory.length >= 6) {
                const oldestMove = moveHistory.shift();
                gameState[oldestMove.index] = "";
                const cellToClear = document.querySelector(`.cell[data-index='${oldestMove.index}']`);
                if (cellToClear) {
                    cellToClear.classList.add('fading');
-                   setTimeout(() => {
-                       cellToClear.innerText = "";
-                       cellToClear.className = 'cell';
-                   }, 500);
+                   setTimeout(() => { cellToClear.innerText = ""; cellToClear.className = 'cell'; }, 500);
                }
            }
            gameState[index] = currentPlayer;
            moveHistory.push({ player: currentPlayer, index: index });
            updateBoardUI();
-           
            const winner = checkWinner(gameState);
-           if (winner) {
-               endGame(false, winner);
-           } else {
+           if (winner) endGame(false, winner);
+           else {
                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                updateTurnDisplay();
            }
@@ -655,34 +592,25 @@
                const cell = document.querySelector(`.cell[data-index='${i}']`);
                if (cell && cell.innerText !== value) {
                    cell.innerText = value;
-                   cell.className = 'cell'; // Reset classes
-                   if (value) cell.classList.add(value.toLowerCase());
+                   cell.className = 'cell ' + (value ? value.toLowerCase() : '');
                }
            });
        }
        
        function updateTurnDisplay() {
            const turnDisplay = document.getElementById('turn-display');
-           if (!gameActive) {
-               turnDisplay.innerText = '';
-               return;
-           }
-           if (gameMode === 'coop') {
-                turnDisplay.innerText = (currentPlayer === playerSymbol) ? "ตาของคุณ!" : `รอตาของ ${currentPlayer}`;
-           } else {
-                turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
-           }
+           if (!gameActive) { turnDisplay.innerText = ''; return; }
+           if (gameMode === 'coop') turnDisplay.innerText = (currentPlayer === playerSymbol) ? "ตาของคุณ!" : `รอตาของ ${currentPlayer}`;
+           else turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
        }
 
        function checkWinner(board) {
-           const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+           const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
            for (const line of lines) {
                const [a, b, c] = line;
-               if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                   return board[a]; // Returns 'X' or 'O'
-               }
+               if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
            }
-           return null; // No winner
+           return null;
        }
 
        function endGame(isDraw, winner = null) {
@@ -692,9 +620,7 @@
        }
 
        function botMove() {
-           if (!gameActive) return;
-           // Bot AI logic... (same as original, but uses local checkWinner)
-           makeMove(getBestBotMove());
+           if (!gameActive) return; makeMove(getBestBotMove());
        }
        
        function getBestBotMove() {
@@ -702,24 +628,14 @@
             for (let i = 0; i < 9; i++) { if (gameState[i] === "") { let b = [...gameState]; b[i] = 'X'; if (checkWinner(b)) return i; } }
             const moves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
             for(const m of moves){ if(gameState[m] === "") return m; }
-            return gameState.findIndex(s => s === ""); // fallback
+            return gameState.findIndex(s => s === "");
        }
 
-       // --- Real-time Co-op (Firestore) ---
        async function handleCreateRoom() {
            const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
            currentRoomId = roomId;
            playerSymbol = 'X';
-           
-           const roomData = {
-               status: 'lobby',
-               players: {
-                   [currentUser.uid]: { username: currentUser.username, symbol: 'X', ready: false }
-               },
-               game: { board: Array(9).fill(""), history: [], turn: "X", winner: null },
-               createdAt: serverTimestamp()
-           };
-
+           const roomData = { status: 'lobby', players: { [currentUser.uid]: { username: currentUser.username, userTag: currentUser.userTag, symbol: 'X', ready: false } }, game: { board: Array(9).fill(""), history: [], turn: "X", winner: null }, createdAt: serverTimestamp() };
            await setDoc(doc(db, "rooms", roomId), roomData);
            listenToRoomUpdates(roomId);
            showScreen('roomLobby');
@@ -728,26 +644,18 @@
        async function handleJoinRoom() {
            const roomId = document.getElementById('room-code-input').value.trim().toUpperCase();
            if (!roomId) return showToast("กรุณาใส่รหัสห้อง", 'error');
-           
            const roomRef = doc(db, "rooms", roomId);
            const roomSnap = await getDoc(roomRef);
-
            if (roomSnap.exists()) {
                const roomData = roomSnap.data();
                if (Object.keys(roomData.players).length >= 2) return showToast("ห้องเต็มแล้ว", 'error');
                if (roomData.status !== 'lobby') return showToast("เกมเริ่มไปแล้ว", 'error');
-               
                currentRoomId = roomId;
                playerSymbol = 'O';
-               await updateDoc(roomRef, {
-                   [`players.${currentUser.uid}`]: { username: currentUser.username, symbol: 'O', ready: false }
-               });
-               
+               await updateDoc(roomRef, { [`players.${currentUser.uid}`]: { username: currentUser.username, userTag: currentUser.userTag, symbol: 'O', ready: false } });
                listenToRoomUpdates(roomId);
                showScreen('roomLobby');
-           } else {
-               showToast("ไม่พบห้องนี้", 'error');
-           }
+           } else showToast("ไม่พบห้องนี้", 'error');
        }
 
        let currentUserInRoom = {};
@@ -760,22 +668,18 @@
                    cleanupAfterRoom();
                    return;
                }
-
                const data = docSnap.data();
                currentUserInRoom = data;
                updateLobbyUI(data);
 
-               if (data.status === 'playing' && !screens.game.classList.contains('active')) {
+               if (data.status === 'playing' && screens.game.style.display === 'none') {
                    gameActive = true;
                    document.getElementById('play-again-btn').style.display = (Object.keys(data.players)[0] === currentUser.uid) ? 'block' : 'none';
-                   startGame(); // Initializes the board visually
+                   startGame();
                    showScreen('game');
                }
-                if (data.status === 'lobby' && !screens.roomLobby.classList.contains('active')) {
-                   showScreen('roomLobby');
-                }
+                if (data.status === 'lobby' && screens.roomLobby.style.display === 'none') showScreen('roomLobby');
 
-               // Update game state
                if (data.game) {
                    gameState = data.game.board || Array(9).fill("");
                    moveHistory = data.game.history || [];
@@ -786,43 +690,36 @@
                    if(gameActive) {
                        const winner = checkWinner(gameState);
                        if (winner) {
-                           gameActive = false; // Prevent multiple triggers
+                           gameActive = false;
                            const winnerUID = Object.keys(data.players).find(uid => data.players[uid].symbol === winner);
                            const loserUID = Object.keys(data.players).find(uid => data.players[uid].symbol !== winner);
-                           // Only host updates stats to prevent double counting
-                           if (Object.keys(data.players)[0] === currentUser.uid) {
-                               updatePlayerStats(winnerUID, loserUID);
-                           }
+                           if (Object.keys(data.players)[0] === currentUser.uid) updatePlayerStats(winnerUID, loserUID);
                            updateDoc(roomRef, { "game.winner": winner, status: "finished" });
                        }
                    }
-                   if (data.status === 'finished' && data.game.winner) {
-                       endGame(false, data.game.winner);
-                   }
+                   if (data.status === 'finished' && data.game.winner) endGame(false, data.game.winner);
                }
            });
        }
        
+       // ===== START: EDITED SECTION (updateLobbyUI) =====
         function updateLobbyUI(data) {
            document.getElementById('room-code-display').innerText = currentRoomId;
            const playerListDiv = document.getElementById('player-list');
            playerListDiv.innerHTML = '';
-           
            let allReady = Object.keys(data.players).length === 2;
            Object.entries(data.players).forEach(([uid, p]) => {
+               const displayName = `${p.username}#${p.userTag}`;
                const playerDiv = document.createElement('div');
                playerDiv.dataset.uid = uid;
                playerDiv.className = 'player-name-lobby cursor-pointer';
-               playerDiv.innerHTML = `<span>${p.username} (${p.symbol}) - <span class="${p.ready ? 'text-green-500' : 'text-red-500'}">${p.ready ? 'พร้อม' : 'ยังไม่พร้อม'}</span></span>`;
+               playerDiv.innerHTML = `<span>${displayName} (${p.symbol}) - <span class="${p.ready ? 'text-green-500' : 'text-red-500'}">${p.ready ? 'พร้อม' : 'ยังไม่พร้อม'}</span></span>`;
                playerListDiv.appendChild(playerDiv);
                if (!p.ready) allReady = false;
            });
-
-           // Start game if all ready
-           if (allReady && data.status === 'lobby') {
-               updateDoc(doc(db, "rooms", currentRoomId), { status: 'playing' });
-           }
+           if (allReady && data.status === 'lobby') updateDoc(doc(db, "rooms", currentRoomId), { status: 'playing' });
        }
+       // ===== END: EDITED SECTION (updateLobbyUI) =====
        
        document.getElementById('player-list').addEventListener('click', (e) => {
             const playerDiv = e.target.closest('.player-name-lobby');
@@ -839,9 +736,7 @@
        
        async function handleReadyClick() {
            const currentReadyStatus = currentUserInRoom.players[currentUser.uid]?.ready || false;
-           await updateDoc(doc(db, "rooms", currentRoomId), {
-               [`players.${currentUser.uid}.ready`]: !currentReadyStatus
-           });
+           await updateDoc(doc(db, "rooms", currentRoomId), { [`players.${currentUser.uid}.ready`]: !currentReadyStatus });
        }
 
        async function handleLeaveRoom() {
@@ -849,14 +744,9 @@
                const roomRef = doc(db, "rooms", currentRoomId);
                const roomSnap = await getDoc(roomRef);
                if (roomSnap.exists()) {
-                   const roomData = roomSnap.data();
-                   const players = roomData.players;
+                   const players = roomSnap.data().players;
                    delete players[currentUser.uid];
-                   if(Object.keys(players).length === 0) {
-                       // If last player, delete room is better but for simplicity we just leave it.
-                   } else {
-                        await updateDoc(roomRef, { players: players });
-                   }
+                   if(Object.keys(players).length > 0) await updateDoc(roomRef, { players });
                }
            }
            cleanupAfterRoom();
@@ -874,22 +764,16 @@
            if (!winnerUID || !loserUID) return;
            const winnerRef = doc(db, "users", winnerUID);
            const loserRef = doc(db, "users", loserUID);
-
-           await runTransaction(db, async (transaction) => {
-               const winnerDoc = await transaction.get(winnerRef);
-               const loserDoc = await transaction.get(loserRef);
+           await runTransaction(db, async (t) => {
+               const winnerDoc = await t.get(winnerRef);
+               const loserDoc = await t.get(loserRef);
                if(!winnerDoc.exists() || !loserDoc.exists()) throw "User doc missing";
-
-               const newWinnerWins = (winnerDoc.data().stats.wins || 0) + 1;
-               const newLoserLosses = (loserDoc.data().stats.losses || 0) + 1;
-               
-               transaction.update(winnerRef, { "stats.wins": newWinnerWins });
-               transaction.update(loserRef, { "stats.losses": newLoserLosses });
+               t.update(winnerRef, { "stats.wins": (winnerDoc.data().stats.wins || 0) + 1 });
+               t.update(loserRef, { "stats.losses": (loserDoc.data().stats.losses || 0) + 1 });
            });
        }
        
-       // Start the app
-       init();
+       init(); // Start the app
    </script>
 </body>
 </html>
