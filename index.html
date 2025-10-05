@@ -214,7 +214,6 @@
             contextMenu: document.getElementById('context-menu'),
             gameBoard: document.getElementById('game-board'),
             turnDisplay: document.getElementById('turn-display'),
-            // Add other frequently used elements if needed
         };
 
         // --- Utility Functions ---
@@ -253,7 +252,6 @@
                     AppState.currentUser.uid = user.uid;
                     await checkUserRegistration();
                 } else {
-                    // Reset state if user signs out
                     AppState.currentUser = { uid: null, username: null, userTag: null, stats: { wins: 0, losses: 0 }, friends: {} };
                     if(AppState.listeners.user) AppState.listeners.user();
                     showModal('usernamePrompt', true);
@@ -278,7 +276,7 @@
         };
        
         const listenToUserUpdates = () => {
-            if(AppState.listeners.user) AppState.listeners.user(); // Unsubscribe from old listener
+            if(AppState.listeners.user) AppState.listeners.user();
             const userRef = doc(db, "users", AppState.currentUser.uid);
             AppState.listeners.user = onSnapshot(userRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -321,18 +319,27 @@
                     showScreen('mainMenu');
                 } else {
                     const userTag = AppState.currentUser.uid.substring(0, CONST.USER_TAG_LENGTH);
-                    await setDoc(userRef, {
+                    const newUserData = {
                         username: newUsername,
                         userTag: userTag,
                         stats: { wins: 0, losses: 0 },
                         friends: {},
                         createdAt: serverTimestamp()
-                    });
-                    await checkUserRegistration();
+                    };
+                    await setDoc(userRef, newUserData);
+
+                    AppState.currentUser = { ...AppState.currentUser, ...newUserData };
+                    document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${newUsername}#${userTag}`;
+                    
+                    showModal('usernamePrompt', false);
+                    showScreen('mainMenu');
+                    
+                    listenToUserUpdates();
                 }
             } catch (error) {
                 console.error("Error saving username: ", error);
                 showToast("เกิดข้อผิดพลาดในการบันทึกชื่อ", 'error');
+                errorP.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
             }
         }
 
@@ -386,7 +393,7 @@
             batch.update(doc(db, "users", targetUid), { [`friends.${AppState.currentUser.uid}`]: 'pending_received' });
             await batch.commit();
             showToast('ส่งคำขอเป็นเพื่อนแล้ว!');
-            handleSearchUsers(); // Refresh search results to show "Pending"
+            handleSearchUsers();
         }
 
         async function acceptFriendRequest(targetUid) {
@@ -408,7 +415,6 @@
                 return;
             }
 
-            // Fetch all friend profiles in parallel for better performance
             const friendPromises = friendUIDs.map(uid => getDoc(doc(db, "users", uid)));
             const friendDocs = await Promise.all(friendPromises);
 
@@ -483,9 +489,8 @@
                     let newBoard = [...roomData.game.board];
                     let newHistory = [...(roomData.game.history || [])];
 
-                    if (newBoard[index] !== "") return; // Cell already taken
+                    if (newBoard[index] !== "") return;
                     
-                    // "Super XO" logic: remove oldest piece if board is full
                     if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
                         const oldestMove = newHistory.shift();
                         newBoard[oldestMove.index] = "";
@@ -577,14 +582,11 @@
         
         function getBestBotMove() {
             const board = AppState.game.state;
-            // 1. Win if possible
             for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'O'; if (checkWinner(b)) return i; } }
-            // 2. Block if necessary
             for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'X'; if (checkWinner(b)) return i; } }
-            // 3. Take strategic positions
-            const moves = [4, 0, 2, 6, 8, 1, 3, 5, 7]; // Center, corners, then sides
+            const moves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
             for(const m of moves){ if(board[m] === "") return m; }
-            return board.findIndex(s => s === ""); // Fallback
+            return board.findIndex(s => s === "");
         }
 
         // --- Online (Co-op) Logic ---
@@ -630,7 +632,7 @@
         }
 
         function listenToRoomUpdates(roomId) {
-            if (AppState.listeners.room) AppState.listeners.room(); // Unsubscribe from previous room
+            if (AppState.listeners.room) AppState.listeners.room();
             const roomRef = doc(db, "rooms", roomId);
             AppState.listeners.room = onSnapshot(roomRef, (docSnap) => {
                 if (!docSnap.exists()) {
@@ -643,19 +645,15 @@
                 
                 updateLobbyUI(roomData);
 
-                // Transition from Lobby to Game
                 if (roomData.status === 'playing' && DOM.screens.game.style.display === 'none') {
                     AppState.game.mode = 'coop';
-                    // The host is responsible for enabling the 'play again' button
                     document.getElementById('play-again-btn').style.display = (Object.keys(roomData.players)[0] === AppState.currentUser.uid) ? 'block' : 'none';
-                    startGame(); // Initializes the board
+                    startGame();
                 }
-                // Transition from Game back to Lobby (e.g., after a game ends)
                 if (roomData.status === 'lobby' && DOM.screens.roomLobby.style.display === 'none') {
                     showScreen('roomLobby');
                 }
 
-                // Sync game state from Firestore
                 if (roomData.game) {
                     AppState.game.state = roomData.game.board || Array(9).fill("");
                     AppState.game.history = roomData.game.history || [];
@@ -669,7 +667,6 @@
                             AppState.game.isActive = false;
                             const winnerUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol === winner);
                             const loserUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol !== winner);
-                            // Only one player (the host) should update stats to avoid race conditions
                             if (Object.keys(roomData.players)[0] === AppState.currentUser.uid) {
                                 updatePlayerStats(winnerUID, loserUID);
                             }
@@ -703,7 +700,6 @@
            lobbyStatus.textContent = allReady ? "กำลังเริ่มเกม..." : (Object.keys(data.players).length === 2 ? "รอผู้เล่นกดพร้อม" : "รอผู้เล่นอีกคน...");
 
            if (allReady && data.status === 'lobby') {
-                // Host starts the game
                 if (Object.keys(data.players)[0] === AppState.currentUser.uid) {
                     updateDoc(doc(db, "rooms", AppState.currentRoom.id), { status: 'playing' });
                 }
@@ -720,7 +716,6 @@
             if (!AppState.currentRoom.id) return;
             
             const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-            // Use transaction to safely read and write
             await runTransaction(db, async (transaction) => {
                 const roomDoc = await transaction.get(roomRef);
                 if (!roomDoc.exists()) return;
@@ -732,7 +727,6 @@
                 if (Object.keys(players).length > 0) {
                     transaction.update(roomRef, { players });
                 } else {
-                    // Delete the room if it's empty
                     transaction.delete(roomRef);
                 }
             });
@@ -768,7 +762,6 @@
        
         // --- Event Listeners Setup ---
         function addEventListeners() {
-            // Main navigation
             document.getElementById('play-bot-btn').onclick = () => { AppState.game.mode = 'bot'; startGame(); };
             document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
             document.getElementById('settings-btn').onclick = () => {
@@ -778,12 +771,8 @@
             };
             document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
             document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
-
-            // User & Settings
             document.getElementById('save-username-btn').onclick = () => handleSaveUsername(false);
             document.getElementById('save-settings-btn').onclick = () => handleSaveUsername(true);
-
-            // Friend management
             document.getElementById('search-user-btn').onclick = handleSearchUsers;
             document.getElementById('search-results').addEventListener('click', e => {
                 if (e.target.classList.contains('add-friend-btn')) sendFriendRequest(e.target.dataset.uid);
@@ -792,8 +781,6 @@
             document.getElementById('friend-requests-list').addEventListener('click', e => {
                 if (e.target.classList.contains('accept-friend-btn')) acceptFriendRequest(e.target.dataset.uid);
             });
-
-            // Online room management
             document.getElementById('create-room-btn').onclick = handleCreateRoom;
             document.getElementById('join-room-btn').onclick = handleJoinRoom;
             document.getElementById('ready-btn').onclick = handleReadyClick;
@@ -802,8 +789,6 @@
                 navigator.clipboard.writeText(AppState.currentRoom.id);
                 showToast('คัดลอกรหัสห้องแล้ว!');
             };
-
-            // Game and modals
             document.getElementById('leave-game-btn').onclick = () => {
                 if (AppState.game.mode === 'coop') handleLeaveRoom();
                 else showScreen('mainMenu');
@@ -818,10 +803,8 @@
                 if (AppState.game.mode === 'bot') {
                     startGame();
                 } else if (AppState.game.mode === 'coop') {
-                    // Host resets the game state in Firestore
                     const roomRef = doc(db, "rooms", AppState.currentRoom.id);
                     const players = AppState.currentRoom.data.players;
-                    // Set all players to not ready
                     Object.keys(players).forEach(uid => { players[uid].ready = false; });
                     
                     updateDoc(roomRef, {
@@ -834,8 +817,6 @@
                     });
                 }
             };
-
-            // Profile & Context Menu
             document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
             document.getElementById('player-list').addEventListener('click', (e) => {
                 const playerDiv = e.target.closest('.player-name-lobby');
