@@ -690,21 +690,55 @@
            } else if (AppState.game.mode === 'coop') {
                if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
                
+               // New reliable way to make a move in co-op
                const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-               updateDoc(roomRef, {
-                   "game.lastMove": {
-                       player: AppState.game.currentPlayer,
-                       index: index,
-                       uid: AppState.currentUser.uid
+               runTransaction(db, async (transaction) => {
+                   const roomDoc = await transaction.get(roomRef);
+                   if (!roomDoc.exists()) throw "Room does not exist!";
+                   
+                   const roomData = roomDoc.data();
+                   let newBoard = [...roomData.game.board];
+                   let newHistory = [...(roomData.game.history || [])];
+
+                   // Double-check move validity inside the transaction
+                   if (newBoard[index] !== "" || roomData.game.turn !== AppState.playerSymbol) {
+                       return; // Invalid move, do nothing
+                   }
+                   
+                   if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
+                       const oldestMove = newHistory.shift();
+                       newBoard[oldestMove.index] = "";
+                   }
+                   
+                   newBoard[index] = AppState.game.currentPlayer;
+                   newHistory.push({ player: AppState.game.currentPlayer, index: index });
+                   
+                   const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+                   const winnerResult = checkWinner(newBoard);
+
+                   transaction.update(roomRef, {
+                       "game.board": newBoard,
+                       "game.history": newHistory,
+                       "game.turn": nextTurn,
+                       "game.winner": winnerResult ? winnerResult.winner : null,
+                       "status": winnerResult ? 'finished' : 'playing'
+                   });
+
+                    if(winnerResult) {
+                       const winnerUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol === winnerResult.winner);
+                       const loserUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol !== winnerResult.winner);
+                       if (winnerUID && loserUID) {
+                           updatePlayerStats(winnerUID, loserUID);
+                       }
                    }
                }).catch(error => {
-                   console.error("Error making move: ", error);
+                   console.error("Transaction failed: ", error);
                    showToast("เกิดข้อผิดพลาดในการเดิน", 'error');
                });
            }
        }
        
-       function makeMove(index, isCoop = false) {
+       function makeMove(index) { // This function is now ONLY for bot mode
            if (AppState.game.state[index] !== "" || !AppState.game.isActive) return;
            
            if (AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
@@ -729,7 +763,7 @@
            const result = checkWinner(AppState.game.state);
            if (result) {
                endGame(false, result.winner, result);
-           } else if (AppState.game.history.length === 9 && !isCoop) { // Draw condition for bot
+           } else if (AppState.game.history.length === 9) {
                 endGame(true);
            } else {
                AppState.game.currentPlayer = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
@@ -972,23 +1006,18 @@
                }
 
                if (roomData.game) {
-                    // Check for new moves
-                   if (roomData.game.lastMove && (!oldData || JSON.stringify(roomData.game.lastMove) !== JSON.stringify(oldData.game.lastMove))) {
-                       // This is a new move from another player
-                       if (roomData.game.lastMove.uid !== AppState.currentUser.uid) {
-                            makeMove(roomData.game.lastMove.index, true);
-                       }
-                   }
-
+                   // The game state is now directly driven by Firestore, no more client-side move making for co-op
                    if (JSON.stringify(AppState.game.state) !== JSON.stringify(roomData.game.board || [])) {
                        AppState.game.state = roomData.game.board || Array(9).fill("");
                        AppState.game.history = roomData.game.history || [];
                        updateBoardUI();
                    }
+                   
                    AppState.game.currentPlayer = roomData.game.turn;
                    updateTurnDisplay();
                    
-                   if (roomData.status === 'finished' && roomData.game.winner && !document.getElementById('game-screen-over-overlay').classList.contains('flex')) {
+                   if (roomData.status === 'finished' && roomData.game.winner && AppState.game.isActive) {
+                        AppState.game.isActive = false; // Prevent multiple endGame calls
                        const result = checkWinner(roomData.game.board);
                        endGame(false, roomData.game.winner, result);
                    }
@@ -1124,6 +1153,10 @@
            AppState.currentRoom = { id: null, data: null, countdownInterval: null };
            AppState.playerSymbol = '';
            showScreen('mainMenu');
+
+           // Explicitly show the ready button again for new rooms
+           const readyBtn = document.getElementById('ready-btn');
+           if(readyBtn) readyBtn.style.display = 'flex';
 
            const leaveRoomBtn = document.getElementById('leave-room-btn');
            if(leaveRoomBtn) leaveRoomBtn.disabled = false;
