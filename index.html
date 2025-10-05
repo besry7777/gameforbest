@@ -59,6 +59,7 @@
           border: 2px solid #e5e7eb; /* gray-200 */
           transition: background-color 0.2s;
           line-height: 1; /* Prevents text from affecting cell height */
+          overflow: hidden; /* Prevents content like emojis from resizing the cell */
       }
       .cell:hover { background-color: #f9fafb; /* gray-50 */ }
       .cell.x { color: var(--x-color); }
@@ -173,8 +174,7 @@
           </button>
       </div>
 
-       <!-- Shop Screen -->
-      <div id="shop-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
+       <div id="shop-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
            <div class="w-full max-w-2xl text-center">
               <h2 class="text-3xl font-bold mt-6 mb-2">ร้านค้า</h2>
               <div class="flex items-center justify-center gap-2 text-xl mb-6 font-semibold text-yellow-600 bg-white px-4 py-2 rounded-lg shadow-md">
@@ -183,8 +183,7 @@
               </div>
            </div>
            <div id="shop-items-grid" class="w-full max-w-2xl grid grid-cols-2 sm:grid-cols-3 gap-4">
-               <!-- Shop items will be injected here -->
-           </div>
+               </div>
            <button id="back-to-main-from-shop-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
       </div>
 
@@ -1009,14 +1008,15 @@
               medalRewardEl.textContent = `ปลดล็อค: ${CONST.MEDALS[newMedal.toUpperCase()].name}`;
           }
 
-           // For coop games, set up rematch state
-                     const rematchBtn = document.getElementById('rematch-btn');
-           rematchBtn.style.display = 'flex'; // แสดงปุ่มเสมอ
-           
-           // สำหรับโหมดออนไลน์ ให้ตั้งค่าสถานะ rematch เหมือนเดิม
-           if (AppState.game.mode === 'coop') {
-               updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
-           }
+          // ******************** START OF CHANGE 1 ********************
+          const rematchBtn = document.getElementById('rematch-btn');
+          rematchBtn.style.display = 'flex'; // Show the button always
+
+          // For online mode, set up the rematch state as before
+          if (AppState.game.mode === 'coop') {
+              updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
+          }
+          // ********************* END OF CHANGE 1 *********************
 
           setTimeout(() => {
               overlay.classList.remove('hidden');
@@ -1440,15 +1440,17 @@
               else showScreen('mainMenu');
           };
          
-                    document.getElementById('rematch-btn').onclick = (e) => {
+          // ******************** START OF CHANGE 2 ********************
+          document.getElementById('rematch-btn').onclick = (e) => {
               if (AppState.game.mode === 'coop') {
-                  // ถ้าเล่นออนไลน์ ให้เรียกฟังก์ชัน rematch เหมือนเดิม
+                  // If playing online, call the rematch function as before
                   handleRematchRequest(e.currentTarget);
               } else {
-                  // ถ้าเล่นกับบอท ให้เรียกฟังก์ชัน startGame() เพื่อเริ่มเกมใหม่ได้เลย
+                  // If playing with the bot, just call startGame() to start a new game
                   startGame();
               }
           };
+          // ********************* END OF CHANGE 2 *********************
 
           document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
                if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
