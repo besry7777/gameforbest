@@ -53,7 +53,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-   <!-- Custom Popups/Modals -->
    <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
        <p id="toast-message"></p>
    </div>
@@ -62,7 +61,6 @@
        <button id="view-profile-ctx-btn" class="button button-primary text-sm py-2 px-4">ดูโปรไฟล์</button>
    </div>
    
-   <!-- Modals -->
    <div id="username-prompt-modal" class="modal-overlay active fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center p-4">
        <div class="modal-content bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center w-full max-w-md animate-fade-in-up">
            <h2 class="text-2xl font-bold mb-4">ตั้งชื่อผู้ใช้ของคุณ</h2>
@@ -93,7 +91,6 @@
    </div>
 
 
-   <!-- Screens -->
    <main id="app-container" class="w-full h-screen overflow-hidden">
        <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
            <h1 class="text-5xl font-bold mb-2">Super XO</h1>
@@ -171,25 +168,29 @@
        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, writeBatch, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+       // ========== START: CODE EDITED ==========
        // --- Firebase Config & Initialization ---
-       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-xo-app';
-       let firebaseConfig;
-       try {
-           firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-       } catch (e) {
-           console.error("Firebase config is not valid JSON", e);
-           firebaseConfig = {};
-       }
-       
+       const firebaseConfig = {
+         apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
+         authDomain: "xobybestry777.firebaseapp.com",
+         projectId: "xobybestry777",
+         storageBucket: "xobybestry777.firebasestorage.app",
+         messagingSenderId: "380539937989",
+         appId: "1:380539937989:web:771f477f3aefb963033cac",
+         measurementId: "G-48B0RFSNSF"
+       };
+
        let app, auth, db;
-       if (Object.keys(firebaseConfig).length > 1) {
+       // Check if config object is valid
+       if (firebaseConfig && firebaseConfig.apiKey) {
            app = initializeApp(firebaseConfig);
            auth = getAuth(app);
            db = getFirestore(app);
        } else {
-           console.error("Firebase config is missing.");
+           console.error("Firebase config is missing or incomplete.");
            showToast("Firebase ไม่ได้ถูกตั้งค่า! โหมดออนไลน์จะไม่ทำงาน", 'error');
        }
+       // ========== END: CODE EDITED ==========
 
        // --- App State ---
        let currentUser = { uid: null, username: null, stats: { wins: 0, losses: 0 }, friends: {} };
