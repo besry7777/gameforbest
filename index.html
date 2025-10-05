@@ -1010,12 +1010,13 @@
           }
 
            // For coop games, set up rematch state
-          if (AppState.game.mode === 'coop') {
-               document.getElementById('rematch-btn').style.display = 'flex';
+                     const rematchBtn = document.getElementById('rematch-btn');
+           rematchBtn.style.display = 'flex'; // แสดงปุ่มเสมอ
+           
+           // สำหรับโหมดออนไลน์ ให้ตั้งค่าสถานะ rematch เหมือนเดิม
+           if (AppState.game.mode === 'coop') {
                updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
-          } else {
-               document.getElementById('rematch-btn').style.display = 'none';
-          }
+           }
 
           setTimeout(() => {
               overlay.classList.remove('hidden');
@@ -1439,7 +1440,15 @@
               else showScreen('mainMenu');
           };
          
-          document.getElementById('rematch-btn').onclick = (e) => handleRematchRequest(e.currentTarget);
+                    document.getElementById('rematch-btn').onclick = (e) => {
+              if (AppState.game.mode === 'coop') {
+                  // ถ้าเล่นออนไลน์ ให้เรียกฟังก์ชัน rematch เหมือนเดิม
+                  handleRematchRequest(e.currentTarget);
+              } else {
+                  // ถ้าเล่นกับบอท ให้เรียกฟังก์ชัน startGame() เพื่อเริ่มเกมใหม่ได้เลย
+                  startGame();
+              }
+          };
 
           document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
                if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
