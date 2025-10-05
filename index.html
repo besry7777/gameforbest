@@ -1,620 +1,894 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple XO Game</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #f0f0f0;
-            --board-color: #ffffff;
-            --border-color: #cccccc;
-            --text-color: #333333;
-            --x-color: #ff4136; /* Red */
-            --o-color: #000000; /* Black */
-            --button-primary-bg: #007bff;
-            --button-secondary-bg: #6c757d;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Kanit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            touch-action: manipulation;
-        }
-
-        .screen {
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: absolute;
-            top: 0; left: 0;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .screen.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        h1, h2 { text-align: center; margin-bottom: 1.5rem; }
-        h1 { font-size: 3rem; }
-
-        .button {
-            background-color: var(--button-primary-bg);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 10px;
-            font-size: 1.2rem;
-            font-family: 'Kanit', sans-serif;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.2s;
-            min-width: 250px;
-        }
-        .button:hover { background-color: #0056b3; }
-        .button.secondary { background-color: var(--button-secondary-bg); }
-        .button.secondary:hover { background-color: #5a6268; }
-
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            width: 90vw;
-            height: 90vw;
-            max-width: 450px;
-            max-height: 450px;
-            background-color: var(--board-color);
-            border: 2px solid #333;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .cell {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20vw; /* ตัวใหญ่ขึ้น */
-            font-weight: bold;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-        }
-        @media (min-width: 600px) { .cell { font-size: 8rem; } }
-
-        .cell.x { color: var(--x-color); }
-        .cell.o { color: var(--o-color); }
-        .cell.fading { animation: fadeOut 0.5s forwards; }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-
-        #turn-display, #status-display { margin: 20px 0; font-size: 1.5rem; text-align: center; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            justify-content: center; align-items: center;
-            display: none;
-        }
-        .modal-overlay.active { display: flex; }
-        
-        .modal-content {
-            background: white; padding: 30px; border-radius: 10px;
-            text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 90%; max-width: 400px;
-        }
-        
-        .input-field {
-            padding: 12px; font-size: 1.1rem; border: 1px solid #ccc;
-            border-radius: 5px; text-align: center; width: 100%; margin-bottom: 15px;
-        }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>Super XO Game</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+   <style>
+       :root {
+           --x-color: #ef4444; /* red-500 */
+           --o-color: #3b82f6; /* blue-500 */
+       }
+       body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+       .screen, .modal-overlay { display: none; }
+       .screen.active, .modal-overlay.active { display: flex; }
+       .input-field { @apply w-full px-4 py-3 mb-4 text-center bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors; }
+       .button { @apply w-full max-w-sm px-4 py-3 my-2 text-lg font-semibold text-white transition-transform duration-150 ease-in-out rounded-lg shadow-md transform active:scale-95; }
+       .button-primary { @apply bg-blue-500 hover:bg-blue-600; }
+       .button-secondary { @apply bg-gray-500 hover:bg-gray-600; }
+       .button-success { @apply bg-green-500 hover:bg-green-600; }
+       .button-danger { @apply bg-red-500 hover:bg-red-600; }
+       .cell {
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           font-size: clamp(3rem, 20vw, 8rem);
+           font-weight: bold;
+           cursor: pointer;
+           border: 2px solid #e5e7eb; /* gray-200 */
+           transition: background-color 0.2s;
+       }
+       .cell:hover { background-color: #f9fafb; /* gray-50 */ }
+       .cell.x { color: var(--x-color); }
+       .cell.o { color: var(--o-color); }
+       .cell.fading { animation: fadeOut 0.5s forwards; }
+       @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+       #game-board {
+           width: 90vw;
+           height: 90vw;
+           max-width: 450px;
+           max-height: 450px;
+           aspect-ratio: 1 / 1;
+       }
+       .context-menu {
+           position: absolute;
+           display: none;
+           z-index: 1000;
+       }
+   </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800">
 
-    <div id="name-prompt-screen" class="modal-overlay active">
-        <div class="modal-content">
-            <h2>ตั้งชื่อผู้ใช้</h2>
-            <input type="text" id="username-input" class="input-field" placeholder="ใส่ชื่อของคุณ..." maxlength="15">
-            <button id="save-username-btn" class="button">บันทึก</button>
-        </div>
-    </div>
+   <!-- Custom Popups/Modals -->
+   <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
+       <p id="toast-message"></p>
+   </div>
 
-    <div id="main-menu" class="screen">
-        <h1 id="welcome-message">XO Game</h1>
-        <button id="play-bot-btn" class="button">เล่นกับบอท</button>
-        <button id="play-coop-btn" class="button">เล่นกับเพื่อน (Online)</button>
-        <button id="settings-btn" class="button secondary">ตั้งค่า</button>
-    </div>
+   <div id="context-menu" class="context-menu">
+       <button id="view-profile-ctx-btn" class="button button-primary text-sm py-2 px-4">ดูโปรไฟล์</button>
+   </div>
+   
+   <!-- Modals -->
+   <div id="username-prompt-modal" class="modal-overlay active fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center p-4">
+       <div class="modal-content bg-white p-6 sm:p-8 rounded-xl shadow-2xl text-center w-full max-w-md animate-fade-in-up">
+           <h2 class="text-2xl font-bold mb-4">ตั้งชื่อผู้ใช้ของคุณ</h2>
+           <p id="username-error" class="text-red-500 mb-2 h-5"></p>
+           <input type="text" id="username-input" class="input-field" placeholder="ใส่ชื่อที่ไม่ซ้ำใคร..." maxlength="15">
+           <button id="save-username-btn" class="button button-primary">บันทึก</button>
+       </div>
+   </div>
+   
+   <div id="game-over-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
+       <div class="modal-content bg-white p-8 rounded-xl shadow-2xl text-center w-full max-w-md animate-fade-in-up">
+           <h2 id="game-over-message" class="text-3xl font-bold mb-6"></h2>
+           <button id="play-again-btn" class="button button-primary">เล่นอีกครั้ง</button>
+           <button id="modal-back-to-menu-btn" class="button button-secondary">กลับเมนูหลัก</button>
+       </div>
+   </div>
 
-    <div id="settings-screen" class="screen">
-        <h2>ตั้งค่า</h2>
-        <input type="text" id="change-username-input" class="input-field" placeholder="เปลี่ยนชื่อ...">
-        <button id="save-settings-btn" class="button">บันทึก</button>
-        <button id="back-to-main-from-settings-btn" class="button secondary">กลับ</button>
-    </div>
+   <div id="profile-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 justify-center items-center p-4">
+       <div class="modal-content bg-white p-8 rounded-xl shadow-2xl text-center w-full max-w-md relative">
+            <button id="close-profile-btn" class="absolute top-2 right-4 text-2xl font-bold text-gray-500 hover:text-gray-800">×</button>
+           <h2 id="profile-username" class="text-3xl font-bold mb-4"></h2>
+           <div class="text-xl">
+               <p>สถิติ (ออนไลน์)</p>
+               <p class="text-green-500">ชนะ: <span id="profile-wins">0</span></p>
+               <p class="text-red-500">แพ้: <span id="profile-losses">0</span></p>
+           </div>
+       </div>
+   </div>
 
-    <div id="coop-menu" class="screen">
-        <h2>เล่นกับเพื่อน</h2>
-        <button id="create-room-btn" class="button">สร้างห้อง</button>
-        <input type="text" id="room-code-input" class="input-field" placeholder="ใส่รหัสห้อง" style="width: 250px; text-transform: uppercase;">
-        <button id="join-room-btn" class="button">เข้าร่วมห้อง</button>
-        <button id="back-to-main-from-coop-btn" class="button secondary">กลับ</button>
-    </div>
-    
-    <div id="room-lobby" class="screen">
-        <h2>รหัสห้อง: <span id="room-code-display" style="color: var(--x-color);"></span></h2>
-        <div id="player-list"></div>
-        <p id="lobby-status" style="margin: 20px 0;"></p>
-        <button id="ready-btn" class="button">เตรียมพร้อม</button>
-        <button id="leave-room-btn" class="button secondary">ออกจากห้อง</button>
-    </div>
 
-    <div id="game-screen" class="screen">
-        <div id="turn-display"></div>
-        <div id="game-board"></div>
-        <button id="leave-game-btn" class="button secondary" style="margin-top: 20px;">ยอมแพ้/ออกจากเกม</button>
-    </div>
-    
-    <div id="game-over-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="game-over-message"></h2>
-            <button id="play-again-btn" class="button">เล่นอีกครั้ง</button>
-            <button id="modal-back-to-menu-btn" class="button secondary">กลับเมนูหลัก</button>
-        </div>
-    </div>
+   <!-- Screens -->
+   <main id="app-container" class="w-full h-screen overflow-hidden">
+       <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+           <h1 class="text-5xl font-bold mb-2">Super XO</h1>
+           <h2 id="welcome-message" class="text-2xl mb-8"></h2>
+           <button id="play-bot-btn" class="button button-primary">เล่นกับบอท</button>
+           <button id="play-coop-btn" class="button button-success">เล่นกับเพื่อน (Online)</button>
+           <button id="settings-btn" class="button button-secondary">ตั้งค่า & เพื่อน</button>
+       </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+       <div id="settings-screen" class="screen w-full h-full flex-col justify-center items-start p-5 overflow-y-auto">
+           <h2 class="text-3xl font-bold mb-6 text-center w-full">ตั้งค่า & เพื่อน</h2>
+           
+           <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
+               <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
+               <input type="text" id="change-username-input" class="input-field" placeholder="เปลี่ยนชื่อ...">
+                <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
+               <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
+           </div>
 
-    <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBcxVAP08XMiPMoqElaKM7AYY_2z08oWok",
-  authDomain: "xobybestry777.firebaseapp.com",
-  projectId: "xobybestry777",
-  storageBucket: "xobybestry777.firebasestorage.app",
-  messagingSenderId: "380539937989",
-  appId: "1:380539937989:web:771f477f3aefb963033cac",
-};
-        // Initialize Firebase
-        if (Object.keys(firebaseConfig).length > 1) { // Check if config is filled
-            firebase.initializeApp(firebaseConfig);
-            window.db = firebase.database();
-        } else {
-            console.error("กรุณาใส่ Firebase Config ของคุณในโค้ด");
-            alert("Firebase ไม่ได้ถูกตั้งค่า! โหมด Co-op จะไม่ทำงาน");
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- State and Variables ---
-            let username = '';
-            let currentRoomId = null;
-            let playerSymbol = ''; // 'X' or 'O'
-            let roomUnsubscribe = null; // Function to stop listening to room updates
+           <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
+               <h3 class="text-xl font-semibold mb-2">จัดการเพื่อน</h3>
+               <div class="mb-4">
+                   <label for="search-user-input" class="font-semibold">ค้นหาผู้เล่น:</label>
+                   <div class="flex mt-1">
+                       <input type="text" id="search-user-input" class="input-field !mb-0 !rounded-r-none" placeholder="ค้นหาด้วยชื่อ...">
+                       <button id="search-user-btn" class="bg-blue-500 text-white px-4 rounded-r-lg hover:bg-blue-600">ค้นหา</button>
+                   </div>
+                   <div id="search-results" class="mt-2"></div>
+               </div>
+               <div id="friend-requests" class="mb-4">
+                   <h4 class="font-semibold">คำขอเป็นเพื่อน:</h4>
+                   <div id="friend-requests-list" class="text-gray-600">ไม่มีคำขอ</div>
+               </div>
+               <div>
+                   <h4 class="font-semibold">รายชื่อเพื่อน:</h4>
+                   <div id="friends-list" class="text-gray-600">ยังไม่มีเพื่อน</div>
+               </div>
+           </div>
 
-            let gameState = Array(9).fill("");
-            let currentPlayer = "X";
-            let gameActive = false;
-            let gameMode = 'bot'; // 'bot' or 'coop'
-            let moveHistory = []; 
+           <button id="back-to-main-from-settings-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
+       </div>
 
-            // --- DOM Elements ---
-            const screens = {
-                namePrompt: document.getElementById('name-prompt-screen'),
-                mainMenu: document.getElementById('main-menu'),
-                settings: document.getElementById('settings-screen'),
-                coopMenu: document.getElementById('coop-menu'),
-                roomLobby: document.getElementById('room-lobby'),
-                game: document.getElementById('game-screen'),
-            };
-            const gameOverModal = document.getElementById('game-over-modal');
+       <div id="coop-menu" class="screen w-full h-full flex-col justify-center items-center p-5">
+           <h2 class="text-3xl font-bold mb-8">เล่นกับเพื่อน</h2>
+           <button id="create-room-btn" class="button button-primary">สร้างห้อง</button>
+           <input type="text" id="room-code-input" class="input-field max-w-sm" placeholder="ใส่รหัสห้อง" style="text-transform: uppercase;">
+           <button id="join-room-btn" class="button button-success">เข้าร่วมห้อง</button>
+           <button id="back-to-main-from-coop-btn" class="button button-secondary">กลับ</button>
+       </div>
 
-            // --- Initialization ---
-            function init() {
-                loadUsername();
-                addEventListeners();
-            }
+       <div id="room-lobby" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+           <h2 class="text-2xl mb-2">รหัสห้อง:</h2>
+            <div class="flex items-center justify-center gap-2 mb-6">
+               <span id="room-code-display" class="text-4xl font-bold text-red-500 tracking-widest"></span>
+               <button id="copy-room-code-btn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+               </button>
+           </div>
+           <div id="player-list" class="text-xl mb-6 space-y-2"></div>
+           <p id="lobby-status" class="mb-6 h-6"></p>
+           <button id="ready-btn" class="button button-success">เตรียมพร้อม</button>
+           <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
+       </div>
+       
+       <div id="game-screen" class="screen w-full h-full flex-col justify-center items-center p-2 sm:p-5">
+           <div id="turn-display" class="text-2xl font-semibold mb-4 h-8"></div>
+           <div id="game-board" class="grid grid-cols-3 bg-white rounded-lg shadow-xl overflow-hidden"></div>
+           <button id="leave-game-btn" class="button button-danger mt-6">ยอมแพ้/ออกจากเกม</button>
+       </div>
+   </main>
+   
+   <script type="module">
+       // Firebase Imports
+       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+       import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+       import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, onSnapshot, writeBatch, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            function loadUsername() {
-                const savedName = localStorage.getItem('xo_username');
-                if (savedName) {
-                    username = savedName;
-                    document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${username}`;
-                    screens.namePrompt.classList.remove('active');
-                    screens.mainMenu.classList.add('active');
-                } else {
-                    screens.namePrompt.classList.add('active');
-                }
-            }
-            
-            function showScreen(screenName) {
-                Object.values(screens).forEach(s => s.classList.remove('active'));
-                if(screens[screenName]) screens[screenName].classList.add('active');
-            }
+       // --- Firebase Config & Initialization ---
+       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-xo-app';
+       let firebaseConfig;
+       try {
+           firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+       } catch (e) {
+           console.error("Firebase config is not valid JSON", e);
+           firebaseConfig = {};
+       }
+       
+       let app, auth, db;
+       if (Object.keys(firebaseConfig).length > 1) {
+           app = initializeApp(firebaseConfig);
+           auth = getAuth(app);
+           db = getFirestore(app);
+       } else {
+           console.error("Firebase config is missing.");
+           showToast("Firebase ไม่ได้ถูกตั้งค่า! โหมดออนไลน์จะไม่ทำงาน", 'error');
+       }
 
-            // --- Event Listeners ---
-            function addEventListeners() {
-                // Username
-                document.getElementById('save-username-btn').onclick = () => {
-                    const nameInput = document.getElementById('username-input');
-                    if (nameInput.value.trim()) {
-                        username = nameInput.value.trim();
-                        localStorage.setItem('xo_username', username);
-                        loadUsername();
-                    }
-                };
+       // --- App State ---
+       let currentUser = { uid: null, username: null, stats: { wins: 0, losses: 0 }, friends: {} };
+       let currentRoomId = null;
+       let playerSymbol = '';
+       let roomUnsubscribe = null;
+       let userUnsubscribe = null;
 
-                // Main Menu
-                document.getElementById('play-bot-btn').onclick = () => {
-                    gameMode = 'bot';
-                    startGame();
-                };
-                document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
-                document.getElementById('settings-btn').onclick = () => {
-                    document.getElementById('change-username-input').value = username;
-                    showScreen('settings');
-                };
+       let gameState = Array(9).fill("");
+       let moveHistory = [];
+       let currentPlayer = "X";
+       let gameActive = false;
+       let gameMode = 'bot';
 
-                // Settings
-                document.getElementById('save-settings-btn').onclick = () => {
-                    const nameInput = document.getElementById('change-username-input');
-                    if (nameInput.value.trim()) {
-                        username = nameInput.value.trim();
-                        localStorage.setItem('xo_username', username);
-                        loadUsername();
-                        showScreen('mainMenu');
-                    }
-                };
-                document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
+       // --- DOM Elements ---
+       const screens = {
+           mainMenu: document.getElementById('main-menu'),
+           settings: document.getElementById('settings-screen'),
+           coopMenu: document.getElementById('coop-menu'),
+           roomLobby: document.getElementById('room-lobby'),
+           game: document.getElementById('game-screen'),
+       };
+       const modals = {
+           usernamePrompt: document.getElementById('username-prompt-modal'),
+           gameOver: document.getElementById('game-over-modal'),
+           profile: document.getElementById('profile-modal'),
+       };
+       const contextMenu = document.getElementById('context-menu');
 
-                // Co-op Menu
-                document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
-                document.getElementById('create-room-btn').onclick = handleCreateRoom;
-                document.getElementById('join-room-btn').onclick = handleJoinRoom;
+       // --- Utility Functions ---
+       const showToast = (message, type = 'info') => {
+           const toast = document.getElementById('toast-notification');
+           const toastMessage = document.getElementById('toast-message');
+           toastMessage.textContent = message;
+           toast.className = `fixed top-5 right-5 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 z-50 opacity-100 transform translate-y-0`;
+           if(type === 'error') toast.classList.add('bg-red-600');
+           else toast.classList.add('bg-gray-800');
+           
+           setTimeout(() => {
+               toast.classList.replace('opacity-100', 'opacity-0');
+               toast.classList.replace('translate-y-0', '-translate-y-10');
+           }, 3000);
+       };
 
-                // Lobby
-                document.getElementById('ready-btn').onclick = handleReadyClick;
-                document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
+       const showScreen = (screenName) => {
+           Object.values(screens).forEach(s => s.classList.remove('active'));
+           if(screens[screenName]) screens[screenName].classList.add('active');
+       };
 
-                // In-Game
-                 document.getElementById('leave-game-btn').onclick = () => {
-                    if (gameMode === 'coop') {
-                        handleLeaveRoom(); // Also handles leaving the game
-                    } else {
-                        showScreen('mainMenu');
-                    }
-                };
+       const showModal = (modalName, show = true) => {
+           if(modals[modalName]) modals[modalName].classList.toggle('active', show);
+       };
+       
+       // --- Initialization ---
+       const init = async () => {
+           if (!db) return; // Stop if firebase isn't configured
+           addEventListeners();
+           
+           try {
+               if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                   await signInWithCustomToken(auth, __initial_auth_token);
+               } else {
+                   await signInAnonymously(auth);
+               }
+           } catch (error) {
+               console.error("Authentication failed:", error);
+               showToast("การยืนยันตัวตนล้มเหลว", 'error');
+           }
 
-                // Game Over Modal
-                document.getElementById('play-again-btn').onclick = () => {
-                    gameOverModal.classList.remove('active');
-                    if(gameMode === 'bot') startGame();
-                    else if (gameMode === 'coop') {
-                        // In coop, only host can restart. For simplicity, just go back to lobby
-                         window.db.ref(`rooms/${currentRoomId}/status`).set('lobby');
-                    }
-                };
-                 document.getElementById('modal-back-to-menu-btn').onclick = () => {
-                     gameOverModal.classList.remove('active');
-                     if(gameMode === 'coop' && currentRoomId) {
-                         handleLeaveRoom();
-                     }
-                     showScreen('mainMenu');
-                 };
-            }
+           onAuthStateChanged(auth, async (user) => {
+               if (user) {
+                   currentUser.uid = user.uid;
+                   await checkUserRegistration();
+               } else {
+                   // Handle user being signed out
+                   currentUser = { uid: null, username: null, stats: { wins: 0, losses: 0 }, friends: {} };
+                   if(userUnsubscribe) userUnsubscribe();
+                   showModal('usernamePrompt', true);
+               }
+           });
+       };
+       
+       const checkUserRegistration = async () => {
+           const userRef = doc(db, "users", currentUser.uid);
+           const userSnap = await getDoc(userRef);
+           if (userSnap.exists()) {
+               const userData = userSnap.data();
+               currentUser.username = userData.username;
+               currentUser.stats = userData.stats || { wins: 0, losses: 0 };
+               currentUser.friends = userData.friends || {};
+               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}`;
+               showModal('usernamePrompt', false);
+               showScreen('mainMenu');
+               listenToUserUpdates();
+           } else {
+               showModal('usernamePrompt', true);
+           }
+       };
+       
+       const listenToUserUpdates = () => {
+            if(userUnsubscribe) userUnsubscribe();
+            userUnsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
+               if (docSnap.exists()) {
+                   const userData = docSnap.data();
+                   currentUser.username = userData.username;
+                   currentUser.stats = userData.stats || { wins: 0, losses: 0 };
+                   currentUser.friends = userData.friends || {};
+                   updateFriendsUI(); // Update UI whenever friend data changes
+               }
+            });
+       }
 
-            // --- Game Logic ---
-            function startGame() {
-                gameState.fill("");
-                moveHistory = [];
-                gameActive = true;
-                currentPlayer = Math.random() < 0.5 ? "X" : "O";
-                
-                const board = document.getElementById('game-board');
-                board.innerHTML = '';
-                for (let i = 0; i < 9; i++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.dataset.index = i;
-                    cell.onclick = handleCellClick;
-                    board.appendChild(cell);
-                }
-                
-                showScreen('game');
-                updateTurnDisplay();
+       // --- Event Listeners ---
+       function addEventListeners() {
+           // Username Registration
+           document.getElementById('save-username-btn').onclick = handleSaveUsername;
+           document.getElementById('save-settings-btn').onclick = () => handleSaveUsername(true);
 
-                if (gameMode === 'bot' && currentPlayer === 'O') {
-                    setTimeout(botMove, 500);
-                }
-            }
+           // Main Menu
+           document.getElementById('play-bot-btn').onclick = () => { gameMode = 'bot'; startGame(); };
+           document.getElementById('play-coop-btn').onclick = () => showScreen('coopMenu');
+           document.getElementById('settings-btn').onclick = () => {
+               document.getElementById('change-username-input').value = currentUser.username;
+               updateFriendsUI();
+               showScreen('settings');
+           };
+           
+           // Settings
+           document.getElementById('back-to-main-from-settings-btn').onclick = () => showScreen('mainMenu');
+           document.getElementById('search-user-btn').onclick = handleSearchUsers;
+           
+           // Coop Menu
+           document.getElementById('create-room-btn').onclick = handleCreateRoom;
+           document.getElementById('join-room-btn').onclick = handleJoinRoom;
+           document.getElementById('back-to-main-from-coop-btn').onclick = () => showScreen('mainMenu');
+           
+           // Lobby
+           document.getElementById('ready-btn').onclick = handleReadyClick;
+           document.getElementById('leave-room-btn').onclick = handleLeaveRoom;
+           document.getElementById('copy-room-code-btn').onclick = () => {
+               navigator.clipboard.writeText(currentRoomId);
+               showToast('คัดลอกรหัสห้องแล้ว!');
+           };
 
-            function handleCellClick(event) {
-                if (!gameActive) return;
-                const index = parseInt(event.target.dataset.index);
+           // In-Game
+           document.getElementById('leave-game-btn').onclick = () => {
+               if (gameMode === 'coop') handleLeaveRoom();
+               else showScreen('mainMenu');
+           };
 
-                if (gameMode === 'bot') {
-                    if (gameState[index] !== "" || currentPlayer !== 'X') return;
-                    makeMove(index);
-                    if (gameActive) setTimeout(botMove, 500);
-                } else if (gameMode === 'coop') {
-                    if (currentPlayer !== playerSymbol || gameState[index] !== "") return;
-                    // In Co-op, we update Firebase, which then triggers update for all players
-                    const newGameState = [...gameState];
-                    const newMoveHistory = [...moveHistory];
-
-                     if (newMoveHistory.length >= 6) {
-                        const oldestMove = newMoveHistory.shift();
-                        newGameState[oldestMove.index] = "";
-                    }
-                    newGameState[index] = currentPlayer;
-                    newMoveHistory.push({ player: currentPlayer, index: index });
-                    
-                    const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                    
-                    window.db.ref(`rooms/${currentRoomId}/game`).update({
-                        board: newGameState,
-                        history: newMoveHistory,
-                        turn: nextPlayer
-                    });
-                }
-            }
-            
-            function makeMove(index) {
-                if (gameState[index] !== "" || !gameActive) return;
-
-                if (moveHistory.length >= 6) {
-                    const oldestMove = moveHistory.shift();
-                    gameState[oldestMove.index] = "";
-                    const cellToClear = document.querySelector(`.cell[data-index='${oldestMove.index}']`);
-                    cellToClear.classList.add('fading');
-                    setTimeout(() => {
-                        cellToClear.innerText = "";
-                        cellToClear.className = 'cell';
-                    }, 500);
-                }
-
-                gameState[index] = currentPlayer;
-                moveHistory.push({ player: currentPlayer, index: index });
-                
-                updateBoardUI();
-                checkResult();
-            }
-
-            function updateBoardUI() {
-                gameState.forEach((value, i) => {
-                    const cell = document.querySelector(`.cell[data-index='${i}']`);
-                    if(cell) {
-                        cell.innerText = value;
-                        cell.className = 'cell'; // Reset classes
-                        if (value) cell.classList.add(value.toLowerCase());
-                    }
-                });
-            }
-
-            function updateTurnDisplay() {
-                const turnDisplay = document.getElementById('turn-display');
-                if (!gameActive) {
-                    turnDisplay.innerText = '';
-                    return;
-                }
-                if (gameMode === 'coop') {
-                     turnDisplay.innerText = (currentPlayer === playerSymbol) ? "ตาของคุณ!" : `รอตาของ ${currentPlayer}`;
-                } else {
-                     turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
-                }
-            }
-
-            function checkResult() {
-                let roundWon = false;
-                for (const condition of [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]) {
-                    const [a, b, c] = condition;
-                    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
-                        roundWon = true;
-                        break;
-                    }
-                }
-
-                if (roundWon) {
-                    endGame(false);
-                    return;
-                }
-                
-                if (gameMode === 'bot') {
-                     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                     updateTurnDisplay();
-                }
-            }
-
-            function endGame(isDraw) {
-                gameActive = false;
-                document.getElementById('game-over-message').innerText = isDraw ? "เสมอ!" : `ผู้เล่น ${currentPlayer} ชนะ!`;
-                gameOverModal.classList.add('active');
-            }
-
-            // --- Improved Bot AI ---
-            function botMove() {
-                if (!gameActive) return;
-                // Priority 1: Check if bot can win in the next move.
-                for (let i = 0; i < 9; i++) {
-                    if (gameState[i] === "") {
-                        let boardCopy = [...gameState];
-                        boardCopy[i] = 'O'; // Bot is 'O'
-                        if (checkWinner(boardCopy, 'O')) {
-                            makeMove(i);
-                            return;
-                        }
-                    }
-                }
-                
-                // Priority 2: Check if player can win, and block them.
-                for (let i = 0; i < 9; i++) {
-                    if (gameState[i] === "") {
-                        let boardCopy = [...gameState];
-                        boardCopy[i] = 'X'; // Player is 'X'
-                        if (checkWinner(boardCopy, 'X')) {
-                            makeMove(i);
-                            return;
-                        }
-                    }
-                }
-
-                // Priority 3: Fallback to a simple strategy (center, corners, etc.)
-                const strategicMoves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
-                for(const move of strategicMoves){
-                    if(gameState[move] === ""){
-                        makeMove(move);
-                        return;
-                    }
-                }
-            }
-
-            function checkWinner(board, player) {
-                for (const c of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]) {
-                    if (board[c[0]] === player && board[c[1]] === player && board[c[2]] === player) return true;
-                }
-                return false;
-            }
-
-            // --- Real-time Co-op (Firebase) ---
-            async function handleCreateRoom() {
-                const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
-                currentRoomId = roomId;
-                playerSymbol = 'X'; // Creator is always X
-                
-                const roomData = {
-                    status: 'lobby', // lobby, playing, finished
-                    players: {
-                        [username]: { symbol: 'X', ready: false }
-                    },
-                    game: {
-                        board: Array(9).fill(""),
-                        history: [],
-                        turn: "X",
-                        winner: null
-                    }
-                };
-
-                await window.db.ref(`rooms/${roomId}`).set(roomData);
-                listenToRoomUpdates(roomId);
-                showScreen('roomLobby');
-            }
-
-            async function handleJoinRoom() {
-                const roomId = document.getElementById('room-code-input').value.toUpperCase();
-                if (!roomId) return alert("กรุณาใส่รหัสห้อง");
-                
-                const roomRef = window.db.ref(`rooms/${roomId}`);
-                const snapshot = await roomRef.get();
-
-                if (snapshot.exists()) {
-                    const roomData = snapshot.val();
-                    if (Object.keys(roomData.players).length >= 2) {
-                        return alert("ห้องเต็มแล้ว");
-                    }
-                     if (roomData.status !== 'lobby') {
-                        return alert("ไม่สามารถเข้าร่วมห้องที่กำลังเล่นอยู่ได้");
-                    }
-
-                    currentRoomId = roomId;
-                    playerSymbol = 'O'; // Joiner is always O
-                    await roomRef.child(`players/${username}`).set({ symbol: 'O', ready: false });
-                    
-                    listenToRoomUpdates(roomId);
-                    showScreen('roomLobby');
-                } else {
-                    alert("ไม่พบห้องนี้");
-                }
-            }
-
-            function listenToRoomUpdates(roomId) {
-                const roomRef = window.db.ref(`rooms/${roomId}`);
-                roomUnsubscribe = roomRef.on('value', (snapshot) => {
-                    if (!snapshot.exists()) {
-                        alert("ห้องถูกปิดแล้ว กลับสู่เมนูหลัก");
-                        handleLeaveRoom(false); // Don't write to DB if room is gone
-                        return;
-                    }
-
-                    const data = snapshot.val();
-                    updateLobbyUI(data.players);
-                    
-                    // Check if game starts
-                    if (data.status === 'playing' && screens.game.style.display === 'none') {
-                        gameActive = true;
-                        document.getElementById('play-again-btn').style.display = 'none'; // hide for coop
-                        showScreen('game');
-                    }
-                    
-                    if (data.status === 'lobby' && screens.roomLobby.style.display === 'none') {
-                        showScreen('roomLobby');
-                    }
-
-                    // Update game state if playing
-                    if (data.game) {
-                        gameState = data.game.board || Array(9).fill("");
-                        moveHistory = data.game.history || [];
-                        currentPlayer = data.game.turn;
-                        updateBoardUI();
-                        updateTurnDisplay();
-                         if (data.game.winner) {
-                            gameActive = false;
-                            document.getElementById('game-over-message').innerText = data.game.winner === 'draw' ? 'เสมอ!' : `ผู้เล่น ${data.game.winner} ชนะ!`;
-                            gameOverModal.classList.add('active');
-                        }
-                    }
-                });
-            }
-            
-             function updateLobbyUI(players) {
-                document.getElementById('room-code-display').innerText = currentRoomId;
-                const playerListDiv = document.getElementById('player-list');
-                playerListDiv.innerHTML = '';
-                let allReady = Object.keys(players).length === 2;
-                
-                for (const name in players) {
-                    const p = players[name];
-                    playerListDiv.innerHTML += `<div>${name} (${p.symbol}) - <span style="color:${p.ready ? 'green' : 'red'}">${p.ready ? 'พร้อม' : 'ยังไม่พร้อม'}</span></div>`;
-                    if(!p.ready) allReady = false;
-                }
-                
-                // Start game if all ready
-                if(allReady){
-                    window.db.ref(`rooms/${currentRoomId}/status`).set('playing');
-                }
-            }
-            
-            async function handleReadyClick() {
-                const readyRef = window.db.ref(`rooms/${currentRoomId}/players/${username}/ready`);
-                const snapshot = await readyRef.get();
-                await readyRef.set(!snapshot.val());
-            }
-
-            function handleLeaveRoom(writeToDb = true) {
-                if (roomUnsubscribe) {
-                    window.db.ref(`rooms/${currentRoomId}`).off('value', roomUnsubscribe);
-                    roomUnsubscribe = null;
-                }
-                if (currentRoomId && writeToDb) {
-                     window.db.ref(`rooms/${currentRoomId}/players/${username}`).remove();
-                }
-                currentRoomId = null;
-                playerSymbol = '';
+           // Modals
+           document.getElementById('play-again-btn').onclick = () => {
+               showModal('gameOver', false);
+               if (gameMode === 'bot') startGame();
+               else if (gameMode === 'coop') {
+                   // Only host can restart. A better approach is resetting the game state in Firestore.
+                   const roomRef = doc(db, "rooms", currentRoomId);
+                   updateDoc(roomRef, {
+                       "game.board": Array(9).fill(""),
+                       "game.history": [],
+                       "game.turn": "X",
+                       "game.winner": null,
+                       "status": "lobby"
+                   }).then(() => {
+                       Object.keys(currentUserInRoom.players).forEach(uid => {
+                           updateDoc(roomRef, {[`players.${uid}.ready`]: false});
+                       });
+                   });
+               }
+           };
+           document.getElementById('modal-back-to-menu-btn').onclick = () => {
+                showModal('gameOver', false);
+                if(gameMode === 'coop' && currentRoomId) handleLeaveRoom();
                 showScreen('mainMenu');
-            }
-            
-            // Start the app
-            init();
-        });
-    </script>
+           };
+           document.getElementById('close-profile-btn').onclick = () => showModal('profile', false);
+           
+            // Context Menu
+           document.getElementById('view-profile-ctx-btn').onclick = async (e) => {
+               const targetUid = e.target.dataset.uid;
+               if (targetUid) await viewProfile(targetUid);
+               contextMenu.style.display = 'none';
+           };
+           document.addEventListener('click', (e) => {
+               if (!contextMenu.contains(e.target)) {
+                   contextMenu.style.display = 'none';
+               }
+           });
+       }
+       
+       // --- User and Friends Logic ---
+       async function handleSaveUsername(isUpdate = false) {
+           const inputId = isUpdate ? 'change-username-input' : 'username-input';
+           const errorId = isUpdate ? 'change-username-error' : 'username-error';
+           const input = document.getElementById(inputId);
+           const errorP = document.getElementById(errorId);
+           const newUsername = input.value.trim();
+
+           errorP.textContent = '';
+           if (newUsername.length < 3 || newUsername.length > 15) {
+               errorP.textContent = 'ชื่อต้องมี 3-15 ตัวอักษร';
+               return;
+           }
+            if (newUsername === currentUser.username) { // No change
+               if (isUpdate) showScreen('mainMenu');
+               return;
+           }
+
+           // Check for uniqueness
+           const q = query(collection(db, "users"), where("username", "==", newUsername));
+           const querySnapshot = await getDocs(q);
+           if (!querySnapshot.empty) {
+               errorP.textContent = 'ชื่อนี้ถูกใช้แล้ว';
+               return;
+           }
+
+           const userRef = doc(db, "users", currentUser.uid);
+           if(isUpdate) {
+               await updateDoc(userRef, { username: newUsername });
+               currentUser.username = newUsername;
+               document.getElementById('welcome-message').innerText = `ยินดีต้อนรับ, ${currentUser.username}`;
+               showToast('เปลี่ยนชื่อสำเร็จ!');
+               showScreen('mainMenu');
+           } else {
+               await setDoc(userRef, {
+                   username: newUsername,
+                   stats: { wins: 0, losses: 0 },
+                   friends: {},
+                   createdAt: serverTimestamp()
+               });
+               await checkUserRegistration();
+           }
+       }
+       
+       async function handleSearchUsers() {
+           const searchTerm = document.getElementById('search-user-input').value.trim();
+           const resultsDiv = document.getElementById('search-results');
+           resultsDiv.innerHTML = 'กำลังค้นหา...';
+
+           if (searchTerm.length < 3) {
+               resultsDiv.innerHTML = '<p class="text-gray-500">กรุณาพิมพ์อย่างน้อย 3 ตัวอักษร</p>';
+               return;
+           }
+
+           const q = query(collection(db, "users"), where("username", "==", searchTerm));
+           const querySnapshot = await getDocs(q);
+
+           if (querySnapshot.empty) {
+               resultsDiv.innerHTML = '<p class="text-gray-500">ไม่พบผู้เล่น</p>';
+           } else {
+               resultsDiv.innerHTML = '';
+               querySnapshot.forEach(docSnap => {
+                   const user = docSnap.data();
+                   const uid = docSnap.id;
+                   if (uid === currentUser.uid) return;
+
+                   const userDiv = document.createElement('div');
+                   userDiv.className = 'flex justify-between items-center p-2 bg-gray-100 rounded-md';
+                   userDiv.innerHTML = `<span>${user.username}</span>`;
+                   
+                   const friendStatus = currentUser.friends[uid];
+                   let buttonHtml = '';
+                   if (friendStatus === 'accepted') {
+                       buttonHtml = '<span class="text-green-500">เป็นเพื่อนกันแล้ว</span>';
+                   } else if (friendStatus === 'pending_sent') {
+                       buttonHtml = '<span class="text-gray-500">ส่งคำขอแล้ว</span>';
+                   } else if (friendStatus === 'pending_received') {
+                        buttonHtml = `<button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับ</button>`;
+                   } else {
+                       buttonHtml = `<button data-uid="${uid}" data-username="${user.username}" class="add-friend-btn button button-primary !py-1 !px-3 !my-0 !text-sm">เพิ่มเพื่อน</button>`;
+                   }
+                   userDiv.innerHTML += buttonHtml;
+                   resultsDiv.appendChild(userDiv);
+               });
+           }
+       }
+       
+       document.getElementById('search-results').addEventListener('click', e => {
+           if(e.target.classList.contains('add-friend-btn')) {
+               const targetUid = e.target.dataset.uid;
+               sendFriendRequest(targetUid);
+           }
+           if(e.target.classList.contains('accept-friend-btn')) {
+                const targetUid = e.target.dataset.uid;
+               acceptFriendRequest(targetUid);
+           }
+       });
+       document.getElementById('friend-requests-list').addEventListener('click', e => {
+           if(e.target.classList.contains('accept-friend-btn')) {
+                const targetUid = e.target.dataset.uid;
+               acceptFriendRequest(targetUid);
+           }
+       });
+
+
+       async function sendFriendRequest(targetUid) {
+           const batch = writeBatch(db);
+           const currentUserRef = doc(db, "users", currentUser.uid);
+           const targetUserRef = doc(db, "users", targetUid);
+
+           batch.update(currentUserRef, { [`friends.${targetUid}`]: 'pending_sent' });
+           batch.update(targetUserRef, { [`friends.${currentUser.uid}`]: 'pending_received' });
+
+           await batch.commit();
+           showToast('ส่งคำขอเป็นเพื่อนแล้ว!');
+           handleSearchUsers(); // Refresh search results
+       }
+
+       async function acceptFriendRequest(targetUid) {
+            const batch = writeBatch(db);
+           const currentUserRef = doc(db, "users", currentUser.uid);
+           const targetUserRef = doc(db, "users", targetUid);
+
+           batch.update(currentUserRef, { [`friends.${targetUid}`]: 'accepted' });
+           batch.update(targetUserRef, { [`friends.${currentUser.uid}`]: 'accepted' });
+
+           await batch.commit();
+           showToast('รับเป็นเพื่อนแล้ว!');
+       }
+
+       function updateFriendsUI() {
+           const requestsList = document.getElementById('friend-requests-list');
+           const friendsList = document.getElementById('friends-list');
+           requestsList.innerHTML = '';
+           friendsList.innerHTML = '';
+           
+           let hasRequests = false;
+           let hasFriends = false;
+
+           for (const uid in currentUser.friends) {
+               const status = currentUser.friends[uid];
+               if (status === 'pending_received') {
+                   hasRequests = true;
+                    // We need to get username for this UID
+                   getDoc(doc(db, "users", uid)).then(docSnap => {
+                       if (docSnap.exists()) {
+                           const user = docSnap.data();
+                           requestsList.innerHTML += `<div class="flex justify-between items-center p-2"><span>${user.username}</span><button data-uid="${uid}" class="accept-friend-btn button button-success !py-1 !px-3 !my-0 !text-sm">รับเป็นเพื่อน</button></div>`;
+                       }
+                   });
+               } else if (status === 'accepted') {
+                   hasFriends = true;
+                    getDoc(doc(db, "users", uid)).then(docSnap => {
+                       if (docSnap.exists()) {
+                           const user = docSnap.data();
+                           friendsList.innerHTML += `<div class="p-2">${user.username}</div>`;
+                       }
+                   });
+               }
+           }
+
+           if (!hasRequests) requestsList.innerHTML = '<p class="text-gray-500">ไม่มีคำขอ</p>';
+           if (!hasFriends) friendsList.innerHTML = '<p class="text-gray-500">ยังไม่มีเพื่อน</p>';
+       }
+
+       async function viewProfile(uid) {
+           const userSnap = await getDoc(doc(db, 'users', uid));
+           if (userSnap.exists()) {
+               const user = userSnap.data();
+               document.getElementById('profile-username').textContent = user.username;
+               document.getElementById('profile-wins').textContent = user.stats?.wins || 0;
+               document.getElementById('profile-losses').textContent = user.stats?.losses || 0;
+               showModal('profile', true);
+           }
+       }
+       
+       // --- Game Logic ---
+       function startGame() {
+           gameState.fill("");
+           moveHistory = [];
+           gameActive = true;
+           currentPlayer = "X";
+           
+           const board = document.getElementById('game-board');
+           board.innerHTML = '';
+           for (let i = 0; i < 9; i++) {
+               const cell = document.createElement('div');
+               cell.classList.add('cell');
+               cell.dataset.index = i;
+               cell.onclick = handleCellClick;
+               board.appendChild(cell);
+           }
+           
+           showScreen('game');
+           updateTurnDisplay();
+
+           if (gameMode === 'bot' && currentPlayer === 'O') {
+               setTimeout(botMove, 500);
+           }
+       }
+
+       function handleCellClick(event) {
+           if (!gameActive) return;
+           const index = parseInt(event.target.dataset.index);
+
+           if (gameMode === 'bot') {
+               if (gameState[index] !== "" || currentPlayer !== 'X') return;
+               makeMove(index);
+               if (gameActive) setTimeout(botMove, 500);
+           } else if (gameMode === 'coop') {
+               if (currentPlayer !== playerSymbol || gameState[index] !== "") return;
+               
+               const roomRef = doc(db, "rooms", currentRoomId);
+               runTransaction(db, async (transaction) => {
+                   const roomDoc = await transaction.get(roomRef);
+                   if (!roomDoc.exists()) throw "Room does not exist!";
+
+                   const roomData = roomDoc.data();
+                   const newBoard = [...roomData.game.board];
+                   const newHistory = [...(roomData.game.history || [])];
+
+                   if (newBoard[index] !== "") return; // Cell already taken
+
+                   if (newHistory.length >= 6) {
+                       const oldestMove = newHistory.shift();
+                       newBoard[oldestMove.index] = "";
+                   }
+                   newBoard[index] = currentPlayer;
+                   newHistory.push({ player: currentPlayer, index: index });
+
+                   const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                   
+                   transaction.update(roomRef, {
+                       "game.board": newBoard,
+                       "game.history": newHistory,
+                       "game.turn": nextPlayer
+                   });
+               });
+           }
+       }
+       
+       function makeMove(index) {
+           if (gameState[index] !== "" || !gameActive) return;
+
+           if (moveHistory.length >= 6) {
+               const oldestMove = moveHistory.shift();
+               gameState[oldestMove.index] = "";
+               const cellToClear = document.querySelector(`.cell[data-index='${oldestMove.index}']`);
+               if (cellToClear) {
+                   cellToClear.classList.add('fading');
+                   setTimeout(() => {
+                       cellToClear.innerText = "";
+                       cellToClear.className = 'cell';
+                   }, 500);
+               }
+           }
+           gameState[index] = currentPlayer;
+           moveHistory.push({ player: currentPlayer, index: index });
+           updateBoardUI();
+           
+           const winner = checkWinner(gameState);
+           if (winner) {
+               endGame(false, winner);
+           } else {
+               currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+               updateTurnDisplay();
+           }
+       }
+
+       function updateBoardUI() {
+           gameState.forEach((value, i) => {
+               const cell = document.querySelector(`.cell[data-index='${i}']`);
+               if (cell && cell.innerText !== value) {
+                   cell.innerText = value;
+                   cell.className = 'cell'; // Reset classes
+                   if (value) cell.classList.add(value.toLowerCase());
+               }
+           });
+       }
+       
+       function updateTurnDisplay() {
+           const turnDisplay = document.getElementById('turn-display');
+           if (!gameActive) {
+               turnDisplay.innerText = '';
+               return;
+           }
+           if (gameMode === 'coop') {
+                turnDisplay.innerText = (currentPlayer === playerSymbol) ? "ตาของคุณ!" : `รอตาของ ${currentPlayer}`;
+           } else {
+                turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
+           }
+       }
+
+       function checkWinner(board) {
+           const lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+           for (const line of lines) {
+               const [a, b, c] = line;
+               if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                   return board[a]; // Returns 'X' or 'O'
+               }
+           }
+           return null; // No winner
+       }
+
+       function endGame(isDraw, winner = null) {
+           gameActive = false;
+           document.getElementById('game-over-message').innerText = isDraw ? "เสมอ!" : `ผู้เล่น ${winner} ชนะ!`;
+           showModal('gameOver', true);
+       }
+
+       function botMove() {
+           if (!gameActive) return;
+           // Bot AI logic... (same as original, but uses local checkWinner)
+           makeMove(getBestBotMove());
+       }
+       
+       function getBestBotMove() {
+            for (let i = 0; i < 9; i++) { if (gameState[i] === "") { let b = [...gameState]; b[i] = 'O'; if (checkWinner(b)) return i; } }
+            for (let i = 0; i < 9; i++) { if (gameState[i] === "") { let b = [...gameState]; b[i] = 'X'; if (checkWinner(b)) return i; } }
+            const moves = [4, 0, 2, 6, 8, 1, 3, 5, 7];
+            for(const m of moves){ if(gameState[m] === "") return m; }
+            return gameState.findIndex(s => s === ""); // fallback
+       }
+
+       // --- Real-time Co-op (Firestore) ---
+       async function handleCreateRoom() {
+           const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+           currentRoomId = roomId;
+           playerSymbol = 'X';
+           
+           const roomData = {
+               status: 'lobby',
+               players: {
+                   [currentUser.uid]: { username: currentUser.username, symbol: 'X', ready: false }
+               },
+               game: { board: Array(9).fill(""), history: [], turn: "X", winner: null },
+               createdAt: serverTimestamp()
+           };
+
+           await setDoc(doc(db, "rooms", roomId), roomData);
+           listenToRoomUpdates(roomId);
+           showScreen('roomLobby');
+       }
+
+       async function handleJoinRoom() {
+           const roomId = document.getElementById('room-code-input').value.trim().toUpperCase();
+           if (!roomId) return showToast("กรุณาใส่รหัสห้อง", 'error');
+           
+           const roomRef = doc(db, "rooms", roomId);
+           const roomSnap = await getDoc(roomRef);
+
+           if (roomSnap.exists()) {
+               const roomData = roomSnap.data();
+               if (Object.keys(roomData.players).length >= 2) return showToast("ห้องเต็มแล้ว", 'error');
+               if (roomData.status !== 'lobby') return showToast("เกมเริ่มไปแล้ว", 'error');
+               
+               currentRoomId = roomId;
+               playerSymbol = 'O';
+               await updateDoc(roomRef, {
+                   [`players.${currentUser.uid}`]: { username: currentUser.username, symbol: 'O', ready: false }
+               });
+               
+               listenToRoomUpdates(roomId);
+               showScreen('roomLobby');
+           } else {
+               showToast("ไม่พบห้องนี้", 'error');
+           }
+       }
+
+       let currentUserInRoom = {};
+       function listenToRoomUpdates(roomId) {
+           if (roomUnsubscribe) roomUnsubscribe();
+           const roomRef = doc(db, "rooms", roomId);
+           roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+               if (!docSnap.exists()) {
+                   showToast("ห้องถูกปิดแล้ว", 'info');
+                   cleanupAfterRoom();
+                   return;
+               }
+
+               const data = docSnap.data();
+               currentUserInRoom = data;
+               updateLobbyUI(data);
+
+               if (data.status === 'playing' && !screens.game.classList.contains('active')) {
+                   gameActive = true;
+                   document.getElementById('play-again-btn').style.display = (Object.keys(data.players)[0] === currentUser.uid) ? 'block' : 'none';
+                   startGame(); // Initializes the board visually
+                   showScreen('game');
+               }
+                if (data.status === 'lobby' && !screens.roomLobby.classList.contains('active')) {
+                   showScreen('roomLobby');
+                }
+
+               // Update game state
+               if (data.game) {
+                   gameState = data.game.board || Array(9).fill("");
+                   moveHistory = data.game.history || [];
+                   currentPlayer = data.game.turn;
+                   updateBoardUI();
+                   updateTurnDisplay();
+                   
+                   if(gameActive) {
+                       const winner = checkWinner(gameState);
+                       if (winner) {
+                           gameActive = false; // Prevent multiple triggers
+                           const winnerUID = Object.keys(data.players).find(uid => data.players[uid].symbol === winner);
+                           const loserUID = Object.keys(data.players).find(uid => data.players[uid].symbol !== winner);
+                           // Only host updates stats to prevent double counting
+                           if (Object.keys(data.players)[0] === currentUser.uid) {
+                               updatePlayerStats(winnerUID, loserUID);
+                           }
+                           updateDoc(roomRef, { "game.winner": winner, status: "finished" });
+                       }
+                   }
+                   if (data.status === 'finished' && data.game.winner) {
+                       endGame(false, data.game.winner);
+                   }
+               }
+           });
+       }
+       
+        function updateLobbyUI(data) {
+           document.getElementById('room-code-display').innerText = currentRoomId;
+           const playerListDiv = document.getElementById('player-list');
+           playerListDiv.innerHTML = '';
+           
+           let allReady = Object.keys(data.players).length === 2;
+           Object.entries(data.players).forEach(([uid, p]) => {
+               const playerDiv = document.createElement('div');
+               playerDiv.dataset.uid = uid;
+               playerDiv.className = 'player-name-lobby cursor-pointer';
+               playerDiv.innerHTML = `<span>${p.username} (${p.symbol}) - <span class="${p.ready ? 'text-green-500' : 'text-red-500'}">${p.ready ? 'พร้อม' : 'ยังไม่พร้อม'}</span></span>`;
+               playerListDiv.appendChild(playerDiv);
+               if (!p.ready) allReady = false;
+           });
+
+           // Start game if all ready
+           if (allReady && data.status === 'lobby') {
+               updateDoc(doc(db, "rooms", currentRoomId), { status: 'playing' });
+           }
+       }
+       
+       document.getElementById('player-list').addEventListener('click', (e) => {
+            const playerDiv = e.target.closest('.player-name-lobby');
+           if (playerDiv) {
+               e.stopPropagation();
+               const targetUid = playerDiv.dataset.uid;
+               const rect = playerDiv.getBoundingClientRect();
+               contextMenu.style.left = `${rect.left}px`;
+               contextMenu.style.top = `${rect.bottom + 5}px`;
+               contextMenu.style.display = 'block';
+               document.getElementById('view-profile-ctx-btn').dataset.uid = targetUid;
+           }
+       });
+       
+       async function handleReadyClick() {
+           const currentReadyStatus = currentUserInRoom.players[currentUser.uid]?.ready || false;
+           await updateDoc(doc(db, "rooms", currentRoomId), {
+               [`players.${currentUser.uid}.ready`]: !currentReadyStatus
+           });
+       }
+
+       async function handleLeaveRoom() {
+           if (currentRoomId) {
+               const roomRef = doc(db, "rooms", currentRoomId);
+               const roomSnap = await getDoc(roomRef);
+               if (roomSnap.exists()) {
+                   const roomData = roomSnap.data();
+                   const players = roomData.players;
+                   delete players[currentUser.uid];
+                   if(Object.keys(players).length === 0) {
+                       // If last player, delete room is better but for simplicity we just leave it.
+                   } else {
+                        await updateDoc(roomRef, { players: players });
+                   }
+               }
+           }
+           cleanupAfterRoom();
+       }
+
+       function cleanupAfterRoom() {
+           if (roomUnsubscribe) roomUnsubscribe();
+           roomUnsubscribe = null;
+           currentRoomId = null;
+           playerSymbol = '';
+           showScreen('mainMenu');
+       }
+
+       async function updatePlayerStats(winnerUID, loserUID) {
+           if (!winnerUID || !loserUID) return;
+           const winnerRef = doc(db, "users", winnerUID);
+           const loserRef = doc(db, "users", loserUID);
+
+           await runTransaction(db, async (transaction) => {
+               const winnerDoc = await transaction.get(winnerRef);
+               const loserDoc = await transaction.get(loserRef);
+               if(!winnerDoc.exists() || !loserDoc.exists()) throw "User doc missing";
+
+               const newWinnerWins = (winnerDoc.data().stats.wins || 0) + 1;
+               const newLoserLosses = (loserDoc.data().stats.losses || 0) + 1;
+               
+               transaction.update(winnerRef, { "stats.wins": newWinnerWins });
+               transaction.update(loserRef, { "stats.losses": newLoserLosses });
+           });
+       }
+       
+       // Start the app
+       init();
+   </script>
 </body>
 </html>
