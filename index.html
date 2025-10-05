@@ -687,53 +687,54 @@
                if (AppState.game.state[index] !== "" || AppState.game.currentPlayer !== 'X') return;
                makeMove(index);
                if (AppState.game.isActive) setTimeout(botMove, 500);
+
            } else if (AppState.game.mode === 'coop') {
                if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
                
-               // New reliable way to make a move in co-op
+               // --- Optimistic UI Update ---
+               // 1. Calculate the next state locally
+               let newBoard = [...AppState.game.state];
+               let newHistory = [...AppState.game.history];
+
+               if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
+                   const oldestMove = newHistory.shift();
+                   newBoard[oldestMove.index] = "";
+               }
+               
+               newBoard[index] = AppState.game.currentPlayer;
+               newHistory.push({ player: AppState.game.currentPlayer, index: index });
+               const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+               
+               // 2. Apply the new state to the local UI immediately
+               AppState.game.state = newBoard;
+               AppState.game.history = newHistory;
+               AppState.game.currentPlayer = nextTurn;
+               updateBoardUI();
+               updateTurnDisplay();
+               
+               // 3. Send the confirmed new state to Firestore in the background
                const roomRef = doc(db, "rooms", AppState.currentRoom.id);
-               runTransaction(db, async (transaction) => {
-                   const roomDoc = await transaction.get(roomRef);
-                   if (!roomDoc.exists()) throw "Room does not exist!";
-                   
-                   const roomData = roomDoc.data();
-                   let newBoard = [...roomData.game.board];
-                   let newHistory = [...(roomData.game.history || [])];
-
-                   // Double-check move validity inside the transaction
-                   if (newBoard[index] !== "" || roomData.game.turn !== AppState.playerSymbol) {
-                       return; // Invalid move, do nothing
-                   }
-                   
-                   if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
-                       const oldestMove = newHistory.shift();
-                       newBoard[oldestMove.index] = "";
-                   }
-                   
-                   newBoard[index] = AppState.game.currentPlayer;
-                   newHistory.push({ player: AppState.game.currentPlayer, index: index });
-                   
-                   const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
-                   const winnerResult = checkWinner(newBoard);
-
-                   transaction.update(roomRef, {
-                       "game.board": newBoard,
-                       "game.history": newHistory,
-                       "game.turn": nextTurn,
-                       "game.winner": winnerResult ? winnerResult.winner : null,
-                       "status": winnerResult ? 'finished' : 'playing'
-                   });
-
-                    if(winnerResult) {
-                       const winnerUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol === winnerResult.winner);
-                       const loserUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol !== winnerResult.winner);
-                       if (winnerUID && loserUID) {
-                           updatePlayerStats(winnerUID, loserUID);
-                       }
+               const winnerResult = checkWinner(newBoard);
+               
+               updateDoc(roomRef, {
+                   "game.board": newBoard,
+                   "game.history": newHistory,
+                   "game.turn": nextTurn,
+                   "game.winner": winnerResult ? winnerResult.winner : null,
+                   "status": winnerResult ? 'finished' : 'playing'
+               }).then(() => {
+                   if(winnerResult) {
+                        const roomData = AppState.currentRoom.data;
+                        const winnerUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol === winnerResult.winner);
+                        const loserUID = Object.keys(roomData.players).find(uid => roomData.players[uid].symbol !== winnerResult.winner);
+                        if (winnerUID && loserUID) {
+                            updatePlayerStats(winnerUID, loserUID);
+                        }
                    }
                }).catch(error => {
-                   console.error("Transaction failed: ", error);
-                   showToast("เกิดข้อผิดพลาดในการเดิน", 'error');
+                   console.error("Error updating move to Firestore:", error);
+                   showToast("การเชื่อมต่อขัดข้อง, กรุณาลองใหม่", 'error');
+                   // Optional: Add logic to revert the optimistic update if needed
                });
            }
        }
@@ -1006,15 +1007,18 @@
                }
 
                if (roomData.game) {
-                   // The game state is now directly driven by Firestore, no more client-side move making for co-op
+                   // Firestore is the source of truth. If the local state differs, sync it.
                    if (JSON.stringify(AppState.game.state) !== JSON.stringify(roomData.game.board || [])) {
+                       console.log("Syncing local state with Firestore.");
                        AppState.game.state = roomData.game.board || Array(9).fill("");
                        AppState.game.history = roomData.game.history || [];
                        updateBoardUI();
                    }
                    
-                   AppState.game.currentPlayer = roomData.game.turn;
-                   updateTurnDisplay();
+                   if (AppState.game.currentPlayer !== roomData.game.turn) {
+                       AppState.game.currentPlayer = roomData.game.turn;
+                       updateTurnDisplay();
+                   }
                    
                    if (roomData.status === 'finished' && roomData.game.winner && AppState.game.isActive) {
                         AppState.game.isActive = false; // Prevent multiple endGame calls
