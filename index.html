@@ -1,2618 +1,648 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ตำนานแห่งอัญมณีที่ถูกลืม</title>
-  <style>
-    /* สไตล์พื้นฐาน */
-    body, html {
-      margin: 0; padding: 0;
-      overflow: hidden;
-      background: #000;
-      height: 100%; width: 100%;
-      display: flex; justify-content: center; align-items: center;
-      touch-action: none;
-      font-family: 'Courier New', monospace;
-      -webkit-tap-highlight-color: transparent;
-    }
-    canvas {
-      display: block;
-      image-rendering: pixelated;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bangkok XO Game - Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0c0a1a;
+            --primary-color: #ff00ff; /* Magenta Neon */
+            --secondary-color: #00ffff; /* Cyan Neon */
+            --text-color: #f0f0f0;
+            --border-color: rgba(0, 255, 255, 0.3);
+            --glow-primary: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+            --glow-secondary: 0 0 5px var(--secondary-color), 0 0 10px var(--secondary-color), 0 0 20px var(--secondary-color);
+        }
 
-    /* ป้องกันการซูมเมื่อ Double Tap */
-    * {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -khtml-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-      touch-action: manipulation;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* ปุ่มควบคุมมือถือ */
-    .mobile-controls {
-      position: fixed;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      z-index: 50;
-    }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* ป้องกันการเลื่อน */
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            touch-action: manipulation; /* ป้องกัน double-tap to zoom */
+        }
 
-    /* จอยสติ๊ก */
-    #joystick-area {
-      position: relative;
-      width: 150px;
-      height: 150px;
-      margin-left: 30px;
-      pointer-events: auto;
-    }
+        .screen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: fadeIn 0.5s ease-in-out;
+        }
 
-    #joystick-bg, #joystick-stick {
-      position: absolute;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
+        .screen.active {
+            display: flex;
+        }
 
-    #joystick-bg {
-      width: 120px;
-      height: 120px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      left: 75px; top: 75px;
-    }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
 
-    #joystick-stick {
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.4);
-      border: 2px solid rgba(0, 0, 0, 0.3);
-      left: 75px; top: 75px;
-      transition: all 0.1s linear;
-    }
+        h1, h2 {
+            text-shadow: var(--glow-secondary);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 3rem;
+        }
 
-    /* ปุ่ม Action */
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-right: 30px;
-      pointer-events: auto;
-    }
+        .button {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 1.2rem;
+            font-family: 'Kanit', sans-serif;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-shadow: var(--glow-primary);
+            box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.5), 0 0 10px rgba(255, 0, 255, 0.5);
+        }
 
-    .action-button {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 18px;
-      color: white;
-      font-weight: bold;
-      text-shadow: 1px 1px 2px #000;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
+        .button:hover {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            box-shadow: var(--glow-primary);
+        }
 
-    #action-btn {
-      background: rgba(255, 80, 80, 0.6);
-      border: 2px solid rgba(255, 0, 0, 0.8);
-    }
+        .button.secondary {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+            text-shadow: var(--glow-secondary);
+            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.5), 0 0 10px rgba(0, 255, 255, 0.5);
+        }
 
-    #menu-btn {
-      background: rgba(80, 80, 255, 0.6);
-      border: 2px solid rgba(0, 0, 255, 0.8);
-    }
+        .button.secondary:hover {
+            background: var(--secondary-color);
+            color: var(--bg-color);
+            box-shadow: var(--glow-secondary);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        #game-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    #jump-btn {
-      background: rgba(80, 255, 80, 0.6);
-      border: 2px solid rgba(0, 255, 0, 0.8);
-    }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 90vw;
+            height: 90vw;
+            max-width: 400px;
+            max-height: 400px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
 
-    /* กล่องข้อความ */
-    #dialog-box {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.9);
-      border: 4px solid #4a2c12;
-      border-radius: 10px;
-      padding: 15px;
-      color: white;
-      display: none;
-      z-index: 100;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5vw;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        @media (min-width: 600px) {
+            .cell {
+                font-size: 3rem;
+            }
+        }
 
-    #dialog-text {
-      margin-bottom: 15px;
-      line-height: 1.5;
-      min-height: 60px;
-    }
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
 
-    #dialog-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        .cell.x {
+            color: var(--primary-color);
+            text-shadow: var(--glow-primary);
+        }
 
-    .dialog-option {
-      background: #4a2c12;
-      border: 2px solid #6d4a2a;
-      border-radius: 5px;
-      padding: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+        .cell.o {
+            color: var(--secondary-color);
+            text-shadow: var(--glow-secondary);
+        }
+        
+        .cell.fading {
+            animation: fadeOut 0.5s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.5); }
+        }
 
-    .dialog-option:hover {
-      background: #6d4a2a;
-    }
+        #status-display, #turn-display {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            min-height: 2.2rem;
+            text-align: center;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
 
-    /* เมนูเกม */
-    #game-menu {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      display: none;
-    }
+        .input-field {
+            padding: 10px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            color: var(--text-color);
+            text-align: center;
+            width: 200px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            box-shadow: var(--glow-secondary);
+        }
+        
+        #room-lobby .room-code {
+            font-size: 2rem;
+            background: #1a1a2e;
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px dashed var(--primary-color);
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+        }
+        
+        #room-lobby .player-status {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .ready-status {
+            color: #ff5555;
+        }
+        
+        .ready-status.ready {
+            color: #55ff55;
+        }
+        
+        /* Loading Animation */
+        #loading-screen .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--primary-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
 
-    .menu-title {
-      color: #f8d030;
-      font-size: 2.5rem;
-      margin-bottom: 2rem;
-      text-shadow: 2px 2px 0 #b88a00;
-    }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none; /* Initially hidden */
+        }
+        
+        #game-over-modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-color);
+            padding: 40px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-color);
+            text-align: center;
+            box-shadow: var(--glow-primary);
+            animation: fadeIn 0.3s;
+        }
 
-    .menu-button {
-      background: #4a2c12;
-      border: 4px solid #6d4a2a;
-      border-radius: 10px;
-      color: white;
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      min-width: 200px;
-      text-align: center;
-      transition: background 0.2s;
-    }
-
-    .menu-button:hover {
-      background: #6d4a2a;
-    }
-
-    /* สถานะผู้เล่น */
-    #player-status {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      border: 3px solid #4a2c12;
-      border-radius: 8px;
-      padding: 10px;
-      color: white;
-      font-size: 14px;
-      min-width: 180px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      z-index: 10;
-    }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-
-    .status-label {
-      width: 70px;
-    }
-
-    .status-value {
-      flex-grow: 1;
-    }
-
-    .status-bar {
-      height: 10px;
-      background: #333;
-      border-radius: 5px;
-      margin-top: 3px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .health-bar {
-      height: 100%;
-      background: linear-gradient(to right, #ff0000, #ff4444);
-      width: 100%;
-      transition: width 0.3s;
-    }
-
-    .energy-bar {
-      height: 100%;
-      background: linear-gradient(to right, #0066ff, #44aaff);
-      width: 100%;
-      transition: width 0.3s;
-    }
-
-    /* เอฟเฟกต์เปลี่ยนฉาก */
-    .scene-transition {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      z-index: 300;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease-in-out;
-    }
-
-    /* เควส UI */
-    #quest-log {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      border: 3px solid #4a2c12;
-      border-radius: 8px;
-      padding: 10px;
-      color: white;
-      font-size: 14px;
-      max-width: 200px;
-      max-height: 150px;
-      overflow-y: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      z-index: 10;
-      display: none;
-    }
-
-    #quest-log h3 {
-      margin-top: 0;
-      color: #f8d030;
-      border-bottom: 1px solid #6d4a2a;
-      padding-bottom: 5px;
-    }
-
-    .quest-item {
-      margin-bottom: 8px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed #4a2c12;
-    }
-
-    /* ปุ่มเปิดปิด UI */
-    .ui-toggle {
-      position: fixed;
-      width: 40px;
-      height: 40px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid #4a2c12;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-weight: bold;
-      z-index: 20;
-      cursor: pointer;
-    }
-
-    #toggle-quest {
-      top: 60px;
-      right: 10px;
-    }
-
-    #toggle-stats {
-      top: 110px;
-      right: 10px;
-    }
-  </style>
+    </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+    <div id="main-menu" class="screen active">
+        <h1>Bangkok XO</h1>
+        <button id="play-bot-btn" class="button">เล่นกับบอท (โหดสุดๆ)</button>
+        <button id="play-coop-btn" class="button secondary">เล่นกับเพื่อน (Co-op)</button>
+    </div>
 
-<!-- ระบบควบคุมมือถือ -->
-<div class="mobile-controls">
-  <div id="joystick-area">
-    <div id="joystick-bg"></div>
-    <div id="joystick-stick"></div>
-  </div>
-  
-  <div class="action-buttons">
-    <div class="action-button" id="jump-btn">กระโดด</div>
-    <div class="action-button" id="action-btn">คุย</div>
-    <div class="action-button" id="menu-btn">เมนู</div>
-  </div>
-</div>
+    <div id="loading-screen" class="screen">
+        <div class="loader"></div>
+    </div>
 
-<!-- กล่องข้อความ -->
-<div id="dialog-box">
-  <div id="dialog-text"></div>
-  <div id="dialog-options"></div>
-</div>
-
-<!-- เมนูเกม -->
-<div id="game-menu">
-  <div class="menu-title">ตำนานแห่งอัญมณีที่ถูกลืม</div>
-  <div class="menu-button" id="continue-btn">เล่นต่อ</div>
-  <div class="menu-button" id="new-game-btn">เกมใหม่</div>
-  <div class="menu-button" id="settings-btn">ตั้งค่า</div>
-  <div class="menu-button" id="quit-btn">ออกจากเกม</div>
-</div>
-
-<!-- สถานะผู้เล่น -->
-<div id="player-status">
-  <div class="status-row">
-    <div class="status-label">ชื่อ:</div>
-    <div class="status-value" id="player-name">นักผจญภัย</div>
-  </div>
-  <div class="status-row">
-    <div class="status-label">HP:</div>
-    <div class="status-value" id="hp-text">100/100</div>
-  </div>
-  <div class="status-bar"><div class="health-bar" id="health-bar"></div></div>
-  <div class="status-row">
-    <div class="status-label">พลังงาน:</div>
-    <div class="status-value" id="energy-text">50/50</div>
-  </div>
-  <div class="status-bar"><div class="energy-bar" id="energy-bar"></div></div>
-  <div class="status-row">
-    <div class="status-label">เงิน:</div>
-    <div class="status-value" id="money-text">100</div>
-  </div>
-</div>
-
-<!-- เควส UI -->
-<div id="quest-log">
-  <h3>เควสปัจจุบัน</h3>
-  <div id="quest-list"></div>
-</div>
-
-<!-- ปุ่มเปิดปิด UI -->
-<div class="ui-toggle" id="toggle-quest">Q</div>
-<div class="ui-toggle" id="toggle-stats">S</div>
-
-<!-- เอฟเฟกต์เปลี่ยนฉาก -->
-<div class="scene-transition" id="scene-transition"></div>
-
-<script>
-// Canvas & Context
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-// ขนาดโลกเกม
-const TILE_SIZE = 32;
-const world = {
-  width: 60 * TILE_SIZE,  // 1920px
-  height: 50 * TILE_SIZE  // 1600px
-};
-
-// ระบบสุ่ม
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomFloat(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-// ประเภทฉาก
-const SCENES = {
-  FOREST: 'forest',
-  TOWN: 'town',
-  CAVE: 'cave'
-};
-
-// สร้างแผนที่ด้วย Perlin Noise
-function generateMap(sceneType, width, height) {
-  const map = [];
-  const noise = new PerlinNoise();
-  
-  for (let y = 0; y < height; y++) {
-    const row = [];
-    for (let x = 0; x < width; x++) {
-      // สร้างค่าความสูงจาก noise
-      const elevation = noise.get(x * 0.1, y * 0.1);
-      
-      if (sceneType === SCENES.FOREST) {
-        // ฉากป่า
-        if (elevation > 0.6) {
-          // ภูเขา
-          row.push({ 
-            type: 'mountain', 
-            color: getMountainColor(x, y),
-            walkable: false 
-          });
-        } else if (elevation > 0.4) {
-          // หิน
-          row.push({ 
-            type: 'rock', 
-            color: getRockColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > 0.2) {
-          // ดิน
-          row.push({ 
-            type: 'dirt', 
-            color: getDirtColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.2) {
-          // หญ้า
-          row.push({ 
-            type: 'grass', 
-            color: getGrassColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.4) {
-          // ทราย
-          row.push({ 
-            type: 'sand', 
-            color: getSandColor(x, y),
-            walkable: true 
-          });
-        } else {
-          // น้ำ
-          row.push({ 
-            type: 'water', 
-            color: getWaterColor(x, y),
-            walkable: false 
-          });
-        }
-      } else if (sceneType === SCENES.TOWN) {
-        // ฉากเมือง
-        if (elevation > 0.6) {
-          // อาคาร
-          row.push({ 
-            type: 'building', 
-            color: getBuildingColor(x, y),
-            walkable: false 
-          });
-        } else if (elevation > 0.4) {
-          // ถนนหิน
-          row.push({ 
-            type: 'stone_road', 
-            color: getStoneRoadColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > 0.2) {
-          // ถนนดิน
-          row.push({ 
-            type: 'dirt_road', 
-            color: getDirtRoadColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.2) {
-          // พื้นหญ้าเมือง
-          row.push({ 
-            type: 'town_grass', 
-            color: getTownGrassColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.4) {
-          // แผ่นไม้
-          row.push({ 
-            type: 'wood_plank', 
-            color: getWoodPlankColor(x, y),
-            walkable: true 
-          });
-        } else {
-          // น้ำพุ
-          row.push({ 
-            type: 'fountain', 
-            color: getFountainColor(x, y),
-            walkable: false 
-          });
-        }
-      } else if (sceneType === SCENES.CAVE) {
-        // ฉากถ้ำ
-        if (elevation > 0.6) {
-          // หินยักษ์
-          row.push({ 
-            type: 'big_rock', 
-            color: getBigRockColor(x, y),
-            walkable: false 
-          });
-        } else if (elevation > 0.4) {
-          // หิน
-          row.push({ 
-            type: 'rock', 
-            color: getCaveRockColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > 0.2) {
-          // ดินถ้ำ
-          row.push({ 
-            type: 'cave_dirt', 
-            color: getCaveDirtColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.2) {
-          // หินระยิบระยับ
-          row.push({ 
-            type: 'shiny_rock', 
-            color: getShinyRockColor(x, y),
-            walkable: true 
-          });
-        } else if (elevation > -0.4) {
-          // น้ำใต้ดิน
-          row.push({ 
-            type: 'underground_water', 
-            color: getUndergroundWaterColor(x, y),
-            walkable: false 
-          });
-        } else {
-          // คริสตัล
-          row.push({ 
-            type: 'crystal', 
-            color: getCrystalColor(x, y),
-            walkable: false 
-          });
-        }
-      }
-    }
-    map.push(row);
-  }
-  
-  // เพิ่มรายละเอียดให้แผนที่
-  addFeatures(map, sceneType);
-  
-  return map;
-}
-
-// ฟังก์ชันสร้างสีแบบสุ่มสำหรับแต่ละประเภท Tile
-function getMountainColor(x, y) {
-  const base = 0x8B;
-  const variation = Math.floor(Math.sin(x * 0.2 + y * 0.3) * 20;
-  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
-}
-
-function getRockColor(x, y) {
-  const base = 0xA0;
-  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15;
-  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
-}
-
-function getDirtColor(x, y) {
-  const r = 0x8B + Math.floor(Math.sin(x * 0.1) * 10;
-  const g = 0x45 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x13 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getGrassColor(x, y) {
-  const r = 0x2E + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0x8B + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x57 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getSandColor(x, y) {
-  const r = 0xF4 + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0xA4 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x60 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getWaterColor(x, y) {
-  const r = 0x1E + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
-  const g = 0x90 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
-  const b = 0xFF;
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getBuildingColor(x, y) {
-  const r = 0xB2 + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0x22 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x22 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getStoneRoadColor(x, y) {
-  const base = 0x80;
-  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
-  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
-}
-
-function getDirtRoadColor(x, y) {
-  return getDirtColor(x, y);
-}
-
-function getTownGrassColor(x, y) {
-  const r = 0x7C + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0xFC + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x00 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getWoodPlankColor(x, y) {
-  const r = 0xDE + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0xB8 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x87 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getFountainColor(x, y) {
-  const r = 0x87 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
-  const g = 0xCE + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
-  const b = 0xEB;
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getBigRockColor(x, y) {
-  const base = 0x69;
-  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
-  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
-}
-
-function getCaveRockColor(x, y) {
-  const base = 0x80;
-  const variation = Math.floor(Math.sin(x * 0.1 + y * 0.2) * 15);
-  return `rgb(${base + variation}, ${base + variation}, ${base + variation})`;
-}
-
-function getCaveDirtColor(x, y) {
-  const r = 0x65 + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0x43 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x21 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getShinyRockColor(x, y) {
-  const r = 0xDA + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
-  const g = 0xA5 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
-  const b = 0x20;
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getUndergroundWaterColor(x, y) {
-  const r = 0x41 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
-  const g = 0x69 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
-  const b = 0xE1;
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function getCrystalColor(x, y) {
-  const r = 0x93 + Math.floor(Math.sin(x * 0.2 + y * 0.3) * 10);
-  const g = 0x70 + Math.floor(Math.cos(x * 0.3 + y * 0.2) * 10);
-  const b = 0xDB;
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-// เพิ่มรายละเอียดให้แผนที่ (ต้นไม้, ทางเดิน, ฯลฯ)
-function addFeatures(map, sceneType) {
-  const width = map[0].length;
-  const height = map.length;
-  
-  if (sceneType === SCENES.FOREST) {
-    // เพิ่มต้นไม้ในพื้นที่หญ้า
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (map[y][x].type === 'grass' && Math.random() < 0.05) {
-          map[y][x].feature = 'tree';
-        } else if (map[y][x].type === 'water' && Math.random() < 0.02) {
-          map[y][x].feature = 'lily_pad';
-        }
-      }
-    }
+    <div id="coop-menu" class="screen">
+        <h2>โหมดเล่นกับเพื่อน</h2>
+        <button id="create-room-btn" class="button">สร้างห้อง</button>
+        <div class="input-group">
+            <input type="number" id="room-code-input" class="input-field" placeholder="ใส่รหัสห้อง 4 หลัก">
+        </div>
+        <button id="join-room-btn" class="button secondary">เข้าร่วมห้อง</button>
+        <button id="back-to-main-btn" class="button">กลับ</button>
+    </div>
     
-    // สร้างทางเดินแบบสุ่ม
-    createPath(map, width / 2, height / 2, 100);
+    <div id="room-lobby" class="screen">
+        <h2>รหัสห้อง:</h2>
+        <div id="room-code-display" class="room-code">----</div>
+        <div class="player-status">
+            ผู้เล่น 1: <span id="player1-status" class="ready-status">ยังไม่พร้อม</span>
+        </div>
+        <div class="player-status">
+            ผู้เล่น 2: <span id="player2-status" class="ready-status">ยังไม่พร้อม</span>
+        </div>
+        <p id="lobby-message" style="margin-bottom: 20px;">รอผู้เล่นอีกคน...</p>
+        <button id="ready-btn" class="button">เตรียมพร้อม</button>
+        <button id="cancel-lobby-btn" class="button secondary">ยกเลิก</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div id="game-container">
+            <div id="turn-display"></div>
+            <div id="game-board"></div>
+            <div id="status-display"></div>
+            <button id="back-to-menu-game-btn" class="button" style="margin-top: 20px;">กลับเมนูหลัก</button>
+        </div>
+    </div>
     
-    // เพิ่มดอกไม้
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (map[y][x].type === 'grass' && !map[y][x].feature && Math.random() < 0.03) {
-          map[y][x].feature = 'flower';
-          map[y][x].featureColor = getRandomFlowerColor();
-        }
-      }
-    }
-  }
-  else if (sceneType === SCENES.TOWN) {
-    // เพิ่มบ้านและ NPC ในเมือง
-    const buildingPositions = [];
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (map[y][x].type === 'building' && Math.random() < 0.2) {
-          map[y][x].feature = 'house';
-          buildingPositions.push({x, y});
-        } else if (map[y][x].type === 'town_grass' && Math.random() < 0.03) {
-          map[y][x].feature = 'town_flower';
-          map[y][x].featureColor = getRandomFlowerColor();
-        }
-      }
-    }
-    
-    // เพิ่มร้านค้า
-    if (buildingPositions.length > 0) {
-      const shop = buildingPositions[Math.floor(buildingPositions.length / 2)];
-      map[shop.y][shop.x].feature = 'shop';
-    }
-    
-    // สร้างถนนหลัก
-    createTownRoads(map);
-    
-    // เพิ่มโคมไฟ
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (map[y][x].type === 'stone_road' && Math.random() < 0.05) {
-          map[y][x].feature = 'street_light';
-        }
-      }
-    }
-  }
-  else if (sceneType === SCENES.CAVE) {
-    // เพิ่มคริสตัลในถ้ำ
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (map[y][x].type === 'shiny_rock' && Math.random() < 0.1) {
-          map[y][x].feature = 'crystal_cluster';
-        } else if (map[y][x].type === 'cave_dirt' && Math.random() < 0.02) {
-          map[y][x].feature = 'mushroom';
-        }
-      }
-    }
-    
-    // เพิ่มทางเดินในถ้ำ
-    createCavePaths(map);
-  }
-}
+    <div id="game-over-modal" class="modal-content-wrapper">
+        <div class="modal-content">
+            <h2 id="game-over-message"></h2>
+            <button id="play-again-btn" class="button">เล่นอีกครั้ง</button>
+            <button id="modal-back-to-menu-btn" class="button secondary">กลับเมนูหลัก</button>
+        </div>
+    </div>
 
-function getRandomFlowerColor() {
-  const colors = [
-    '#FF0000', '#FF69B4', '#FFA500', '#FFFF00', 
-    '#00FF00', '#00FFFF', '#0000FF', '#8A2BE2'
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const screens = {
+                mainMenu: document.getElementById('main-menu'),
+                loading: document.getElementById('loading-screen'),
+                coopMenu: document.getElementById('coop-menu'),
+                roomLobby: document.getElementById('room-lobby'),
+                game: document.getElementById('game-screen'),
+            };
+            const buttons = {
+                playBot: document.getElementById('play-bot-btn'),
+                playCoop: document.getElementById('play-coop-btn'),
+                createRoom: document.getElementById('create-room-btn'),
+                joinRoom: document.getElementById('join-room-btn'),
+                backToMain: document.getElementById('back-to-main-btn'),
+                ready: document.getElementById('ready-btn'),
+                cancelLobby: document.getElementById('cancel-lobby-btn'),
+                backToMenuFromGame: document.getElementById('back-to-menu-game-btn'),
+                playAgain: document.getElementById('play-again-btn'),
+                modalBackToMenu: document.getElementById('modal-back-to-menu-btn'),
+            };
+            const gameElements = {
+                board: document.getElementById('game-board'),
+                turnDisplay: document.getElementById('turn-display'),
+                statusDisplay: document.getElementById('status-display'),
+            };
+            const coopElements = {
+                roomCodeInput: document.getElementById('room-code-input'),
+                roomCodeDisplay: document.getElementById('room-code-display'),
+                player1Status: document.getElementById('player1-status'),
+                player2Status: document.getElementById('player2-status'),
+                lobbyMessage: document.getElementById('lobby-message'),
+            };
+            const modalElements = {
+                container: document.getElementById('game-over-modal'),
+                message: document.getElementById('game-over-message'),
+            };
 
-// สร้างทางเดินแบบสุ่ม
-function createPath(map, startX, startY, steps) {
-  let x = startX;
-  let y = startY;
-  
-  for (let i = 0; i < steps; i++) {
-    // ตรวจสอบขอบเขต
-    x = Math.max(1, Math.min(map[0].length - 2, x));
-    y = Math.max(1, Math.min(map.length - 2, y));
-    
-    // เปลี่ยนพื้นที่เป็นทางเดิน
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        if (map[y + dy][x + dx].walkable !== false) {
-          map[y + dy][x + dx].type = 'path';
-          map[y + dy][x + dx].color = getPathColor(x + dx, y + dy);
-        }
-      }
-    }
-    
-    // เคลื่อนที่แบบสุ่ม
-    const dir = randomInt(0, 3);
-    if (dir === 0) y--;
-    else if (dir === 1) y++;
-    else if (dir === 2) x--;
-    else x++;
-  }
-}
+            // Game State
+            let gameState = ["", "", "", "", "", "", "", "", ""];
+            let currentPlayer;
+            let gameActive = false;
+            let gameMode = 'bot'; // 'bot' or 'coop'
+            let moveHistory = []; // For FIFO rule
+            const humanPlayer = 'X';
+            const botPlayer = 'O';
 
-function getPathColor(x, y) {
-  const r = 0xD2 + Math.floor(Math.sin(x * 0.1) * 10);
-  const g = 0xB4 + Math.floor(Math.cos(y * 0.1) * 10);
-  const b = 0x8C + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10);
-  return `rgb(${r}, ${g}, ${b})`;
-}
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]  // Diagonals
+            ];
 
-// สร้างถนนในเมือง
-function createTownRoads(map) {
-  const width = map[0].length;
-  const height = map.length;
-  
-  // ถนนแนวนอน
-  for (let x = 0; x < width; x++) {
-    for (let y = height/2 - 2; y <= height/2 + 2; y++) {
-      if (y >= 0 && y < height) {
-        map[y][x].type = 'stone_road';
-        map[y][x].color = getStoneRoadColor(x, y);
-      }
-    }
-  }
-  
-  // ถนนแนวตั้ง
-  for (let y = 0; y < height; y++) {
-    for (let x = width/2 - 2; x <= width/2 + 2; x++) {
-      if (x >= 0 && x < width) {
-        map[y][x].type = 'stone_road';
-        map[y][x].color = getStoneRoadColor(x, y);
-      }
-    }
-  }
-}
+            // --- Navigation ---
+            function showScreen(screenName) {
+                Object.values(screens).forEach(screen => screen.classList.remove('active'));
+                screens[screenName].classList.add('active');
+            }
 
-// สร้างทางเดินในถ้ำ
-function createCavePaths(map) {
-  const width = map[0].length;
-  const height = map.length;
-  
-  // ทางเดินหลัก
-  for (let x = width/4; x < 3*width/4; x++) {
-    for (let y = height/4 - 1; y <= height/4 + 1; y++) {
-      if (y >= 0 && y < height) {
-        map[y][x].type = 'cave_path';
-        map[y][x].color = getCavePathColor(x, y);
-      }
-    }
-  }
-  
-  // ทางเดินเชื่อม
-  for (let y = height/4; y < 3*height/4; y++) {
-    for (let x = width/2 - 1; x <= width/2 + 1; x++) {
-      if (x >= 0 && x < width) {
-        map[y][x].type = 'cave_path';
-        map[y][x].color = getCavePathColor(x, y);
-      }
-    }
-  }
-}
+            // --- Game Logic ---
+            function startGame() {
+                gameState = ["", "", "", "", "", "", "", "", ""];
+                
+                // *** NEW: Randomize starting player ***
+                currentPlayer = Math.random() < 0.5 ? "X" : "O";
+                
+                gameActive = true;
+                moveHistory = [];
+                gameElements.board.innerHTML = '';
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.index = i;
+                    cell.addEventListener('click', handleCellClick);
+                    gameElements.board.appendChild(cell);
+                }
+                updateTurnDisplay();
+                showScreen('game');
+                
+                // *** NEW: If bot starts, it makes the first move ***
+                if (gameMode === 'bot' && currentPlayer === botPlayer) {
+                    setTimeout(botMove, 500);
+                }
+            }
 
-function getCavePathColor(x, y) {
-  const r = 0x8B + Math.floor(Math.sin(x * 0.1) * 10;
-  const g = 0x45 + Math.floor(Math.cos(y * 0.1) * 10;
-  const b = 0x13 + Math.floor(Math.sin(x * 0.05 + y * 0.05) * 10;
-  return `rgb(${r}, ${g}, ${b})`;
-}
+            function handleCellClick(event) {
+                const clickedCell = event.target;
+                const clickedCellIndex = parseInt(clickedCell.dataset.index);
 
-// ตัวละครหลัก
-const player = {
-  x: world.width / 2,
-  y: world.height / 2,
-  width: 24,
-  height: 32,
-  speed: 3,
-  dx: 0,
-  dy: 0,
-  name: "นักผจญภัย",
-  hp: 100,
-  maxHp: 100,
-  energy: 50,
-  maxEnergy: 50,
-  money: 100,
-  direction: 'down', // 'up', 'down', 'left', 'right'
-  moving: false,
-  jumping: false,
-  jumpHeight: 0,
-  maxJumpHeight: 20,
-  skinColor: '#FFDBAC',
-  hairColor: '#8B4513',
-  shirtColor: '#4169E1',
-  pantsColor: '#2E8B57',
-  shoesColor: '#000000',
-  animationFrame: 0,
-  inventory: [],
-  quests: [],
-  experience: 0,
-  level: 1
-};
+                if (gameState[clickedCellIndex] !== "" || !gameActive) {
+                    return;
+                }
+                
+                // In bot mode, prevent human from playing on bot's turn
+                if (gameMode === 'bot' && currentPlayer === botPlayer) {
+                    return;
+                }
+                
+                handleMove(clickedCellIndex);
 
-// NPCs
-const npcs = {
-  forest: [
-    {
-      id: 1,
-      x: world.width / 2 + 150,
-      y: world.height / 2 - 50,
-      width: 24,
-      height: 32,
-      name: "พ่อค้า",
-      skinColor: '#D2B48C',
-      hairColor: '#000000',
-      shirtColor: '#FF6347',
-      pantsColor: '#8B4513',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: false,
-      moveTimer: 0,
-      moveInterval: randomInt(100, 300),
-      dialogues: [
-        {
-          id: 1,
-          text: "สวัสดีนักผจญภัย! ต้องการซื้ออะไรไหม?",
-          options: [
-            { text: "แสดงสินค้า", nextDialog: 2 },
-            { text: "ไม่เป็นไร ขอบคุณ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "นี่คือสินค้าของฉัน:",
-          options: [
-            { text: "ซื้อดาบ (50 เงิน)", action: "buy", item: "sword", cost: 50, nextDialog: 3 },
-            { text: "ซื้อเกราะ (80 เงิน)", action: "buy", item: "armor", cost: 80, nextDialog: 3 },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ขอบคุณสำหรับการซื้อ!",
-          options: [
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "deliver_goods",
-          name: "ส่งของให้พ่อค้า",
-          description: "นำเห็ดหายาก 5 ดอกมาให้พ่อค้า",
-          requiredItem: "rare_mushroom",
-          requiredAmount: 5,
-          reward: 100,
-          rewardItem: "health_potion",
-          rewardAmount: 2,
-          completed: false
-        }
-      ]
-    },
-    {
-      id: 2,
-      x: world.width / 2 - 200,
-      y: world.height / 2 + 100,
-      width: 24,
-      height: 32,
-      name: "นักบวช",
-      skinColor: '#FFDBAC',
-      hairColor: '#FFFFFF',
-      shirtColor: '#9370DB',
-      pantsColor: '#4B0082',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: false,
-      moveTimer: 0,
-      moveInterval: randomInt(150, 400),
-      dialogues: [
-        {
-          id: 1,
-          text: "สวัสดีลูก โลกนี้กำลังตกอยู่ในอันตรายจากความมืด...",
-          options: [
-            { text: "เกิดอะไรขึ้น?", nextDialog: 2 },
-            { text: "ฉันไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "อัญมณีศักดิ์สิทธิ์ที่ปกป้องโลกได้หายไป...",
-          options: [
-            { text: "ฉันจะช่วยหา!", nextDialog: 3, quest: "find_gem" },
-            { text: "นั่นไม่ใช่ปัญหาของฉัน", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ขอบคุณลูก ขอให้พระเจ้าคุ้มครองคุณ",
-          options: [
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "find_gem",
-          name: "ตามหาอัญมณีศักดิ์สิทธิ์",
-          description: "ตามหาอัญมณีศักดิ์สิทธิ์ที่หายไป",
-          requiredItem: "sacred_gem",
-          requiredAmount: 1,
-          reward: 500,
-          rewardItem: "magic_amulet",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    },
-    {
-      id: 3,
-      x: world.width / 2 + 300,
-      y: world.height / 2 - 150,
-      width: 24,
-      height: 32,
-      name: "นักล่า",
-      skinColor: '#D2B48C',
-      hairColor: '#8B4513',
-      shirtColor: '#556B2F',
-      pantsColor: '#8B4513',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: true,
-      moveTimer: 0,
-      moveInterval: randomInt(50, 200),
-      movePattern: 'random',
-      dialogues: [
-        {
-          id: 1,
-          text: "เฮ้! เจอสัตว์ประหลาดตัวใหญ่แถวๆ นั้นไหม?",
-          options: [
-            { text: "เห็นเมื่อกี้ทางเหนือ", nextDialog: 2 },
-            { text: "ไม่เห็น", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "ขอบคุณสำหรับข้อมูล! ถ้าช่วยฉันล่ามันได้จะให้รางวัล",
-          options: [
-            { text: "ตกลง", nextDialog: 3, quest: "hunt_monster" },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ดีมาก! มันมักจะอยู่แถวถ้ำทางเหนือ",
-          options: [
-            { text: "เข้าใจแล้ว", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "hunt_monster",
-          name: "ล่าสัตว์ประหลาด",
-          description: "ล่าสัตว์ประหลาดในป่าและนำหลักฐานมาให้",
-          requiredItem: "monster_claw",
-          requiredAmount: 3,
-          reward: 200,
-          rewardItem: "hunter_bow",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    }
-  ],
-  town: [
-    {
-      id: 4,
-      x: world.width / 2 + 100,
-      y: world.height / 2 - 100,
-      width: 24,
-      height: 32,
-      name: "นายกเทศมนตรี",
-      skinColor: '#FFDBAC',
-      hairColor: '#A9A9A9',
-      shirtColor: '#FFD700',
-      pantsColor: '#000000',
-      shoesColor: '#FFFFFF',
-      direction: 'down',
-      moving: false,
-      moveTimer: 0,
-      moveInterval: randomInt(200, 500),
-      dialogues: [
-        {
-          id: 1,
-          text: "ยินดีต้อนรับสู่เมืองของเรา!",
-          options: [
-            { text: "เมืองนี้สวยมาก", nextDialog: 2 },
-            { text: "ฉันกำลังรีบ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "ขอบคุณ! เราพยายามทำให้เมืองน่าอยู่",
-          options: [
-            { text: "มีอะไรให้ช่วยไหม?", nextDialog: 3 },
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "มีปัญหากับโจรป่ากลุ่มหนึ่ง...",
-          options: [
-            { text: "ฉันจะจัดการพวกเขา", nextDialog: 4, quest: "defeat_bandits" },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 4,
-          text: "ขอบคุณมาก! เราจะให้รางวัลคุณ",
-          options: [
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "defeat_bandits",
-          name: "กำจัดโจรป่า",
-          description: "กำจัดโจรป่า 5 คนที่คุกคามเมือง",
-          requiredItem: "bandit_scarf",
-          requiredAmount: 5,
-          reward: 300,
-          rewardItem: "town_key",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    },
-    {
-      id: 5,
-      x: world.width / 2 - 150,
-      y: world.height / 2 + 50,
-      width: 24,
-      height: 32,
-      name: "พ่อค้าเครื่องประดับ",
-      skinColor: '#D2B48C',
-      hairColor: '#000000',
-      shirtColor: '#FF0000',
-      pantsColor: '#0000FF',
-      shoesColor: '#FFFFFF',
-      direction: 'down',
-      moving: false,
-      moveTimer: 0,
-      moveInterval: randomInt(100, 300),
-      dialogues: [
-        {
-          id: 1,
-          text: "สวัสดี! ต้องการซื้อเครื่องประดับไหม?",
-          options: [
-            { text: "มีอะไรบ้าง?", nextDialog: 2 },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "ฉันมีแหวนและสร้อยคอที่สวยงาม",
-          options: [
-            { text: "ซื้อแหวน (100 เงิน)", action: "buy", item: "ring", cost: 100, nextDialog: 3 },
-            { text: "ซื้อสร้อยคอ (150 เงิน)", action: "buy", item: "necklace", cost: 150, nextDialog: 3 },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ขอบคุณสำหรับการซื้อ!",
-          options: [
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "collect_gems",
-          name: "เก็บรวบรวมอัญมณี",
-          description: "นำอัญมณีสีต่างๆ มาให้พ่อค้าเครื่องประดับ",
-          requiredItem: "colorful_gem",
-          requiredAmount: 10,
-          reward: 400,
-          rewardItem: "gold_ring",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    },
-    {
-      id: 6,
-      x: world.width / 2 - 50,
-      y: world.height / 2 - 150,
-      width: 24,
-      height: 32,
-      name: "นักรบฝึกหัด",
-      skinColor: '#FFDBAC',
-      hairColor: '#8B4513',
-      shirtColor: '#800000',
-      pantsColor: '#000080',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: true,
-      moveTimer: 0,
-      moveInterval: randomInt(50, 150),
-      movePattern: 'patrol',
-      patrolPoints: [
-        {x: world.width / 2 - 50, y: world.height / 2 - 150},
-        {x: world.width / 2 + 50, y: world.height / 2 - 150},
-        {x: world.width / 2 + 50, y: world.height / 2 - 100},
-        {x: world.width / 2 - 50, y: world.height / 2 - 100}
-      ],
-      currentPatrolIndex: 0,
-      dialogues: [
-        {
-          id: 1,
-          text: "เฮ้! อยากฝึกต่อสู้ด้วยไหม?",
-          options: [
-            { text: "ได้เลย", nextDialog: 2 },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "เยี่ยม! ถ้าเอาชนะฉันได้จะให้รางวัล",
-          options: [
-            { text: "เริ่มกันเลย", nextDialog: 3, quest: "sparring" },
-            { text: "ไม่แล้วกัน", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "เตรียมตัวให้ดีนะ!",
-          options: [
-            { text: "เข้าใจแล้ว", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "sparring",
-          name: "ฝึกต่อสู้",
-          description: "เอาชนะนักรบฝึกหัดในการฝึกซ้อม",
-          requiredItem: "sparring_victory",
-          requiredAmount: 1,
-          reward: 150,
-          rewardItem: "training_sword",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    }
-  ],
-  cave: [
-    {
-      id: 7,
-      x: world.width / 2,
-      y: world.height / 2 - 200,
-      width: 24,
-      height: 32,
-      name: "นักสำรวจ",
-      skinColor: '#FFDBAC',
-      hairColor: '#8B4513',
-      shirtColor: '#808080',
-      pantsColor: '#696969',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: true,
-      moveTimer: 0,
-      moveInterval: randomInt(100, 250),
-      movePattern: 'random',
-      dialogues: [
-        {
-          id: 1,
-          text: "ระวังในถ้ำนี้! มีอันตรายมากมาย",
-          options: [
-            { text: "มีอะไรบ้าง?", nextDialog: 2 },
-            { text: "ฉันแข็งแกร่งพอ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "มีสัตว์ประหลาดและกับดักมากมาย",
-          options: [
-            { text: "ขอบคุณที่เตือน", nextDialog: 3 },
-            { text: "ฉันไม่กลัว", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ถ้าคุณพบอัญมณีลึกลับ โปรดนำมาให้ฉันดู",
-          options: [
-            { text: "ได้เลย", nextDialog: -1, quest: "find_mystery_gem" },
-            { text: "ไม่สัญญา", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "find_mystery_gem",
-          name: "อัญมณีลึกลับ",
-          description: "หาอัญมณีลึกลับในถ้ำ",
-          requiredItem: "mystery_gem",
-          requiredAmount: 1,
-          reward: 250,
-          rewardItem: "miner_pickaxe",
-          rewardAmount: 1,
-          completed: false
-        }
-      ]
-    },
-    {
-      id: 8,
-      x: world.width / 2 + 100,
-      y: world.height / 2 + 100,
-      width: 24,
-      height: 32,
-      name: "นักขุด",
-      skinColor: '#D2B48C',
-      hairColor: '#000000',
-      shirtColor: '#A0522D',
-      pantsColor: '#8B4513',
-      shoesColor: '#000000',
-      direction: 'down',
-      moving: false,
-      moveTimer: 0,
-      moveInterval: randomInt(200, 400),
-      dialogues: [
-        {
-          id: 1,
-          text: "โอ้โห! มีคนมาที่นี่ไม่บ่อยนัก",
-          options: [
-            { text: "คุณมาทำอะไรที่นี่?", nextDialog: 2 },
-            { text: "ลาก่อน", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 2,
-          text: "ฉันกำลังขุดหาอัญมณี ถ้าช่วยฉันได้จะแบ่งให้",
-          options: [
-            { text: "ช่วยอะไรบ้าง?", nextDialog: 3 },
-            { text: "ไม่สนใจ", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 3,
-          text: "ช่วยหาวัตถุดิบสำหรับเครื่องมือขุดให้หน่อย",
-          options: [
-            { text: "ได้เลย", nextDialog: 4, quest: "mining_supplies" },
-            { text: "ไม่ว่าง", nextDialog: -1 }
-          ]
-        },
-        {
-          id: 4,
-          text: "ขอบคุณ! ต้องการไม้แข็งและหินแข็ง 5 ชิ้น",
-          options: [
-            { text: "เข้าใจแล้ว", nextDialog: -1 }
-          ]
-        }
-      ],
-      quests: [
-        {
-          id: "mining_supplies",
-          name: "อุปกรณ์ขุดเหมือง",
-          description: "นำไม้แข็งและหินแข็งมาให้นักขุด",
-          requiredItem: "hardwood",
-          requiredAmount: 5,
-          reward: 180,
-          rewardItem: "iron_ore",
-          rewardAmount: 3,
-          completed: false
-        }
-      ]
-    }
-  ]
-};
+                if (gameActive && gameMode === 'bot' && currentPlayer === botPlayer) {
+                    setTimeout(botMove, 500);
+                }
+            }
+            
+            function handleMove(index) {
+                if (gameState[index] !== "" || !gameActive) return;
 
-// กล้อง
-const camera = {
-  x: 0,
-  y: 0,
-  width: window.innerWidth,
-  height: window.innerHeight
-};
+                // FIFO Rule Implementation
+                if (moveHistory.length >= 6) {
+                    const oldestMove = moveHistory.shift(); 
+                    gameState[oldestMove.index] = ""; 
+                    
+                    const cellToClear = gameElements.board.querySelector(`[data-index='${oldestMove.index}']`);
+                    cellToClear.classList.add('fading');
+                    setTimeout(() => {
+                        cellToClear.innerText = "";
+                        cellToClear.classList.remove('x', 'o', 'fading');
+                    }, 500);
+                }
 
-// การควบคุม
-const keys = { up: false, down: false, left: false, right: false, jump: false };
-let actionPressed = false;
-let menuPressed = false;
+                gameState[index] = currentPlayer;
+                moveHistory.push({ player: currentPlayer, index: index });
+                
+                updateBoardUI();
+                if (checkWinner(gameState, currentPlayer)) {
+                    endGame(false);
+                    return;
+                }
+                switchPlayer();
+            }
 
-// สถานะเกม
-const gameState = {
-  paused: false,
-  currentDialog: null,
-  currentNpc: null,
-  inventory: [],
-  money: 100,
-  quests: [],
-  currentScene: SCENES.FOREST,
-  transition: false,
-  showStats: true,
-  showQuests: false
-};
+            function updateBoardUI() {
+                 const cells = gameElements.board.children;
+                 for (let i = 0; i < gameState.length; i++) {
+                     const cell = cells[i];
+                     if (gameState[i] && cell.innerText !== gameState[i]) {
+                         cell.innerText = gameState[i];
+                         cell.classList.remove('x', 'o'); // remove previous classes
+                         cell.classList.add(gameState[i].toLowerCase());
+                     }
+                 }
+            }
 
-// แผนที่เกม
-let gameMap = [];
+            function switchPlayer() {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                updateTurnDisplay();
+            }
+            
+            function endGame(isDraw) {
+                gameActive = false;
+                modalElements.container.classList.add('active');
+                if (isDraw) {
+                    modalElements.message.innerText = "คุณทำได้ดีมาก!\nเสมอกัน!";
+                } else {
+                    modalElements.message.innerText = `ผู้เล่น ${currentPlayer} ชนะ!`;
+                }
+            }
 
-// Perlin Noise สำหรับสร้างแผนที่
-class PerlinNoise {
-  constructor() {
-    this.gradients = {};
-    this.memory = {};
-  }
+            function updateTurnDisplay() {
+                gameElements.turnDisplay.innerText = `ตาของ: ${currentPlayer}`;
+            }
 
-  rand_vect() {
-    const theta = Math.random() * 2 * Math.PI;
-    return { x: Math.cos(theta), y: Math.sin(theta) };
-  }
+            // --- Unbeatable Bot AI (Minimax) ---
+            function botMove() {
+                if (!gameActive) return;
+                const bestMove = findBestMove(gameState);
+                handleMove(bestMove.index);
+            }
 
-  dot_prod_grid(x, y, vx, vy) {
-    let g_vect;
-    const d_vect = { x: x - vx, y: y - vy };
-    if (this.gradients[[vx, vy]]) {
-      g_vect = this.gradients[[vx, vy]];
-    } else {
-      g_vect = this.rand_vect();
-      this.gradients[[vx, vy]] = g_vect;
-    }
-    return d_vect.x * g_vect.x + d_vect.y * g_vect.y;
-  }
+            function findBestMove(board) {
+                let bestVal = -Infinity;
+                let bestMove = {index: -1};
 
-  smootherstep(x) {
-    return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3;
-  }
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] === "") {
+                        board[i] = botPlayer;
+                        let moveVal = minimax(board, 0, false);
+                        board[i] = ""; // backtrack
+                        if (moveVal > bestVal) {
+                            bestMove.index = i;
+                            bestVal = moveVal;
+                        }
+                    }
+                }
+                return bestMove;
+            }
 
-  interp(x, a, b) {
-    return a + this.smootherstep(x) * (b - a);
-  }
+            function minimax(board, depth, isMax) {
+                let score = evaluate(board);
+                if (score === 10) return score - depth;
+                if (score === -10) return score + depth;
+                if (!isMovesLeft(board)) return 0;
 
-  get(x, y) {
-    if (this.memory[[x, y]]) {
-      return this.memory[[x, y]];
-    }
-    
-    const xf = Math.floor(x);
-    const yf = Math.floor(y);
-    
-    // ค่า noise ที่ 4 มุม
-    const tl = this.dot_prod_grid(x, y, xf, yf);
-    const tr = this.dot_prod_grid(x, y, xf + 1, yf);
-    const bl = this.dot_prod_grid(x, y, xf, yf + 1);
-    const br = this.dot_prod_grid(x, y, xf + 1, yf + 1);
-    
-    // Interpolate
-    const xt = this.interp(x - xf, tl, tr);
-    const xb = this.interp(x - xf, bl, br);
-    const v = this.interp(y - yf, xt, xb);
-    
-    this.memory[[x, y]] = v;
-    return v;
-  }
-}
+                if (isMax) { // Bot's turn (Maximizer)
+                    let best = -Infinity;
+                    for (let i = 0; i < board.length; i++) {
+                        if (board[i] === "") {
+                            board[i] = botPlayer;
+                            best = Math.max(best, minimax(board, depth + 1, !isMax));
+                            board[i] = "";
+                        }
+                    }
+                    return best;
+                } else { // Human's turn (Minimizer)
+                    let best = Infinity;
+                    for (let i = 0; i < board.length; i++) {
+                        if (board[i] === "") {
+                            board[i] = humanPlayer;
+                            best = Math.min(best, minimax(board, depth + 1, !isMax));
+                            board[i] = "";
+                        }
+                    }
+                    return best;
+                }
+            }
+            
+            function evaluate(board) {
+                if (checkWinner(board, botPlayer)) return 10;
+                if (checkWinner(board, humanPlayer)) return -10;
+                return 0; // No winner yet
+            }
 
-// วาดตัวละครแบบพิกเซล (ปรับปรุงแล้ว)
-function drawPixelCharacter(x, y, width, height, character, jumpHeight = 0) {
-  const jumpOffset = jumpHeight > 0 ? -jumpHeight : 0;
-  const yPos = y + jumpOffset;
-  
-  // ศีรษะ
-  ctx.fillStyle = character.skinColor;
-  ctx.fillRect(x + width/4, yPos - 8, width/2, 8);
-  
-  // ผม
-  ctx.fillStyle = character.hairColor;
-  if (character.direction === 'left') {
-    ctx.fillRect(x + width/4 - 2, yPos - 8, width/2 + 4, 4);
-    // หูด้านขวา (ถูกบัง)
-    ctx.fillStyle = character.skinColor;
-    ctx.fillRect(x + 3*width/4 - 2, yPos - 6, 2, 4);
-  } else if (character.direction === 'right') {
-    ctx.fillRect(x + width/4 - 2, yPos - 8, width/2 + 4, 4);
-    // หูด้านซ้าย (ถูกบัง)
-    ctx.fillStyle = character.skinColor;
-    ctx.fillRect(x + width/4, yPos - 6, 2, 4);
-  } else {
-    ctx.fillRect(x + width/4, yPos - 10, width/2, 10);
-  }
-  
-  // ตัว
-  ctx.fillStyle = character.shirtColor;
-  ctx.fillRect(x, yPos, width, height - 8);
-  
-  // กางเกง
-  ctx.fillStyle = character.pantsColor;
-  ctx.fillRect(x, yPos + height - 12, width, 4);
-  
-  // รองเท้า
-  ctx.fillStyle = character.shoesColor;
-  ctx.fillRect(x, yPos + height - 8, width, 8);
-  
-  // ตา (กระพริบเมื่อเคลื่อนที่)
-  const eyeOffset = character.moving ? Math.floor(Date.now() / 200) % 2 : 0;
-  ctx.fillStyle = '#000';
-  if (character.direction === 'left' || character.direction === 'right') {
-    ctx.fillRect(x + width/4 + eyeOffset, yPos - 6, 2, 2);
-    ctx.fillRect(x + 3*width/4 - eyeOffset, yPos - 6, 2, 2);
-  } else {
-    ctx.fillRect(x + width/4, yPos - 6 + eyeOffset, 2, 2);
-    ctx.fillRect(x + 3*width/4, yPos - 6 + eyeOffset, 2, 2);
-  }
-  
-  // ปาก
-  if (character.direction === 'down') {
-    ctx.fillRect(x + width/2 - 2, yPos - 4, 4, 1);
-  } else {
-    ctx.fillRect(x + width/2 - 2, yPos - 4, 4, 1);
-  }
-  
-  // แขนและขา
-  const limbOffset = character.moving ? Math.sin(Date.now() / 100) * 3 : 0;
-  
-  if (character.direction === 'left') {
-    // แขนซ้าย (ด้านหน้า)
-    ctx.fillStyle = character.shirtColor;
-    ctx.fillRect(x - 4, yPos + 8, 4, 8);
-    // แขนขวา (ด้านหลัง)
-    ctx.fillRect(x + width, yPos + 8, 4, 4);
-    // ขา
-    ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 12, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + height - 12, 8, 4);
-    // รองเท้า
-    ctx.fillStyle = character.shoesColor;
-    ctx.fillRect(x, yPos + height - 8, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8, 8, 8);
-  } 
-  else if (character.direction === 'right') {
-    // แขนขวา (ด้านหน้า)
-    ctx.fillStyle = character.shirtColor;
-    ctx.fillRect(x + width, yPos + 8, 4, 8);
-    // แขนซ้าย (ด้านหลัง)
-    ctx.fillRect(x - 4, yPos + 8, 4, 4);
-    // ขา
-    ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 12, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + height - 12, 8, 4);
-    // รองเท้า
-    ctx.fillStyle = character.shoesColor;
-    ctx.fillRect(x, yPos + height - 8, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8, 8, 8);
-  } 
-  else if (character.direction === 'up') {
-    // แขน
-    ctx.fillStyle = character.shirtColor;
-    ctx.fillRect(x, yPos + 8 + limbOffset, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + 8 - limbOffset, 8, 4);
-    // ขา
-    ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 12 - limbOffset, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + height - 12 + limbOffset, 8, 4);
-    // รองเท้า
-    ctx.fillStyle = character.shoesColor;
-    ctx.fillRect(x, yPos + height - 8 - limbOffset/2, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8 + limbOffset/2, 8, 8);
-  } 
-  else { // down
-    // แขน
-    ctx.fillStyle = character.shirtColor;
-    ctx.fillRect(x, yPos + 8 - limbOffset, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + 8 + limbOffset, 8, 4);
-    // ขา
-    ctx.fillStyle = character.pantsColor;
-    ctx.fillRect(x, yPos + height - 12 + limbOffset, 8, 4);
-    ctx.fillRect(x + width - 8, yPos + height - 12 - limbOffset, 8, 4);
-    // รองเท้า
-    ctx.fillStyle = character.shoesColor;
-    ctx.fillRect(x, yPos + height - 8 + limbOffset/2, 8, 8);
-    ctx.fillRect(x + width - 8, yPos + height - 8 - limbOffset/2, 8, 8);
-  }
-}
+            function checkWinner(board, player) {
+                for (let i = 0; i < winningConditions.length; i++) {
+                    const [a, b, c] = winningConditions[i];
+                    if (board[a] === player && board[b] === player && board[c] === player) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
-// วาดต้นไม้แบบใหม่ (ใหญ่ขึ้น)
-function drawTree(x, y) {
-  // ลำต้น (ใหญ่ขึ้น)
-  ctx.fillStyle = '#8B4513'; // สีน้ำตาล
-  ctx.fillRect(x + TILE_SIZE/3, y + TILE_SIZE/2, TILE_SIZE/3, TILE_SIZE);
-  
-  // เปลือกไม้
-  ctx.fillStyle = '#654321';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/3 + 2, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/3 + 4, y + TILE_SIZE/2 + 2);
-  ctx.lineTo(x + TILE_SIZE/3 + 2, y + TILE_SIZE/2 + 4);
-  ctx.lineTo(x + TILE_SIZE/3, y + TILE_SIZE/2 + 2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // ใบไม้ (ใหญ่ขึ้น)
-  ctx.fillStyle = '#228B22'; // สีเขียว
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2, y);
-  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE/3);
-  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2);
-  ctx.lineTo(x, y + TILE_SIZE);
-  ctx.lineTo(x, y + TILE_SIZE/3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // รายละเอียดใบไม้
-  ctx.fillStyle = '#2E8B57';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2, y + TILE_SIZE/4);
-  ctx.lineTo(x + 3*TILE_SIZE/4, y + TILE_SIZE/3);
-  ctx.lineTo(x + 3*TILE_SIZE/4, y + 2*TILE_SIZE/3);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/4, y + 2*TILE_SIZE/3);
-  ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // ผลไม้ (ถ้ามี)
-  if (Math.random() > 0.7) {
-    ctx.fillStyle = '#FF0000';
-    ctx.beginPath();
-    ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/3, 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#8B0000';
-    ctx.beginPath();
-    ctx.arc(x + TILE_SIZE/2 + 1, y + TILE_SIZE/3 - 1, 1, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
+            function isMovesLeft(board) {
+                return board.some(cell => cell === "");
+            }
 
-// วาดดอกไม้
-function drawFlower(x, y, color) {
-  ctx.fillStyle = color;
-  // กลีบดอก
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const petalX = x + TILE_SIZE/2 + Math.cos(angle) * 4;
-    const petalY = y + TILE_SIZE/2 + Math.sin(angle) * 4;
-    ctx.beginPath();
-    ctx.arc(petalX, petalY, 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // ตรงกลาง
-  ctx.fillStyle = '#FFD700';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 2, 0, Math.PI * 2);
-  ctx.fill();
-  // ก้าน
-  ctx.fillStyle = '#008000';
-  ctx.fillRect(x + TILE_SIZE/2 - 1, y + TILE_SIZE/2 + 4, 2, 4);
-}
-
-// วาดบ้าน
-function drawHouse(x, y) {
-  // ฐานบ้าน
-  ctx.fillStyle = '#B22222';
-  ctx.fillRect(x, y + TILE_SIZE/2, TILE_SIZE, TILE_SIZE);
-  
-  // หน้าต่าง
-  ctx.fillStyle = '#87CEEB';
-  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 8, 8);
-  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 8, 8);
-  
-  // กรอบหน้าต่าง
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 8, 1);
-  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 15, 8, 1);
-  ctx.fillRect(x + 8, y + TILE_SIZE/2 + 8, 1, 8);
-  ctx.fillRect(x + 15, y + TILE_SIZE/2 + 8, 1, 8);
-  
-  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 8, 1);
-  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 15, 8, 1);
-  ctx.fillRect(x + TILE_SIZE - 16, y + TILE_SIZE/2 + 8, 1, 8);
-  ctx.fillRect(x + TILE_SIZE - 9, y + TILE_SIZE/2 + 8, 1, 8);
-  
-  // หลังคา
-  ctx.fillStyle = '#8B0000';
-  ctx.beginPath();
-  ctx.moveTo(x, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y);
-  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE/2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // ประตู
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(x + TILE_SIZE/2 - 4, y + TILE_SIZE - 8, 8, 8);
-  
-  // ลูกบิดประตู
-  ctx.fillStyle = '#FFD700';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE - 4, 1, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // ปล่องไฟ
-  ctx.fillStyle = '#696969';
-  ctx.fillRect(x + 10, y + TILE_SIZE/2 - 4, 4, 4);
-  
-  // ควัน
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.beginPath();
-  ctx.arc(x + 12, y + TILE_SIZE/2 - 8, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x + 15, y + TILE_SIZE/2 - 10, 2, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// วาดร้านค้า
-function drawShop(x, y) {
-  // ฐานร้าน
-  ctx.fillStyle = '#CD5C5C';
-  ctx.fillRect(x, y + TILE_SIZE/2, TILE_SIZE, TILE_SIZE);
-  
-  // หน้าต่างแสดงสินค้า
-  ctx.fillStyle = '#87CEEB';
-  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, TILE_SIZE - 8, 8);
-  
-  // กรอบหน้าต่าง
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, TILE_SIZE - 8, 1);
-  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 11, TILE_SIZE - 8, 1);
-  ctx.fillRect(x + 4, y + TILE_SIZE/2 + 4, 1, 8);
-  ctx.fillRect(x + TILE_SIZE - 5, y + TILE_SIZE/2 + 4, 1, 8);
-  
-  // หลังคา
-  ctx.fillStyle = '#A52A2A';
-  ctx.beginPath();
-  ctx.moveTo(x, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y);
-  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE/2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // ป้ายร้าน
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(x + TILE_SIZE/4, y - 4, TILE_SIZE/2, 4);
-  
-  // ข้อความป้าย
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 8px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('SHOP', x + TILE_SIZE/2, y - 1);
-  
-  // ประตู
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(x + TILE_SIZE/2 - 4, y + TILE_SIZE - 8, 8, 8);
-  
-  // ลูกบิดประตู
-  ctx.fillStyle = '#FFD700';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE - 4, 1, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// วาดโคมไฟถนน
-function drawStreetLight(x, y) {
-  // เสา
-  ctx.fillStyle = '#696969';
-  ctx.fillRect(x + TILE_SIZE/2 - 1, y, 2, TILE_SIZE/2);
-  
-  // โคมไฟ
-  ctx.fillStyle = '#D3D3D3';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2 - 4, y + TILE_SIZE/4);
-  ctx.lineTo(x + TILE_SIZE/2 + 4, y + TILE_SIZE/4);
-  ctx.lineTo(x + TILE_SIZE/2 + 2, y + TILE_SIZE/4 + 4);
-  ctx.lineTo(x + TILE_SIZE/2 - 2, y + TILE_SIZE/4 + 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // แสงไฟ
-  ctx.fillStyle = 'rgba(255, 255, 150, 0.3)';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2 - 4, y + TILE_SIZE/4 + 4);
-  ctx.lineTo(x + TILE_SIZE/2 + 4, y + TILE_SIZE/4 + 4);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE);
-  ctx.closePath();
-  ctx.fill();
-  
-  // หลอดไฟ
-  ctx.fillStyle = '#FFFF00';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/4 + 2, 2, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// วาดคริสตัล
-function drawCrystal(x, y) {
-  ctx.fillStyle = '#9370DB';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2, y);
-  ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE);
-  ctx.lineTo(x, y + TILE_SIZE/2);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2, y + TILE_SIZE/4);
-  ctx.lineTo(x + 3*TILE_SIZE/4, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y + 3*TILE_SIZE/4);
-  ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // แสงสะท้อน
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/4, y + TILE_SIZE/4);
-  ctx.lineTo(x + TILE_SIZE/4 + 4, y + TILE_SIZE/4);
-  ctx.lineTo(x + TILE_SIZE/4, y + TILE_SIZE/4 + 4);
-  ctx.closePath();
-  ctx.fill();
-}
-
-// วาดเห็ด
-function drawMushroom(x, y) {
-  // ก้าน
-  ctx.fillStyle = '#F5DEB3';
-  ctx.fillRect(x + TILE_SIZE/2 - 1, y + TILE_SIZE/2 + 2, 2, 6);
-  
-  // หมวก
-  ctx.fillStyle = '#FF0000';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 4, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // จุด
-  ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2 - 2, y + TILE_SIZE/2 - 1, 1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2 + 2, y + TILE_SIZE/2, 1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2 + 1, 1, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// วาดแผนที่
-function drawMap() {
-  const startX = Math.max(0, Math.floor(camera.x / TILE_SIZE));
-  const startY = Math.max(0, Math.floor(camera.y / TILE_SIZE));
-  const endX = Math.min(gameMap[0].length, Math.ceil((camera.x + camera.width) / TILE_SIZE));
-  const endY = Math.min(gameMap.length, Math.ceil((camera.y + camera.height) / TILE_SIZE));
-  
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      const tile = gameMap[y][x];
-      
-      // วาดพื้น
-      ctx.fillStyle = tile.color;
-      ctx.fillRect(
-        x * TILE_SIZE - camera.x,
-        y * TILE_SIZE - camera.y,
-        TILE_SIZE,
-        TILE_SIZE
-      );
-      
-      // วาดรายละเอียด
-      if (tile.feature === 'tree') {
-        drawTree(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'flower' || tile.feature === 'town_flower') {
-        drawFlower(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y,
-          tile.featureColor
-        );
-      } else if (tile.feature === 'house') {
-        drawHouse(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'shop') {
-        drawShop(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'street_light') {
-        drawStreetLight(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'crystal_cluster') {
-        drawCrystal(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'mushroom') {
-        drawMushroom(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      } else if (tile.feature === 'lily_pad') {
-        drawLilyPad(
-          x * TILE_SIZE - camera.x,
-          y * TILE_SIZE - camera.y
-        );
-      }
-    }
-  }
-}
-
-// วาดใบบัว
-function drawLilyPad(x, y) {
-  ctx.fillStyle = '#008000';
-  ctx.beginPath();
-  ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/2, 6, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // รอยแยก
-  ctx.fillStyle = '#006400';
-  ctx.beginPath();
-  ctx.moveTo(x + TILE_SIZE/2, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2 + 6, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2 + 6);
-  ctx.lineTo(x + TILE_SIZE/2 - 6, y + TILE_SIZE/2);
-  ctx.lineTo(x + TILE_SIZE/2, y + TILE_SIZE/2 - 6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // ดอกบัว (บางครั้ง)
-  if (Math.random() > 0.7) {
-    ctx.fillStyle = '#FF69B4';
-    ctx.beginPath();
-    ctx.arc(x + TILE_SIZE/2, y + TILE_SIZE/4, 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-// ระบบบทสนทนา
-function showDialog(npcId, dialogId) {
-  const currentNpcs = npcs[gameState.currentScene];
-  const npc = currentNpcs.find(n => n.id === npcId);
-  if (!npc) return;
-  
-  const dialog = npc.dialogues.find(d => d.id === dialogId);
-  if (!dialog) return;
-  
-  gameState.currentNpc = npcId;
-  gameState.currentDialog = dialogId;
-  gameState.paused = true;
-  
-  const dialogBox = document.getElementById('dialog-box');
-  const dialogText = document.getElementById('dialog-text');
-  const dialogOptions = document.getElementById('dialog-options');
-  
-  dialogText.textContent = `${npc.name}: ${dialog.text}`;
-  dialogOptions.innerHTML = '';
-  
-  dialog.options.forEach(option => {
-    const optionElement = document.createElement('div');
-    optionElement.className = 'dialog-option';
-    optionElement.textContent = option.text;
-    optionElement.addEventListener('click', () => {
-      if (option.nextDialog === -1) {
-        // จบบทสนทนา
-        hideDialog();
-      } else {
-        // แสดงบทสนทนาถัดไป
-        showDialog(npcId, option.nextDialog);
-      }
-      
-      // ตรวจสอบการกระทำพิเศษ
-      if (option.action === 'buy') {
-        if (player.money >= option.cost) {
-          player.money -= option.cost;
-          player.inventory.push(option.item);
-          updatePlayerStatus();
-        } else {
-          alert("เงินของคุณไม่พอ!");
-        }
-      } else if (option.quest) {
-        const npcQuests = npc.quests || [];
-        const quest = npcQuests.find(q => q.id === option.quest);
-        if (quest && !player.quests.some(q => q.id === quest.id && q.completed)) {
-          if (!player.quests.some(q => q.id === quest.id)) {
-            player.quests.push({
-              id: quest.id,
-              name: quest.name,
-              description: quest.description,
-              requiredItem: quest.requiredItem,
-              requiredAmount: quest.requiredAmount,
-              currentAmount: 0,
-              reward: quest.reward,
-              rewardItem: quest.rewardItem,
-              rewardAmount: quest.rewardAmount,
-              completed: false
+            // --- Event Listeners & Co-op Simulation ---
+            buttons.playBot.addEventListener('click', () => {
+                gameMode = 'bot';
+                showScreen('loading');
+                setTimeout(startGame, 1000);
             });
-          }
-          updateQuestLog();
-        }
-      }
-    });
-    dialogOptions.appendChild(optionElement);
-  });
-  
-  dialogBox.style.display = 'block';
-}
 
-function hideDialog() {
-  document.getElementById('dialog-box').style.display = 'none';
-  gameState.currentNpc = null;
-  gameState.currentDialog = null;
-  gameState.paused = false;
-}
+            buttons.playCoop.addEventListener('click', () => {
+                showScreen('coopMenu');
+            });
+            
+            buttons.backToMain.addEventListener('click', () => showScreen('mainMenu'));
+            buttons.cancelLobby.addEventListener('click', () => showScreen('coopMenu'));
+            buttons.backToMenuFromGame.addEventListener('click', () => showScreen('mainMenu'));
 
-// เมนูเกม
-function showGameMenu() {
-  gameState.paused = true;
-  document.getElementById('game-menu').style.display = 'flex';
-  
-  document.getElementById('continue-btn').addEventListener('click', () => {
-    hideGameMenu();
-  });
-  
-  document.getElementById('new-game-btn').addEventListener('click', () => {
-    if (confirm("เริ่มเกมใหม่? ความคืบหน้าปัจจุบันจะหายไป")) {
-      resetGame();
-      hideGameMenu();
-    }
-  });
-  
-  document.getElementById('settings-btn').addEventListener('click', () => {
-    alert("ตั้งค่าเกม (สามารถเพิ่มระบบตั้งค่าที่ซับซ้อนได้ที่นี่)");
-  });
-  
-  document.getElementById('quit-btn').addEventListener('click', () => {
-    if (confirm("ออกจากเกม?")) {
-      window.close();
-    }
-  });
-}
+            let player1Ready = false;
+            let player2Ready = false; 
 
-function hideGameMenu() {
-  document.getElementById('game-menu').style.display = 'none';
-  gameState.paused = false;
-}
+            buttons.createRoom.addEventListener('click', () => {
+                const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+                coopElements.roomCodeDisplay.innerText = roomCode;
+                resetLobby();
+                showScreen('roomLobby');
+                setTimeout(() => { coopElements.lobbyMessage.innerText = "มีผู้เล่นเข้าร่วมแล้ว!"; }, 2000);
+            });
+            
+            buttons.joinRoom.addEventListener('click', () => {
+                const code = coopElements.roomCodeInput.value;
+                if (code.length === 4 && !isNaN(code)) {
+                    coopElements.roomCodeDisplay.innerText = code;
+                    resetLobby();
+                    coopElements.lobbyMessage.innerText = "เข้าร่วมห้องสำเร็จ!";
+                    showScreen('roomLobby');
+                } else {
+                    alert("กรุณาใส่รหัสห้อง 4 หลักให้ถูกต้อง");
+                }
+            });
 
-// เปลี่ยนฉาก
-function changeScene(newScene) {
-  if (gameState.currentScene === newScene || gameState.transition) return;
-  
-  gameState.transition = true;
-  const transitionElement = document.getElementById('scene-transition');
-  transitionElement.style.opacity = '1';
-  
-  setTimeout(() => {
-    gameState.currentScene = newScene;
-    gameMap = generateMap(newScene, world.width / TILE_SIZE, world.height / TILE_SIZE);
-    
-    // ย้ายผู้เล่นไปตำแหน่งที่เหมาะสมในฉากใหม่
-    if (newScene === SCENES.TOWN) {
-      player.x = world.width / 2;
-      player.y = world.height - 100;
-    } else if (newScene === SCENES.CAVE) {
-      player.x = world.width / 2;
-      player.y = 100;
-    } else {
-      player.x = world.width / 2;
-      player.y = world.height / 2;
-    }
-    
-    setTimeout(() => {
-      transitionElement.style.opacity = '0';
-      gameState.transition = false;
-    }, 500);
-  }, 500);
-}
+            buttons.ready.addEventListener('click', () => {
+                player1Ready = !player1Ready;
+                updateLobbyStatus();
+                if (player1Ready && !player2Ready) {
+                    setTimeout(() => {
+                        player2Ready = true;
+                        updateLobbyStatus();
+                        checkIfBothReady();
+                    }, 1500);
+                }
+                 checkIfBothReady();
+            });
+            
+            function resetLobby() {
+                player1Ready = false;
+                player2Ready = false;
+                coopElements.lobbyMessage.innerText = "รอผู้เล่นอีกคน...";
+                updateLobbyStatus();
+            }
 
-// อัพเดทสถานะผู้เล่น
-function updatePlayerStatus() {
-  document.getElementById('player-name').textContent = player.name;
-  document.getElementById('hp-text').textContent = `${player.hp}/${player.maxHp}`;
-  document.getElementById('energy-text').textContent = `${player.energy}/${player.maxEnergy}`;
-  document.getElementById('money-text').textContent = player.money;
-  
-  const healthPercent = (player.hp / player.maxHp) * 100;
-  const energyPercent = (player.energy / player.maxEnergy) * 100;
-  
-  document.getElementById('health-bar').style.width = `${healthPercent}%`;
-  document.getElementById('energy-bar').style.width = `${energyPercent}%`;
-}
+            function updateLobbyStatus() {
+                coopElements.player1Status.innerText = player1Ready ? "พร้อมแล้ว" : "ยังไม่พร้อม";
+                coopElements.player1Status.classList.toggle('ready', player1Ready);
+                coopElements.player2Status.innerText = player2Ready ? "พร้อมแล้ว" : "ยังไม่พร้อม";
+                coopElements.player2Status.classList.toggle('ready', player2Ready);
+            }
 
-// อัพเดทเควสล็อก
-function updateQuestLog() {
-  const questList = document.getElementById('quest-list');
-  questList.innerHTML = '';
-  
-  player.quests.forEach(quest => {
-    if (!quest.completed) {
-      const questItem = document.createElement('div');
-      questItem.className = 'quest-item';
-      
-      const questTitle = document.createElement('div');
-      questTitle.textContent = quest.name;
-      questTitle.style.fontWeight = 'bold';
-      questTitle.style.marginBottom = '3px';
-      
-      const questDesc = document.createElement('div');
-      questDesc.textContent = quest.description;
-      questDesc.style.fontSize = '12px';
-      questDesc.style.marginBottom = '3px';
-      
-      const questProgress = document.createElement('div');
-      questProgress.textContent = `ความคืบหน้า: ${quest.currentAmount}/${quest.requiredAmount}`;
-      questProgress.style.fontSize = '11px';
-      questProgress.style.color = '#AAAAAA';
-      
-      questItem.appendChild(questTitle);
-      questItem.appendChild(questDesc);
-      questItem.appendChild(questProgress);
-      questList.appendChild(questItem);
-    }
-  });
-}
+            function checkIfBothReady() {
+                if (player1Ready && player2Ready) {
+                    coopElements.lobbyMessage.innerText = "กำลังเริ่มเกม...";
+                    setTimeout(() => {
+                        gameMode = 'coop';
+                        startGame();
+                    }, 1000);
+                }
+            }
+            
+            buttons.playAgain.addEventListener('click', () => {
+                modalElements.container.classList.remove('active');
+                startGame();
+            });
 
-// รีเซ็ตเกม
-function resetGame() {
-  player.x = world.width / 2;
-  player.y = world.height / 2;
-  player.hp = player.maxHp;
-  player.energy = player.maxEnergy;
-  player.money = 100;
-  player.direction = 'down';
-  player.moving = false;
-  player.jumping = false;
-  player.jumpHeight = 0;
-  player.inventory = [];
-  player.quests = [];
-  player.experience = 0;
-  player.level = 1;
-  gameState.currentScene = SCENES.FOREST;
-  
-  // สร้างแผนที่ใหม่
-  gameMap = generateMap(gameState.currentScene, world.width / TILE_SIZE, world.height / TILE_SIZE);
-  
-  updatePlayerStatus();
-  updateQuestLog();
-}
+            buttons.modalBackToMenu.addEventListener('click', () => {
+                modalElements.container.classList.remove('active');
+                showScreen('mainMenu');
+            });
 
-// ตั้งค่าควบคุม
-function setupControls() {
-  // -- Joystick --
-  const stick = document.getElementById("joystick-stick");
-  const area = document.getElementById("joystick-area");
-  const joystick = { active: false, startX: 0, startY: 0, dx: 0, dy: 0 };
-  const maxDist = 40;
-
-  area.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    joystick.active = true;
-    joystick.startX = touch.clientX;
-    joystick.startY = touch.clientY;
-  }, { passive: false });
-
-  area.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    if (!joystick.active) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - joystick.startX;
-    const dy = touch.clientY - joystick.startY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx);
-
-    const limitedDist = Math.min(dist, maxDist);
-    joystick.dx = Math.cos(angle) * limitedDist;
-    joystick.dy = Math.sin(angle) * limitedDist;
-
-    player.dx = joystick.dx / maxDist;
-    player.dy = joystick.dy / maxDist;
-
-    // กำหนดทิศทาง
-    if (Math.abs(player.dx) > Math.abs(player.dy)) {
-      player.direction = player.dx > 0 ? 'right' : 'left';
-    } else {
-      player.direction = player.dy > 0 ? 'down' : 'up';
-    }
-    
-    player.moving = true;
-
-    stick.style.left = 75 + joystick.dx + "px";
-    stick.style.top = 75 + joystick.dy + "px";
-  }, { passive: false });
-
-  const resetJoystick = () => {
-    joystick.active = false;
-    player.dx = 0;
-    player.dy = 0;
-    player.moving = false;
-    stick.style.left = "75px";
-    stick.style.top = "75px";
-  };
-  area.addEventListener("touchend", resetJoystick);
-  area.addEventListener("touchcancel", resetJoystick);
-
-  // -- Action Button --
-  const actionButton = document.getElementById('action-btn');
-  actionButton.addEventListener('touchstart', e => {
-    e.preventDefault();
-    actionPressed = true;
-    actionButton.style.background = 'rgba(255,80,80,0.9)';
-  }, { passive: false });
-  actionButton.addEventListener('touchend', e => {
-    e.preventDefault();
-    actionPressed = false;
-    actionButton.style.background = 'rgba(255,80,80,0.6)';
-  }, { passive: false });
-
-  // -- Jump Button --
-  const jumpButton = document.getElementById('jump-btn');
-  jumpButton.addEventListener('touchstart', e => {
-    e.preventDefault();
-    keys.jump = true;
-    jumpButton.style.background = 'rgba(80,255,80,0.9)';
-  }, { passive: false });
-  jumpButton.addEventListener('touchend', e => {
-    e.preventDefault();
-    keys.jump = false;
-    jumpButton.style.background = 'rgba(80,255,80,0.6)';
-  }, { passive: false });
-
-  // -- Menu Button --
-  const menuButton = document.getElementById('menu-btn');
-  menuButton.addEventListener('touchstart', e => {
-    e.preventDefault();
-    menuPressed = true;
-    menuButton.style.background = 'rgba(80,80,255,0.9)';
-  }, { passive: false });
-  menuButton.addEventListener('touchend', e => {
-    e.preventDefault();
-    if (menuPressed) {
-      showGameMenu();
-    }
-    menuPressed = false;
-    menuButton.style.background = 'rgba(80,80,255,0.6)';
-  }, { passive: false });
-
-  // -- Keyboard --
-  window.addEventListener('keydown', e => {
-    if (gameState.paused) return;
-    
-    if (e.key === 'ArrowUp' || e.key === 'w') {
-      keys.up = true;
-      player.direction = 'up';
-      player.moving = true;
-    }
-    if (e.key === 'ArrowDown' || e.key === 's') {
-      keys.down = true;
-      player.direction = 'down';
-      player.moving = true;
-    }
-    if (e.key === 'ArrowLeft' || e.key === 'a') {
-      keys.left = true;
-      player.direction = 'left';
-      player.moving = true;
-    }
-    if (e.key === 'ArrowRight' || e.key === 'd') {
-      keys.right = true;
-      player.direction = 'right';
-      player.moving = true;
-    }
-    if (e.key === ' ' && !player.jumping) {
-      keys.jump = true;
-    }
-    if (e.key === 'e') actionPressed = true;
-    if (e.key === 'Escape') showGameMenu();
-    if (e.key === 'q') toggleQuestLog();
-    if (e.key === 's') toggleStats();
-  });
-  
-  window.addEventListener('keyup', e => {
-    if (e.key === 'ArrowUp' || e.key === 'w') {
-      keys.up = false;
-      player.moving = keys.down || keys.left || keys.right;
-    }
-    if (e.key === 'ArrowDown' || e.key === 's') {
-      keys.down = false;
-      player.moving = keys.up || keys.left || keys.right;
-    }
-    if (e.key === 'ArrowLeft' || e.key === 'a') {
-      keys.left = false;
-      player.moving = keys.up || keys.down || keys.right;
-    }
-    if (e.key === 'ArrowRight' || e.key === 'd') {
-      keys.right = false;
-      player.moving = keys.up || keys.down || keys.left;
-    }
-    if (e.key === ' ') {
-      keys.jump = false;
-    }
-    if (e.key === 'e') actionPressed = false;
-  });
-
-  // -- UI Toggle Buttons --
-  document.getElementById('toggle-quest').addEventListener('click', toggleQuestLog);
-  document.getElementById('toggle-stats').addEventListener('click', toggleStats);
-}
-
-function toggleQuestLog() {
-  gameState.showQuests = !gameState.showQuests;
-  document.getElementById('quest-log').style.display = gameState.showQuests ? 'block' : 'none';
-}
-
-function toggleStats() {
-  gameState.showStats = !gameState.showStats;
-  document.getElementById('player-status').style.display = gameState.showStats ? 'block' : 'none';
-}
-
-// เคลื่อนที่ NPC
-function moveNPCs() {
-  const currentNpcs = npcs[gameState.currentScene];
-  if (!currentNpcs) return;
-  
-  currentNpcs.forEach(npc => {
-    if (npc.moveTimer <= 0) {
-      if (npc.movePattern === 'random') {
-        // เคลื่อนที่แบบสุ่ม
-        const dir = randomInt(0, 3);
-        if (dir === 0) npc.direction = 'up';
-        else if (dir === 1) npc.direction = 'down';
-        else if (dir === 2) npc.direction = 'left';
-        else npc.direction = 'right';
-        
-        npc.moving = true;
-        npc.moveTimer = npc.moveInterval;
-      } else if (npc.movePattern === 'patrol' && npc.patrolPoints) {
-        // เคลื่อนที่ตามจุด patrol
-        const target = npc.patrolPoints[npc.currentPatrolIndex];
-        const dx = target.x - npc.x;
-        const dy = target.y - npc.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance < 5) {
-          npc.currentPatrolIndex = (npc.currentPatrolIndex + 1) % npc.patrolPoints.length;
-        } else {
-          if (Math.abs(dx) > Math.abs(dy)) {
-            npc.direction = dx > 0 ? 'right' : 'left';
-          } else {
-            npc.direction = dy > 0 ? 'down' : 'up';
-          }
-          npc.moving = true;
-        }
-        
-        npc.moveTimer = npc.moveInterval;
-      }
-    } else {
-      npc.moveTimer--;
-      npc.moving = npc.moveTimer > 0;
-    }
-    
-    // ย้ายตำแหน่ง NPC
-    if (npc.moving) {
-      let moveX = 0, moveY = 0;
-      const speed = 1;
-      
-      if (npc.direction === 'up') moveY = -speed;
-      else if (npc.direction === 'down') moveY = speed;
-      else if (npc.direction === 'left') moveX = -speed;
-      else if (npc.direction === 'right') moveX = speed;
-      
-      const newX = npc.x + moveX;
-      const newY = npc.y + moveY;
-      
-      // ตรวจสอบการชนกับสิ่งกีดขวาง
-      const tileX = Math.floor(newX / TILE_SIZE);
-      const tileY = Math.floor(newY / TILE_SIZE);
-      
-      if (tileX >= 0 && tileX < gameMap[0].length && 
-          tileY >= 0 && tileY < gameMap.length) {
-        const tile = gameMap[tileY][tileX];
-        if (tile.walkable !== false) {
-          npc.x = newX;
-          npc.y = newY;
-        } else {
-          npc.moving = false;
-          npc.moveTimer = 0;
-        }
-      }
-      
-      // ตรวจสอบขอบเขต
-      npc.x = Math.max(0, Math.min(world.width - npc.width, npc.x));
-      npc.y = Math.max(0, Math.min(world.height - npc.height, npc.y));
-    }
-  });
-}
-
-function update() {
-  if (gameState.paused || gameState.transition) return;
-  
-  let moveX = 0;
-  let moveY = 0;
-  if (keys.up) moveY -= 1;
-  if (keys.down) moveY += 1;
-  if (keys.left) moveX -= 1;
-  if (keys.right) moveX += 1;
-
-  if (player.dx !== 0 || player.dy !== 0) {
-    moveX = player.dx;
-    moveY = player.dy;
-  }
-  
-  const length = Math.sqrt(moveX * moveX + moveY * moveY);
-  if (length > 0) {
-    moveX = (moveX / length) * player.speed;
-    moveY = (moveY / length) * player.speed;
-  }
-
-  // ตรวจสอบการกระโดด
-  if (keys.jump && !player.jumping) {
-    player.jumping = true;
-    player.jumpHeight = 0;
-  }
-  
-  if (player.jumping) {
-    if (player.jumpHeight < player.maxJumpHeight) {
-      player.jumpHeight += 2;
-    } else {
-      player.jumping = false;
-    }
-  } else if (player.jumpHeight > 0) {
-    player.jumpHeight -= 2;
-  }
-
-  // ย้ายตำแหน่งผู้เล่น
-  const newX = player.x + moveX;
-  const newY = player.y + moveY;
-
-  // ตรวจสอบการเดินทางไปยังฉากใหม่
-  if (newX < 0 && gameState.currentScene === SCENES.FOREST) {
-    changeScene(SCENES.TOWN);
-    return;
-  } else if (newY < 0 && gameState.currentScene === SCENES.FOREST) {
-    changeScene(SCENES.CAVE);
-    return;
-  } else if (newY > world.height - player.height && 
-             (gameState.currentScene === SCENES.TOWN || gameState.currentScene === SCENES.CAVE)) {
-    changeScene(SCENES.FOREST);
-    return;
-  }
-
-  // ตรวจสอบขอบเขตและสิ่งกีดขวาง
-  const tileX = Math.floor(newX / TILE_SIZE);
-  const tileY = Math.floor(newY / TILE_SIZE);
-  
-  if (tileX >= 0 && tileX < gameMap[0].length && 
-      tileY >= 0 && tileY < gameMap.length) {
-    const tile = gameMap[tileY][tileX];
-    if (tile.walkable !== false) {
-      player.x = newX;
-      player.y = newY;
-    }
-  }
-
-  // ตรวจสอบขอบเขตโลก
-  player.x = Math.max(0, Math.min(world.width - player.width, player.x));
-  player.y = Math.max(0, Math.min(world.height - player.height, player.y));
-
-  // อัพเดทกล้อง
-  camera.x = player.x - camera.width / 2 + player.width / 2;
-  camera.y = player.y - camera.height / 2 + player.height / 2;
-
-  camera.x = Math.max(0, Math.min(world.width - camera.width, camera.x));
-  camera.y = Math.max(0, Math.min(world.height - camera.height, camera.y));
-
-  // เคลื่อนที่ NPC
-  moveNPCs();
-
-  // ตรวจสอบการโต้ตอบกับ NPC
-  if (actionPressed) {
-    actionPressed = false;
-    
-    const currentNpcs = npcs[gameState.currentScene];
-    for (const npc of currentNpcs) {
-      const dx = player.x - npc.x;
-      const dy = player.y - npc.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance < 70) {
-        showDialog(npc.id, 1); // เริ่มบทสนทนาด้วย dialog แรก
-        break;
-      }
-    }
-  }
-  
-  // ตรวจสอบการเก็บไอเท็ม
-  checkItemCollection();
-}
-
-// ตรวจสอบการเก็บไอเท็ม
-function checkItemCollection() {
-  const tileX = Math.floor(player.x / TILE_SIZE);
-  const tileY = Math.floor(player.y / TILE_SIZE);
-  
-  if (tileX >= 0 && tileX < gameMap[0].length && 
-      tileY >= 0 && tileY < gameMap.length) {
-    const tile = gameMap[tileY][tileX];
-    
-    if (tile.feature === 'flower' || tile.feature === 'town_flower') {
-      // เก็บดอกไม้
-      player.inventory.push('flower');
-      tile.feature = null;
-      tile.featureColor = null;
-    } else if (tile.feature === 'mushroom') {
-      // เก็บเห็ด
-      player.inventory.push('mushroom');
-      tile.feature = null;
-    } else if (tile.feature === 'crystal_cluster') {
-      // เก็บคริสตัล
-      player.inventory.push('crystal');
-      tile.feature = null;
-    }
-  }
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // วาดแผนที่
-  drawMap();
-  
-  // วาด NPCs
-  ctx.save();
-  ctx.translate(-camera.x, -camera.y);
-  
-  const currentNpcs = npcs[gameState.currentScene];
-  if (currentNpcs) {
-    for (const npc of currentNpcs) {
-      drawPixelCharacter(
-        npc.x, npc.y, npc.width, npc.height, 
-        npc
-      );
-    }
-  }
-  
-  // วาดผู้เล่น
-  drawPixelCharacter(
-    player.x, player.y, player.width, player.height, 
-    player,
-    player.jumpHeight
-  );
-  
-  ctx.restore();
-}
-
-// ปรับขนาด Canvas
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  camera.width = canvas.width;
-  camera.height = canvas.height;
-}
-
-// Game Loop
-function gameLoop() {
-  if (!gameState.paused && !gameState.transition) {
-    update();
-  }
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-// เริ่มเกม
-function initGame() {
-  // สร้างแผนที่
-  gameMap = generateMap(gameState.currentScene, world.width / TILE_SIZE, world.height / TILE_SIZE);
-  
-  // ตั้งค่าควบคุม
-  setupControls();
-  
-  // ปรับขนาด Canvas
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-  
-  // อัพเดทสถานะผู้เล่น
-  updatePlayerStatus();
-  
-  // อัพเดทเควสล็อก
-  updateQuestLog();
-  
-  // ซ่อน UI เริ่มต้น
-  document.getElementById('quest-log').style.display = 'none';
-  
-  // เริ่มเกมลูป
-  gameLoop();
-}
-
-// เริ่มเกมเมื่อหน้าเว็บโหลดเสร็จ
-window.addEventListener('load', initGame);
-</script>
+            // Initial call
+            showScreen('mainMenu');
+        });
+    </script>
 </body>
 </html>
