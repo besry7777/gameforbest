@@ -52,13 +52,15 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          font-size: clamp(3rem, 18vmin, 7rem);
+          /* ADJUSTED: Reduced font size to prevent board resizing */
+          font-size: clamp(3rem, 15vmin, 6rem);
           font-weight: bold;
           cursor: pointer;
           border: 2px solid #e5e7eb; /* gray-200 */
           transition: background-color 0.2s;
-          line-height: 1; /* Prevents text from affecting cell height */
-          overflow: hidden; /* Prevents content from resizing the cell */
+          /* ADDED: Key properties to ensure cell size stability */
+          line-height: 1;
+          overflow: hidden;
       }
       .cell:hover { background-color: #f9fafb; /* gray-50 */ }
       .cell.x { color: var(--x-color); }
@@ -618,7 +620,8 @@
           lineDiv.style.transform = `translate(${left}px, ${top}px) rotate(${angle}deg)`;
           DOM.winningLineContainer.appendChild(lineDiv);
       }
-
+      
+      // MODIFIED: endGame function to handle new GUI
       function endGame(isDraw, winner = null, result = null) {
           AppState.game.isActive = false;
           document.getElementById('leave-game-btn').style.display = 'none';
@@ -638,8 +641,10 @@
          
           const rematchBtn = document.getElementById('rematch-btn');
           rematchBtn.style.display = 'flex';
+          rematchBtn.disabled = false;
+          document.getElementById('rematch-status').textContent = '';
 
-          if (AppState.game.mode === 'coop') {
+          if (AppState.game.mode === 'coop' && AppState.currentRoom.id) {
               updateDoc(doc(db, "rooms", AppState.currentRoom.id), { 'game.rematch': {} });
           }
 
@@ -742,7 +747,7 @@
            showScreen('roomLobby');
 
           } catch (error) {
-              showToast(error, 'error');
+              showToast(error.toString(), 'error');
           }
       }
 
@@ -752,7 +757,7 @@
           AppState.listeners.room = onSnapshot(roomRef, (docSnap) => {
               if (!docSnap.exists()) {
                   const activeScreenId = document.querySelector('.screen.active')?.id;
-                  if (['roomLobby', 'game'].includes(activeScreenId)) {
+                  if (['roomLobby', 'game-screen'].includes(activeScreenId)) {
                       showToast("ห้องถูกปิดแล้ว");
                       cleanupAfterRoom();
                   }
@@ -762,6 +767,7 @@
               const oldData = AppState.currentRoom.data;
               AppState.currentRoom.data = roomData;
              
+               // ADDED: Logic to handle moving from game-over back to lobby for rematch
                if (roomData.status === 'lobby' && oldData?.status !== 'lobby') {
                    showScreen('roomLobby');
                    document.getElementById('game-screen-over-overlay').classList.add('hidden');
@@ -797,6 +803,7 @@
                   }
               }
 
+              // ADDED: Listen for rematch state changes
               if (roomData.game?.rematch) {
                   updateRematchStatus(roomData.game.rematch);
               }
@@ -821,6 +828,10 @@
              const statusText = p.ready
                  ? '<span class="text-green-500 font-semibold">พร้อม</span>'
                  : '<span class="text-red-500">ยังไม่พร้อม</span>';
+             // ADDED: Assigned player symbol from server data
+             if (data.players[AppState.currentUser.uid]) {
+                AppState.playerSymbol = data.players[AppState.currentUser.uid].symbol;
+             }
              playerDiv.innerHTML = `<span>${displayName} (${p.symbol}) - ${statusText}</span>`;
              playerListDiv.appendChild(playerDiv);
              if (!p.ready) allReady = false;
@@ -882,15 +893,18 @@
                   if (!roomDoc.exists()) return;
 
                   const roomData = roomDoc.data();
-                  const players = roomData.players;
+                  const players = {...roomData.players}; // Create a copy to modify
                   const opponentUID = Object.keys(players).find(uid => uid !== AppState.currentUser.uid);
                   delete players[AppState.currentUser.uid];
 
                   if (Object.keys(players).length > 0) {
                       let updates = { players };
-                      if (roomData.status === 'playing') {
+                      if (roomData.status === 'playing' || roomData.status === 'finished') {
                           updates['status'] = 'finished';
-                          updates['game.winner'] = players[opponentUID].symbol;
+                          // Make sure opponent exists before trying to access their properties
+                          if (players[opponentUID]) {
+                            updates['game.winner'] = players[opponentUID].symbol;
+                          }
                       }
                       transaction.update(roomRef, updates);
                   } else {
@@ -919,6 +933,7 @@
           document.getElementById('ready-btn').style.display = 'flex';
       }
      
+      // ADDED: Function to handle rematch request
       async function handleRematchRequest(button) {
           if (!AppState.currentRoom.id) return;
           button.disabled = true;
@@ -926,6 +941,7 @@
           await updateDoc(roomRef, { [`game.rematch.${AppState.currentUser.uid}`]: true });
       }
 
+      // ADDED: Function to update UI based on rematch status
       function updateRematchStatus(rematchData) {
           const rematchStatusEl = document.getElementById('rematch-status');
           const uids = Object.keys(AppState.currentRoom.data.players);
@@ -934,16 +950,24 @@
           const opponentUid = uids.find(uid => uid !== myUid);
 
           if (rematchData[myUid] && rematchData[opponentUid]) {
-               if (uids[0] === myUid) { // Host handles reset
+               // Let the first player in the list handle the room reset to avoid race conditions
+               if (uids[0] === myUid) {
                   const roomRef = doc(db, "rooms", AppState.currentRoom.id);
                   const players = AppState.currentRoom.data.players;
+                  // Reset ready status
                   Object.keys(players).forEach(uid => { players[uid].ready = false; });
                  
+                  // Swap symbols
                   const p1Symbol = players[uids[0]].symbol;
                   players[uids[0]].symbol = players[uids[1]].symbol;
                   players[uids[1]].symbol = p1Symbol;
 
-                  updateDoc(roomRef, { status: "lobby", players: players, game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} } });
+                  // Update Firestore to reset the room to the lobby state
+                  updateDoc(roomRef, { 
+                    status: "lobby", 
+                    players: players, 
+                    game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} } 
+                  });
               }
           } else if (rematchData[myUid]) {
               rematchStatusEl.textContent = "คุณต้องการเล่นอีกครั้ง รออีกฝ่าย...";
@@ -980,6 +1004,7 @@
               else showScreen('mainMenu');
           };
          
+          // MODIFIED: Rematch button logic
           document.getElementById('rematch-btn').onclick = (e) => {
               if (AppState.game.mode === 'coop') {
                   handleRematchRequest(e.currentTarget);
@@ -988,9 +1013,14 @@
               }
           };
 
+          // MODIFIED: Back to menu from game-over screen logic
           document.getElementById('back-to-menu-from-game-btn').onclick = (e) => {
-               if (AppState.game.mode === 'coop' && AppState.currentRoom.id) handleLeaveRoom(e.currentTarget);
-               else showScreen('mainMenu');
+               if (AppState.game.mode === 'coop' && AppState.currentRoom.id) {
+                    handleLeaveRoom(e.currentTarget);
+               }
+               else {
+                    showScreen('mainMenu');
+               }
           };
       }
      
