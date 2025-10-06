@@ -52,13 +52,11 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          /* ADJUSTED: Reduced font size to prevent board resizing */
           font-size: clamp(3rem, 15vmin, 6rem);
           font-weight: bold;
           cursor: pointer;
           border: 2px solid #e5e7eb; /* gray-200 */
           transition: background-color 0.2s;
-          /* ADDED: Key properties to ensure cell size stability */
           line-height: 1;
           overflow: hidden;
       }
@@ -88,6 +86,67 @@
       @keyframes drawLine {
           from { width: 0; }
           to { width: var(--line-width); }
+      }
+      
+      /* NEW: Styles for the new game */
+      .piece {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      .piece-small {
+          width: 60%;
+          height: 60%;
+          font-size: 1.5rem;
+      }
+      .piece-medium {
+          width: 80%;
+          height: 80%;
+          font-size: 2.5rem;
+      }
+      .piece-large {
+          width: 95%;
+          height: 95%;
+          font-size: 3.5rem;
+      }
+      .piece-player1 { background-color: rgba(239, 68, 68, 0.1); }
+      .piece-player2 { background-color: rgba(59, 130, 246, 0.1); }
+      .piece-winner {
+          animation: glow 1.5s infinite alternate;
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      }
+      @keyframes glow {
+          from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+          to { box-shadow: 0 0 20px rgba(255, 215, 0, 0.9); }
+      }
+      .piece-selector {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 20px;
+      }
+      .piece-option {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: all 0.2s;
+          font-size: 1.5rem;
+      }
+      .piece-option.selected {
+          border-color: #3b82f6;
+          transform: scale(1.1);
+      }
+      .piece-option.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
       }
   </style>
 </head>
@@ -169,6 +228,13 @@
           <div id="game-board-container" class="relative">
               <div id="game-board"></div>
               <div id="winning-line-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+          </div>
+          
+          <!-- NEW: Piece selector -->
+          <div id="piece-selector" class="piece-selector hidden">
+              <div class="piece-option piece-small" data-size="small">🐭</div>
+              <div class="piece-option piece-medium" data-size="medium">🐱</div>
+              <div class="piece-option piece-large" data-size="large">🐯</div>
           </div>
          
           <div id="game-screen-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
@@ -313,7 +379,20 @@
           currentRoom: { id: null, data: null, countdownInterval: null },
           playerSymbol: '',
           listeners: { room: null, user: null },
-          game: { state: Array(9).fill(""), history: [], currentPlayer: "X", isActive: false, mode: 'bot', playerSymbols: { X: 'X', O: 'O' } },
+          game: { 
+              state: Array(9).fill(null), 
+              history: [], 
+              currentPlayer: "player1", 
+              isActive: false, 
+              mode: 'bot', 
+              playerSymbols: { player1: '🐭', player2: '🐱' },
+              // NEW: Track available pieces for each player
+              playerPieces: {
+                  player1: { small: 3, medium: 3, large: 3 },
+                  player2: { small: 3, medium: 3, large: 3 }
+              },
+              selectedPieceSize: null
+          },
           loadingTimeout: null,
       };
 
@@ -329,6 +408,7 @@
           gameBoard: document.getElementById('game-board'),
           winningLineContainer: document.getElementById('winning-line-container'),
           turnDisplay: document.getElementById('turn-display'),
+          pieceSelector: document.getElementById('piece-selector'),
       };
 
       // --- Utility Functions ---
@@ -471,16 +551,21 @@
           document.getElementById('rematch-btn').disabled = false;
           document.getElementById('rematch-status').textContent = '';
 
-          AppState.game.state.fill("");
+          // NEW: Reset game state for new game type
+          AppState.game.state.fill(null);
           AppState.game.history = [];
           AppState.game.isActive = true;
-          AppState.game.playerSymbols = { X: 'X', O: 'O' }; // Always use X and O
+          AppState.game.playerPieces = {
+              player1: { small: 3, medium: 3, large: 3 },
+              player2: { small: 3, medium: 3, large: 3 }
+          };
+          AppState.game.selectedPieceSize = null;
          
           if (AppState.game.mode === 'bot') {
               const playerStarts = Math.random() < 0.5;
-              AppState.game.currentPlayer = playerStarts ? 'X' : 'O';
+              AppState.game.currentPlayer = playerStarts ? 'player1' : 'player2';
           } else { // coop
-              AppState.game.currentPlayer = "X";
+              AppState.game.currentPlayer = "player1";
           }
 
           DOM.winningLineContainer.innerHTML = '';
@@ -492,32 +577,98 @@
               cell.onclick = handleCellClick;
               DOM.gameBoard.appendChild(cell);
           }
+          
+          // NEW: Show piece selector
+          DOM.pieceSelector.classList.remove('hidden');
+          updatePieceSelector();
+          
           showScreen('game');
           updateTurnDisplay();
-          if (AppState.game.mode === 'bot' && AppState.game.currentPlayer === 'O') setTimeout(botMove, 500);
+          if (AppState.game.mode === 'bot' && AppState.game.currentPlayer === 'player2') setTimeout(botMove, 500);
+      }
+
+      // NEW: Function to update piece selector UI
+      function updatePieceSelector() {
+          const currentPlayer = AppState.game.currentPlayer;
+          const pieces = AppState.game.playerPieces[currentPlayer];
+          
+          document.querySelectorAll('.piece-option').forEach(option => {
+              const size = option.dataset.size;
+              const count = pieces[size];
+              
+              if (count > 0) {
+                  option.classList.remove('disabled');
+                  option.textContent = AppState.game.playerSymbols[currentPlayer];
+              } else {
+                  option.classList.add('disabled');
+                  option.textContent = '❌';
+              }
+              
+              if (AppState.game.selectedPieceSize === size) {
+                  option.classList.add('selected');
+              } else {
+                  option.classList.remove('selected');
+              }
+          });
       }
 
       function handleCellClick(event) {
           playPopSound();
           if (!AppState.game.isActive) return;
           const index = parseInt(event.target.dataset.index);
+          
+          // NEW: Check if a piece is selected
+          if (!AppState.game.selectedPieceSize) {
+              showToast("กรุณาเลือกขนาดตัวหมากก่อน", 'error');
+              return;
+          }
 
           if (AppState.game.mode === 'bot') {
-              if (AppState.game.state[index] !== "" || AppState.game.currentPlayer !== 'X') return;
+              if (AppState.game.state[index] !== null || AppState.game.currentPlayer !== 'player1') return;
               makeMove(index);
               if (AppState.game.isActive) setTimeout(botMove, 500);
           } else if (AppState.game.mode === 'coop') {
-              if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== "") return;
+              if (AppState.game.currentPlayer !== AppState.playerSymbol || AppState.game.state[index] !== null) return;
              
               let newBoard = [...AppState.game.state];
               let newHistory = [...AppState.game.history];
+              let newPlayerPieces = JSON.parse(JSON.stringify(AppState.game.playerPieces));
+              
+              // NEW: Check if we can place the piece
+              const currentPiece = newBoard[index];
+              if (currentPiece && !canPlacePiece(AppState.game.selectedPieceSize, currentPiece.size)) {
+                  showToast("ไม่สามารถวางตัวหมากขนาดนี้ได้", 'error');
+                  return;
+              }
+              
+              // NEW: Update player pieces
+              newPlayerPieces[AppState.game.currentPlayer][AppState.game.selectedPieceSize]--;
+              
+              // NEW: Update board with piece info
+              newBoard[index] = {
+                  player: AppState.game.currentPlayer,
+                  size: AppState.game.selectedPieceSize,
+                  symbol: AppState.game.playerSymbols[AppState.game.currentPlayer]
+              };
+              
               if (newHistory.length >= CONST.MAX_MOVE_HISTORY) {
                   const oldestMove = newHistory.shift();
-                  newBoard[oldestMove.index] = "";
+                  // NEW: Return piece to player when it's removed from history
+                  if (oldestMove.piece) {
+                      newPlayerPieces[oldestMove.player][oldestMove.piece.size]++;
+                  }
               }
-              newBoard[index] = AppState.game.currentPlayer;
-              newHistory.push({ player: AppState.game.currentPlayer, index: index });
-              const nextTurn = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+              
+              newHistory.push({ 
+                  player: AppState.game.currentPlayer, 
+                  index: index,
+                  piece: {
+                      size: AppState.game.selectedPieceSize,
+                      symbol: AppState.game.playerSymbols[AppState.game.currentPlayer]
+                  }
+              });
+              
+              const nextTurn = AppState.game.currentPlayer === 'player1' ? 'player2' : 'player1';
              
               const roomRef = doc(db, "rooms", AppState.currentRoom.id);
               const winnerResult = checkWinner(newBoard);
@@ -526,32 +677,83 @@
                   "game.board": newBoard,
                   "game.history": newHistory,
                   "game.turn": nextTurn,
+                  "game.playerPieces": newPlayerPieces,
                   "game.winner": winnerResult ? winnerResult.winner : null,
-                  "status": winnerResult || newBoard.every(c => c) ? 'finished' : 'playing'
+                  "status": winnerResult || isBoardFull(newBoard, newPlayerPieces) ? 'finished' : 'playing'
               });
           }
       }
      
+      // NEW: Function to check if a piece can be placed
+      function canPlacePiece(newSize, existingSize) {
+          const sizeOrder = { 'small': 1, 'medium': 2, 'large': 3 };
+          return sizeOrder[newSize] > sizeOrder[existingSize];
+      }
+      
+      // NEW: Function to check if board is full (all pieces placed)
+      function isBoardFull(board, playerPieces) {
+          // Check if all cells are occupied
+          if (board.some(cell => cell === null)) return false;
+          
+          // Check if any player has pieces left
+          for (const player in playerPieces) {
+              for (const size in playerPieces[player]) {
+                  if (playerPieces[player][size] > 0) return false;
+              }
+          }
+          
+          return true;
+      }
+     
       async function makeMove(index) {
-          if (AppState.game.state[index] !== "" || !AppState.game.isActive) return;
+          if (AppState.game.state[index] !== null || !AppState.game.isActive || !AppState.game.selectedPieceSize) return;
+          
+          // NEW: Check if we can place the piece
+          const currentPiece = AppState.game.state[index];
+          if (currentPiece && !canPlacePiece(AppState.game.selectedPieceSize, currentPiece.size)) {
+              showToast("ไม่สามารถวางตัวหมากขนาดนี้ได้", 'error');
+              return;
+          }
+         
+          // NEW: Update player pieces
+          AppState.game.playerPieces[AppState.game.currentPlayer][AppState.game.selectedPieceSize]--;
          
           if (AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
               const oldestMove = AppState.game.history.shift();
-              AppState.game.state[oldestMove.index] = "";
+              // NEW: Return piece to player when it's removed from history
+              if (oldestMove.piece) {
+                  AppState.game.playerPieces[oldestMove.player][oldestMove.piece.size]++;
+              }
           }
          
-          AppState.game.state[index] = AppState.game.currentPlayer;
-          AppState.game.history.push({ player: AppState.game.currentPlayer, index: index });
+          // NEW: Update board with piece info
+          AppState.game.state[index] = {
+              player: AppState.game.currentPlayer,
+              size: AppState.game.selectedPieceSize,
+              symbol: AppState.game.playerSymbols[AppState.game.currentPlayer]
+          };
+          
+          AppState.game.history.push({ 
+              player: AppState.game.currentPlayer, 
+              index: index,
+              piece: {
+                  size: AppState.game.selectedPieceSize,
+                  symbol: AppState.game.playerSymbols[AppState.game.currentPlayer]
+              }
+          });
+          
           updateBoardUI();
          
           const result = checkWinner(AppState.game.state);
           if (result) {
               endGame(false, result.winner, result);
-          } else if (AppState.game.state.every(cell => cell !== "")) {
+          } else if (isBoardFull(AppState.game.state, AppState.game.playerPieces)) {
                endGame(true);
           } else {
-              AppState.game.currentPlayer = AppState.game.currentPlayer === 'X' ? 'O' : 'X';
+              AppState.game.currentPlayer = AppState.game.currentPlayer === 'player1' ? 'player2' : 'player1';
+              AppState.game.selectedPieceSize = null;
               updateTurnDisplay();
+              updatePieceSelector();
           }
       }
 
@@ -559,15 +761,24 @@
           document.querySelectorAll('.cell.indicate-fade').forEach(c => c.classList.remove('indicate-fade'));
           AppState.game.state.forEach((value, i) => {
               const cell = document.querySelector(`.cell[data-index='${i}']`);
-              const displaySymbol = value ? AppState.game.playerSymbols[value] : '';
-              if (cell && cell.innerText !== displaySymbol) {
-                  cell.innerText = displaySymbol;
-                  cell.className = 'cell ' + (value ? value.toLowerCase() : '');
-              } else if (cell && !value && cell.innerText) {
-                   cell.innerText = '';
-                   cell.className = 'cell';
+              
+              // Clear cell
+              cell.innerHTML = '';
+              cell.className = 'cell';
+              
+              if (value) {
+                  const pieceDiv = document.createElement('div');
+                  pieceDiv.className = `piece piece-${value.size} piece-${value.player}`;
+                  pieceDiv.textContent = value.symbol;
+                  cell.appendChild(pieceDiv);
+                  
+                  // Add winner glow if applicable
+                  if (AppState.game.winningPieces && AppState.game.winningPieces.includes(i)) {
+                      pieceDiv.classList.add('piece-winner');
+                  }
               }
           });
+          
           if(AppState.game.history.length >= CONST.MAX_MOVE_HISTORY) {
               const nextToFadeIndex = AppState.game.history[0].index;
               const cellToIndicate = document.querySelector(`.cell[data-index='${nextToFadeIndex}']`);
@@ -580,11 +791,16 @@
               DOM.turnDisplay.innerText = '';
               return;
           }
+          
           const displaySymbol = AppState.game.playerSymbols[AppState.game.currentPlayer];
           if (AppState.game.mode === 'coop') {
-              DOM.turnDisplay.innerText = (AppState.game.currentPlayer === AppState.playerSymbol) ? "ตาของคุณ!" : `รอตาของฝ่ายตรงข้าม (${displaySymbol})`;
+              DOM.turnDisplay.innerText = (AppState.game.currentPlayer === AppState.playerSymbol) 
+                  ? "ตาของคุณ!" 
+                  : `รอตาของฝ่ายตรงข้าม (${displaySymbol})`;
           } else {
-              DOM.turnDisplay.innerText = AppState.game.currentPlayer === 'X' ? `ตาของคุณ (X)` : `ตาของบอท (O)`;
+              DOM.turnDisplay.innerText = AppState.game.currentPlayer === 'player1' 
+                  ? `ตาของคุณ (${displaySymbol})` 
+                  : `ตาของบอท (${displaySymbol})`;
           }
       }
 
@@ -592,34 +808,23 @@
           const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
           for (const line of lines) {
               const [a, b, c] = line;
-              if (board[a] && board[a] === board[b] && board[a] === board[c]) return { winner: board[a], line: line };
+              if (board[a] && board[b] && board[c] && 
+                  board[a].player === board[b].player && 
+                  board[a].player === board[c].player) {
+                  
+                  // NEW: Mark winning pieces for glow effect
+                  AppState.game.winningPieces = line;
+                  
+                  return { 
+                      winner: board[a].player, 
+                      line: line 
+                  };
+              }
           }
           return null;
       }
 
-      function drawWinningLine(result) {
-          const lineDiv = document.createElement('div');
-          lineDiv.className = 'winning-line';
-         
-          const line = result.line;
-          const boardSize = DOM.gameBoard.offsetWidth;
-          const cellSize = boardSize / 3;
-          let angle = 0; let top = 0; let left = 0; let width = boardSize;
-          const lineHeightOffset = 6;
-
-          if (line[0] === 0 && line[2] === 2) { top = (cellSize * 0.5) - lineHeightOffset; }
-          else if (line[0] === 3 && line[2] === 5) { top = (cellSize * 1.5) - lineHeightOffset; }
-          else if (line[0] === 6 && line[2] === 8) { top = (cellSize * 2.5) - lineHeightOffset; }
-          else if (line[0] === 0 && line[2] === 6) { top = (boardSize / 2); left = (cellSize * 0.5) - (boardSize / 2); angle = 90; }
-          else if (line[0] === 1 && line[2] === 7) { top = (boardSize / 2); left = (cellSize * 1.5) - (boardSize / 2); angle = 90; }
-          else if (line[0] === 2 && line[2] === 8) { top = (boardSize / 2); left = (cellSize * 2.5) - (boardSize / 2); angle = 90; }
-          else if (line[0] === 0 && line[2] === 8) { top = 0; left = 0; angle = 45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'top left'; }
-          else if (line[0] === 2 && line[2] === 6) { top = boardSize; left = 0; angle = -45; width = boardSize * 1.414; lineDiv.style.transformOrigin = 'bottom left'; }
-
-          lineDiv.style.setProperty('--line-width', `${width}px`);
-          lineDiv.style.transform = `translate(${left}px, ${top}px) rotate(${angle}deg)`;
-          DOM.winningLineContainer.appendChild(lineDiv);
-      }
+      // MODIFIED: Removed drawWinningLine function since we're using glow effect instead
       
       // MODIFIED: endGame function to handle new GUI
       function endGame(isDraw, winner = null, result = null) {
@@ -634,9 +839,19 @@
           if (isDraw) {
               message.innerText = "เสมอ!";
           } else {
-              playerWon = (AppState.game.mode === 'bot' && winner === 'X') || (AppState.game.mode === 'coop' && winner === AppState.playerSymbol);
+              playerWon = (AppState.game.mode === 'bot' && winner === 'player1') || 
+                         (AppState.game.mode === 'coop' && winner === AppState.playerSymbol);
               message.innerText = playerWon ? "คุณชนะ!" : "คุณแพ้";
-              if(result) drawWinningLine(result);
+              
+              // NEW: Apply glow to winning pieces
+              if (result && result.line) {
+                  result.line.forEach(index => {
+                      const cell = document.querySelector(`.cell[data-index='${index}']`);
+                      if (cell && cell.firstChild) {
+                          cell.firstChild.classList.add('piece-winner');
+                      }
+                  });
+              }
           }
          
           const rematchBtn = document.getElementById('rematch-btn');
@@ -661,19 +876,71 @@
       // --- Bot Logic ---
       function botMove() {
           if (!AppState.game.isActive) return;
-          makeMove(getBestBotMove());
+          
+          // NEW: Bot selects a random available piece size
+          const availableSizes = [];
+          for (const size in AppState.game.playerPieces.player2) {
+              if (AppState.game.playerPieces.player2[size] > 0) {
+                  availableSizes.push(size);
+              }
+          }
+          
+          if (availableSizes.length > 0) {
+              AppState.game.selectedPieceSize = availableSizes[Math.floor(Math.random() * availableSizes.length)];
+              makeMove(getBestBotMove());
+          }
       }
      
       function getBestBotMove() {
           const board = AppState.game.state;
-          for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'O'; if (checkWinner(b)) return i; } }
-          for (let i = 0; i < 9; i++) { if (board[i] === "") { let b = [...board]; b[i] = 'X'; if (checkWinner(b)) return i; } }
-          if (board[4] === "") return 4;
-          const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+          
+          // Try to win
+          for (let i = 0; i < 9; i++) { 
+              if (board[i] === null || canPlacePiece(AppState.game.selectedPieceSize, board[i].size)) { 
+                  let b = [...board];
+                  b[i] = {
+                      player: 'player2',
+                      size: AppState.game.selectedPieceSize,
+                      symbol: AppState.game.playerSymbols.player2
+                  };
+                  if (checkWinner(b)) return i; 
+              } 
+          }
+          
+          // Block player from winning
+          for (let i = 0; i < 9; i++) { 
+              if (board[i] === null || canPlacePiece(AppState.game.selectedPieceSize, board[i].size)) { 
+                  let b = [...board];
+                  b[i] = {
+                      player: 'player1',
+                      size: AppState.game.selectedPieceSize,
+                      symbol: AppState.game.playerSymbols.player1
+                  };
+                  if (checkWinner(b)) return i; 
+              } 
+          }
+          
+          // Prefer center
+          if (board[4] === null || canPlacePiece(AppState.game.selectedPieceSize, board[4].size)) return 4;
+          
+          // Then corners
+          const corners = [0, 2, 6, 8].filter(i => 
+              board[i] === null || canPlacePiece(AppState.game.selectedPieceSize, board[i].size)
+          );
           if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
-          const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+          
+          // Then sides
+          const sides = [1, 3, 5, 7].filter(i => 
+              board[i] === null || canPlacePiece(AppState.game.selectedPieceSize, board[i].size)
+          );
           if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
-          return board.findIndex(s => s === "");
+          
+          // If all else fails, find first available spot
+          for (let i = 0; i < 9; i++) {
+              if (board[i] === null || canPlacePiece(AppState.game.selectedPieceSize, board[i].size)) return i;
+          }
+          
+          return -1; // No valid move
       }
 
       // --- Online (Co-op) Logic ---
@@ -682,7 +949,7 @@
           button.innerHTML = '<span>กำลังสร้าง...</span>';
          
           const roomId = Math.random().toString(36).substring(2, 2 + CONST.ROOM_CODE_LENGTH).toUpperCase();
-          const creatorSymbol = Math.random() < 0.5 ? 'X' : 'O';
+          const creatorSymbol = Math.random() < 0.5 ? 'player1' : 'player2';
           AppState.currentRoom.id = roomId;
           AppState.playerSymbol = creatorSymbol;
           const roomData = {
@@ -695,7 +962,17 @@
                       ready: false
                    }
               },
-              game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} },
+              game: { 
+                  board: Array(9).fill(null), 
+                  history: [], 
+                  turn: "player1", 
+                  playerPieces: {
+                      player1: { small: 3, medium: 3, large: 3 },
+                      player2: { small: 3, medium: 3, large: 3 }
+                  },
+                  winner: null, 
+                  rematch: {} 
+              },
               createdAt: serverTimestamp()
           };
           try {
@@ -728,7 +1005,7 @@
                if (roomData.players[AppState.currentUser.uid]) throw "คุณอยู่ในห้องนี้แล้ว";
 
                const existingPlayerSymbol = Object.values(roomData.players)[0].symbol;
-               const joinerSymbol = existingPlayerSymbol === 'X' ? 'O' : 'X';
+               const joinerSymbol = existingPlayerSymbol === 'player1' ? 'player2' : 'player1';
 
                AppState.currentRoom.id = roomId;
                AppState.playerSymbol = joinerSymbol;
@@ -783,14 +1060,21 @@
 
               if (roomData.game) {
                   if (JSON.stringify(AppState.game.state) !== JSON.stringify(roomData.game.board || [])) {
-                      AppState.game.state = roomData.game.board || Array(9).fill("");
+                      AppState.game.state = roomData.game.board || Array(9).fill(null);
                       AppState.game.history = roomData.game.history || [];
                       updateBoardUI();
+                  }
+                  
+                  // NEW: Update player pieces from server
+                  if (roomData.game.playerPieces) {
+                      AppState.game.playerPieces = roomData.game.playerPieces;
                   }
                  
                   if (AppState.game.currentPlayer !== roomData.game.turn) {
                       AppState.game.currentPlayer = roomData.game.turn;
+                      AppState.game.selectedPieceSize = null;
                       updateTurnDisplay();
+                      updatePieceSelector();
                   }
                  
                   if (roomData.status === 'finished' && AppState.game.isActive) {
@@ -832,7 +1116,7 @@
              if (data.players[AppState.currentUser.uid]) {
                 AppState.playerSymbol = data.players[AppState.currentUser.uid].symbol;
              }
-             playerDiv.innerHTML = `<span>${displayName} (${p.symbol}) - ${statusText}</span>`;
+             playerDiv.innerHTML = `<span>${displayName} (${AppState.game.playerSymbols[p.symbol]}) - ${statusText}</span>`;
              playerListDiv.appendChild(playerDiv);
              if (!p.ready) allReady = false;
          });
@@ -966,7 +1250,17 @@
                   updateDoc(roomRef, { 
                     status: "lobby", 
                     players: players, 
-                    game: { board: Array(9).fill(""), history: [], turn: "X", winner: null, rematch: {} } 
+                    game: { 
+                        board: Array(9).fill(null), 
+                        history: [], 
+                        turn: "player1", 
+                        playerPieces: {
+                            player1: { small: 3, medium: 3, large: 3 },
+                            player2: { small: 3, medium: 3, large: 3 }
+                        },
+                        winner: null, 
+                        rematch: {} 
+                    } 
                   });
               }
           } else if (rematchData[myUid]) {
@@ -1003,6 +1297,17 @@
               if (AppState.game.mode === 'coop') handleLeaveRoom(e.currentTarget);
               else showScreen('mainMenu');
           };
+         
+          // NEW: Piece selector event listeners
+          document.querySelectorAll('.piece-option').forEach(option => {
+              option.addEventListener('click', () => {
+                  if (option.classList.contains('disabled')) return;
+                  
+                  const size = option.dataset.size;
+                  AppState.game.selectedPieceSize = size;
+                  updatePieceSelector();
+              });
+          });
          
           // MODIFIED: Rematch button logic
           document.getElementById('rematch-btn').onclick = (e) => {
