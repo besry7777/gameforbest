@@ -33,7 +33,12 @@
   <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
       <p id="toast-message"></p>
   </div>
- 
+ <div id="loading-overlay" class="loader-overlay">
+    <div class="loader"></div>
+    <p id="loading-percentage" class="loading-text">กำลังเริ่มต้น 0%</p>
+    <button id="reset-button" class="button button-secondary" style="display: none;">ลองอีกครั้ง</button>
+</div>
+
   <main id="app-container" class="w-full h-screen overflow-hidden">
       <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
           <h1 class="text-5xl font-bold mb-2">Super XO</h1>
