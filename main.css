@@ -1,122 +1,136 @@
-/* --- Game Board Styling --- */
-#game-board {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    width: 90vw;
-    height: 90vw;
-    max-width: 450px;
-    max-height: 450px;
-    background-color: #e5e7eb; /* Gray-200 */
-    border-radius: 1rem;
-    gap: 8px; /* ระยะห่างของช่อง */
-    padding: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+/* --- Disable Double-tap Zoom --- */
+body {
+    touch-action: manipulation;
 }
 
-.cell {
-    background-color: #f9fafb; /* Gray-50 */
-    border-radius: 0.75rem;
-    display: flex;
+/* --- Google Font --- */
+body {
+    font-family: 'Kanit', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* ป้องกันแสงกระพริบตอนกดบนมือถือ */
+}
+
+/* --- Screen Transitions --- */
+.screen {
+    display: none; /* ซ่อนทุกหน้าจอไว้ก่อน */
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+.screen.active {
+    display: flex; /* แสดงเฉพาะหน้าจอที่ active */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- General Button Styling --- */
+.button {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.cell:hover {
-    background-color: #d1d5db; /* Gray-300 */
-}
-
-/* --- Piece Styling --- */
-.piece {
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    font-weight: bold;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    user-select: none;
-    z-index: 1;
-}
-.piece-p1 { background-color: #3b82f6; } /* Player 1: Blue */
-.piece-p2 { background-color: #ef4444; } /* Player 2: Red */
-.piece-small { width: 40%; height: 40%; font-size: 1.2rem; z-index: 3; }
-.piece-medium { width: 65%; height: 65%; font-size: 2rem; z-index: 2; }
-.piece-large { width: 90%; height: 90%; font-size: 3rem; z-index: 1;}
-
-/* --- Piece Selector --- */
-.piece-selector {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.75rem;
-    background-color: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    gap: 0.75rem; /* ระยะห่างระหว่าง icon กับ text */
     width: 100%;
-    max-width: 450px;
-}
-.piece-option-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-.piece-option {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0.5rem;
-    background-color: #f3f4f6;
-    border: 2px solid transparent;
+    max-width: 320px;
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: 0.75rem; /* ทำให้ปุ่มโค้งมนสวยงาม */
+    border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 2rem;
-}
-.piece-option.selected {
-    border-color: #3b82f6;
-    background-color: #dbeafe;
-    transform: scale(1.1);
-}
-.piece-option.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-.piece-label {
-    font-size: 0.8rem;
-    color: #4b5563;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* --- Winning Line --- */
-#winning-line-container {
-    position: absolute;
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1);
+}
+
+.button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Button Color Variants --- */
+.button-primary {
+    background-color: #3b82f6; /* Blue */
+    color: white;
+}
+.button-primary:hover {
+    background-color: #2563eb;
+}
+
+.button-success {
+    background-color: #22c55e; /* Green */
+    color: white;
+}
+.button-success:hover {
+    background-color: #16a34a;
+}
+
+.button-danger {
+    background-color: #ef4444; /* Red */
+    color: white;
+}
+.button-danger:hover {
+    background-color: #dc2626;
+}
+
+.button-secondary {
+    background-color: #e5e7eb; /* Gray */
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.button-secondary:hover {
+    background-color: #d1d5db;
+}
+
+/* --- Input Field --- */
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* --- Loading Overlay & Spinner --- */
+.loader-overlay {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    z-index: 5;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
 }
 
-.winning-line {
-    position: absolute;
-    background-color: #16a34a; /* Green */
-    height: 12px; /* ความหนาของเส้น */
-    border-radius: 6px;
-    transform-origin: left center;
-    box-shadow: 0 0 15px rgba(22, 163, 74, 0.7);
-    animation: drawLine 0.5s ease-out forwards;
+.loader {
+    border: 6px solid #f3f3f3; /* Light grey */
+    border-top: 6px solid #3b82f6; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
 }
 
-@keyframes drawLine {
-    from { width: 0; }
-    to { /* width is set by JS */ }
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
