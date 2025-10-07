@@ -50,4 +50,3 @@ const shuffleArray = (array) => {
     }
     return array;
 };
-
