@@ -1,0 +1,131 @@
+/* --- Google Font --- */
+body {
+    font-family: 'Kanit', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* ป้องกันแสงกระพริบตอนกดบนมือถือ */
+}
+
+/* --- Screen Transitions --- */
+.screen {
+    display: none; /* ซ่อนทุกหน้าจอไว้ก่อน */
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+.screen.active {
+    display: flex; /* แสดงเฉพาะหน้าจอที่ active */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- General Button Styling --- */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem; /* ระยะห่างระหว่าง icon กับ text */
+    width: 100%;
+    max-width: 320px;
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: 0.75rem; /* ทำให้ปุ่มโค้งมนสวยงาม */
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1);
+}
+
+.button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Button Color Variants --- */
+.button-primary {
+    background-color: #3b82f6; /* Blue */
+    color: white;
+}
+.button-primary:hover {
+    background-color: #2563eb;
+}
+
+.button-success {
+    background-color: #22c55e; /* Green */
+    color: white;
+}
+.button-success:hover {
+    background-color: #16a34a;
+}
+
+.button-danger {
+    background-color: #ef4444; /* Red */
+    color: white;
+}
+.button-danger:hover {
+    background-color: #dc2626;
+}
+
+.button-secondary {
+    background-color: #e5e7eb; /* Gray */
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.button-secondary:hover {
+    background-color: #d1d5db;
+}
+
+/* --- Input Field --- */
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* --- Loading Overlay & Spinner --- */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.loader {
+    border: 6px solid #f3f3f3; /* Light grey */
+    border-top: 6px solid #3b82f6; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
