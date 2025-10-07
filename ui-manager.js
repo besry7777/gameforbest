@@ -34,51 +34,71 @@ const uiManager = (() => {
 
     let activeScreen = null;
 
+    /**
+     * ฟังก์ชันหลักสำหรับสลับหน้าจอ
+     * @param {string} screenKey Key ของหน้าจอที่ต้องการแสดง (เช่น 'mainMenu', 'game')
+     */
     const showScreen = (screenKey) => {
-        if (!screens[screenKey]) {
-            console.error(`Screen "${screenKey}" not found!`);
+        const newScreen = screens[screenKey];
+
+        if (!newScreen) {
+            console.error(`Screen "${screenKey}" not found in HTML or ui-manager!`);
             return;
         }
 
+        // ซ่อนหน้าจอปัจจุบัน
         if (activeScreen) {
             activeScreen.classList.remove('active');
         }
 
-        activeScreen = screens[screenKey];
-        activeScreen.classList.add('active');
+        // แสดงหน้าจอใหม่
+        newScreen.classList.add('active');
+        activeScreen = newScreen;
     };
 
+    /**
+     * ซ่อน Loading Overlay
+     */
     const hideLoading = () => {
         if (overlays.loading) {
             overlays.loading.style.opacity = '0';
             setTimeout(() => {
                 overlays.loading.style.display = 'none';
-            }, 500);
+            }, 500); // รอให้ animation opacity จบก่อน
+        } else {
+            console.error('Loading overlay element not found!');
         }
     };
     
+    /**
+     * แสดง Overlay ตอนจบเกม
+     * @param {string} message ข้อความที่จะแสดง (เช่น "คุณชนะ!")
+     */
     const showGameOverOverlay = (message) => {
-        if(elements.gameOverMessage) {
+        if (elements.gameOverMessage) {
             elements.gameOverMessage.textContent = message;
         }
-        if(overlays.gameOver) {
-            overlays.gameOver.style.display = 'flex';
-        }
-        if(elements.rematchButtons) {
+        if (elements.rematchButtons) {
             elements.rematchButtons.style.display = 'flex';
         }
-        if(elements.rematchStatus) {
+         if (elements.rematchStatus) {
             elements.rematchStatus.textContent = '';
+        }
+        if (overlays.gameOver) {
+            overlays.gameOver.style.display = 'flex';
         }
     };
 
+    /**
+     * ซ่อน Overlay ตอนจบเกม
+     */
     const hideGameOverOverlay = () => {
-        if(overlays.gameOver) {
+        if (overlays.gameOver) {
             overlays.gameOver.style.display = 'none';
         }
     };
 
-
+    // --- ส่งออกฟังก์ชันและตัวแปรเพื่อให้ไฟล์อื่นเรียกใช้ได้ ---
     return {
         showScreen,
         hideLoading,
