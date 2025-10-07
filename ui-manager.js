@@ -17,7 +17,7 @@ const uiManager = (() => {
     const overlays = {
         loading: document.getElementById('loading-overlay'),
         connectionError: document.getElementById('connection-error-overlay'),
-        gameOver: document.getElementById('game-screen-over-overlay'),
+        gameOver: document.getElementById('game-over-overlay'),
     };
 
     const elements = {
@@ -28,48 +28,35 @@ const uiManager = (() => {
         turnDisplay: document.getElementById('turn-display'),
         gameOverMessage: document.getElementById('game-over-message'),
         rematchStatus: document.getElementById('rematch-status'),
+        rematchButtons: document.getElementById('rematch-buttons'),
         pieceSelector: document.getElementById('piece-selector'),
     };
 
     let activeScreen = null;
 
-    /**
-     * ฟังก์ชันหลักสำหรับสลับหน้าจอ
-     * @param {string} screenKey Key ของหน้าจอที่ต้องการแสดง (เช่น 'mainMenu', 'game')
-     */
     const showScreen = (screenKey) => {
         if (!screens[screenKey]) {
             console.error(`Screen "${screenKey}" not found!`);
             return;
         }
 
-        // ซ่อนหน้าจอปัจจุบัน
         if (activeScreen) {
             activeScreen.classList.remove('active');
         }
 
-        // แสดงหน้าจอใหม่
         activeScreen = screens[screenKey];
         activeScreen.classList.add('active');
     };
 
-    /**
-     * ซ่อน Loading Overlay
-     */
     const hideLoading = () => {
         if (overlays.loading) {
             overlays.loading.style.opacity = '0';
-            // ตั้งเวลาให้ transition เล่นจนจบแล้วค่อย display: none
             setTimeout(() => {
                 overlays.loading.style.display = 'none';
             }, 500);
         }
     };
     
-    /**
-     * แสดง Overlay ตอนจบเกม
-     * @param {string} message ข้อความที่จะแสดง (เช่น "คุณชนะ!")
-     */
     const showGameOverOverlay = (message) => {
         if(elements.gameOverMessage) {
             elements.gameOverMessage.textContent = message;
@@ -77,28 +64,26 @@ const uiManager = (() => {
         if(overlays.gameOver) {
             overlays.gameOver.style.display = 'flex';
         }
-    };
-
-    /**
-     * ซ่อน Overlay ตอนจบเกม
-     */
-    const hideGameOverOverlay = () => {
-        if(overlays.gameOver) {
-            overlays.gameOver.style.display = 'none';
+        if(elements.rematchButtons) {
+            elements.rematchButtons.style.display = 'flex';
         }
         if(elements.rematchStatus) {
             elements.rematchStatus.textContent = '';
         }
     };
 
+    const hideGameOverOverlay = () => {
+        if(overlays.gameOver) {
+            overlays.gameOver.style.display = 'none';
+        }
+    };
 
-    // --- ส่งออกฟังก์ชันและตัวแปรเพื่อให้ไฟล์อื่นเรียกใช้ได้ ---
+
     return {
         showScreen,
         hideLoading,
         showGameOverOverlay,
         hideGameOverOverlay,
-        elements, // ส่ง elements ทั้งหมดออกไปเพื่อให้ง่ายต่อการเข้าถึงจากไฟล์อื่น
+        elements,
     };
 })();
-
