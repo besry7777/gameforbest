@@ -32,33 +32,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let localUid = null;
     let currentMode = null;
     
-    // --- Initialization with Loading Simulation ---
     const initializeApp = () => {
         let progress = 0;
         let authCompleted = false;
 
-        // 1. Simulate loading progress (more stable version)
         const progressInterval = setInterval(() => {
             if (progress < 90 && !authCompleted) {
                 progress++;
-                if (loadingPercentage) {
-                    loadingPercentage.textContent = `กำลังเริ่มต้น ${progress}%`;
-                }
+                if (loadingPercentage) loadingPercentage.textContent = `กำลังเริ่มต้น ${progress}%`;
             } else {
                 clearInterval(progressInterval);
             }
-        }, 30); // Speed of progress bar
+        }, 30);
 
-        // 2. Set a timeout for loading
         const timeoutId = setTimeout(() => {
             if (!authCompleted) {
                 if(buttons.reset) buttons.reset.style.display = 'inline-flex';
                 if(loadingPercentage) loadingPercentage.textContent = 'การเชื่อมต่อช้ากว่าปกติ';
                 clearInterval(progressInterval);
             }
-        }, 10000); // 10 seconds
+        }, 10000);
 
-        // 3. Start actual Firebase authentication
         firebase.auth().signInAnonymously()
             .then(() => {
                 firebase.auth().onAuthStateChanged(user => {
@@ -72,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         localUid = user.uid;
                         if(typeof coopMode !== 'undefined') coopMode.init(localUid);
+                        
                         loadUserProfile();
                         setupEventListeners();
                         
@@ -100,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputs.changeUsername) inputs.changeUsername.value = username;
     };
 
-    // --- Event Listeners Setup ---
     const setupEventListeners = () => {
         if(buttons.playBot) buttons.playBot.addEventListener('click', () => {
             currentMode = 'bot';
@@ -111,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentMode = 'coop';
             uiManager.showScreen('coopMenu');
         });
+        // ... (โค้ดส่วนที่เหลือเหมือนเดิม)
         if(buttons.settings) buttons.settings.addEventListener('click', () => uiManager.showScreen('settings'));
         if(buttons.backToMainFromSettings) buttons.backToMainFromSettings.addEventListener('click', () => uiManager.showScreen('mainMenu'));
         if(buttons.saveSettings) buttons.saveSettings.addEventListener('click', saveUsername);
@@ -144,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const saveUsername = () => {
-        // ... (The rest of the file is the same as before)
         const newUsername = inputs.changeUsername.value.trim();
         const errorEl = document.getElementById('change-username-error');
         if (newUsername.length >= 3 && newUsername.length <= 12 && /^[a-zA-Z0-9]+$/.test(newUsername)) {
@@ -158,6 +152,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // --- Start the App ---
     initializeApp();
 });
