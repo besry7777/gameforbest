@@ -148,6 +148,22 @@
           opacity: 0.5;
           cursor: not-allowed;
       }
+      
+      /* NEW: Added styles for piece labels */
+      .piece-label {
+          position: absolute;
+          bottom: -20px;
+          font-size: 0.75rem;
+          color: #6b7280;
+          width: 100%;
+          text-align: center;
+      }
+      .piece-option-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -230,11 +246,20 @@
               <div id="winning-line-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
           </div>
           
-          <!-- NEW: Piece selector -->
+          <!-- NEW: Piece selector with labels -->
           <div id="piece-selector" class="piece-selector hidden">
-              <div class="piece-option piece-small" data-size="small">🐭</div>
-              <div class="piece-option piece-medium" data-size="medium">🐱</div>
-              <div class="piece-option piece-large" data-size="large">🐯</div>
+              <div class="piece-option-container">
+                  <div class="piece-option piece-small" data-size="small">🐭</div>
+                  <div class="piece-label">เล็ก (3)</div>
+              </div>
+              <div class="piece-option-container">
+                  <div class="piece-option piece-medium" data-size="medium">🐱</div>
+                  <div class="piece-label">กลาง (3)</div>
+              </div>
+              <div class="piece-option-container">
+                  <div class="piece-option piece-large" data-size="large">🐯</div>
+                  <div class="piece-label">ใหญ่ (3)</div>
+              </div>
           </div>
          
           <div id="game-screen-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
@@ -391,7 +416,8 @@
                   player1: { small: 3, medium: 3, large: 3 },
                   player2: { small: 3, medium: 3, large: 3 }
               },
-              selectedPieceSize: null
+              selectedPieceSize: null,
+              winningPieces: null
           },
           loadingTimeout: null,
       };
@@ -555,6 +581,7 @@
           AppState.game.state.fill(null);
           AppState.game.history = [];
           AppState.game.isActive = true;
+          AppState.game.winningPieces = null;
           AppState.game.playerPieces = {
               player1: { small: 3, medium: 3, large: 3 },
               player2: { small: 3, medium: 3, large: 3 }
@@ -609,6 +636,13 @@
               } else {
                   option.classList.remove('selected');
               }
+          });
+          
+          // NEW: Update piece labels with current counts
+          document.querySelectorAll('.piece-label').forEach(label => {
+              const size = label.parentElement.querySelector('.piece-option').dataset.size;
+              const count = pieces[size];
+              label.textContent = `${size === 'small' ? 'เล็ก' : size === 'medium' ? 'กลาง' : 'ใหญ่'} (${count})`;
           });
       }
 
@@ -824,8 +858,6 @@
           return null;
       }
 
-      // MODIFIED: Removed drawWinningLine function since we're using glow effect instead
-      
       // MODIFIED: endGame function to handle new GUI
       function endGame(isDraw, winner = null, result = null) {
           AppState.game.isActive = false;
