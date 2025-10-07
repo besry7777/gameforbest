@@ -6,6 +6,7 @@
   <title>Super XO Game</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -20,7 +21,7 @@
 <body class="bg-gray-50 text-gray-800">
 
   <div id="loading-overlay" class="loader-overlay">
-    <div class="loader"></div>
+      <div class="loader"></div>
   </div>
  
   <div id="connection-error-overlay" class="screen fixed inset-0 bg-white flex-col justify-center items-center p-5 text-center" style="z-index: 9998; display: none;">
@@ -34,41 +35,93 @@
   </div>
  
   <main id="app-container" class="w-full h-screen overflow-hidden">
-    <div id="game-screen" class="screen w-full h-full flex-col justify-between items-center p-2 sm:p-5">
-      <div id="turn-display" class="text-2xl font-semibold mt-4 h-8"></div>
-      
-      <div id="game-board-container" class="relative">
-          <div id="game-board"></div>
+      <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+          <h1 class="text-5xl font-bold mb-2">Super XO</h1>
+          <div class="flex flex-col items-center mb-6">
+              <h2 id="welcome-message" class="text-2xl"></h2>
           </div>
-      
-      <div class="w-full max-w-[450px] flex flex-col items-center mb-4">
-          <div id="piece-selector" class="piece-selector">
-              <div class="piece-option-container">
-                  <div class="piece-option piece-small" data-size="small">🐭</div>
-                  <div class="piece-label">เล็ก (3)</div>
-              </div>
-              <div class="piece-option-container">
-                  <div class="piece-option piece-medium" data-size="medium">🐱</div>
-                  <div class="piece-label">กลาง (3)</div>
-              </div>
-              <div class="piece-option-container">
-                  <div class="piece-option piece-large" data-size="large">🐯</div>
-                  <div class="piece-label">ใหญ่ (3)</div>
-              </div>
-          </div>
-         
-          <button id="leave-game-btn" class="button button-danger mt-4">ยอมแพ้/ออกจากเกม</button>
+          <button id="play-bot-btn" class="button button-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="12" width="16" height="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 18v-2a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2Z"></path></svg>
+              <span>เล่นกับบอท</span>
+          </button>
+          <button id="play-coop-btn" class="button button-success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>เล่นกับเพื่อน (Online)</span>
+          </button>
+          <button id="settings-btn" class="button button-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>ตั้งค่า</span>
+          </button>
       </div>
 
-      <div id="game-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
-           <h2 id="game-over-message" class="text-4xl font-bold mb-2"></h2>
-           <div id="rematch-status" class="h-10 my-4 text-2xl font-bold"></div>
-           <div id="rematch-buttons" class="flex gap-4">
-             <button id="rematch-btn" class="button button-primary !w-auto !px-8">เล่นอีกครั้ง</button>
-             <button id="back-to-menu-from-game-btn" class="button button-secondary !w-auto !px-8">กลับเมนูหลัก</button>
-           </div>
+      <div id="settings-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
+          <h2 class="text-3xl font-bold my-6 text-center w-full">ตั้งค่า</h2>
+          <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
+              <input type="text" id="change-username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, 3-12 ตัว" maxlength="12">
+              <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
+              <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
+          </div>
+          <button id="back-to-main-from-settings-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
       </div>
-    </div>
+
+      <div id="coop-menu" class="screen w-full h-full flex-col justify-center items-center p-5">
+          <h2 class="text-3xl font-bold mb-8">เล่นกับเพื่อน</h2>
+          <button id="create-room-btn" class="button button-primary">สร้างห้อง</button>
+          <input type="text" id="room-code-input" class="input-field max-w-sm" placeholder="ใส่รหัสห้อง" style="text-transform: uppercase;">
+          <button id="join-room-btn" class="button button-success">เข้าร่วมห้อง</button>
+          <button id="back-to-main-from-coop-btn" class="button button-secondary">กลับ</button>
+      </div>
+
+      <div id="room-lobby" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
+          <h2 class="text-2xl mb-2">รหัสห้อง:</h2>
+           <div class="flex items-center justify-center gap-2 mb-6">
+              <span id="room-code-display" class="text-4xl font-bold text-red-500 tracking-widest"></span>
+              <button id="copy-room-code-btn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+          </div>
+          <div id="player-list" class="text-xl mb-6 space-y-2 w-full max-w-sm"></div>
+          <p id="lobby-status" class="mb-6 h-12 text-2xl flex justify-center items-center"></p>
+          <button id="ready-btn" class="button button-success">เตรียมพร้อม</button>
+          <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
+      </div>
+     
+      <div id="game-screen" class="screen w-full h-full flex-col justify-between items-center p-2 sm:p-5">
+          <div id="turn-display" class="text-2xl font-semibold mt-4 h-8"></div>
+          
+          <div id="game-board-container" class="relative">
+              <div id="game-board"></div>
+              </div>
+          
+          <div class="w-full max-w-[450px] flex flex-col items-center mb-4">
+              <div id="piece-selector" class="piece-selector">
+                  <div class="piece-option-container">
+                      <div class="piece-option piece-small" data-size="small">🐭</div>
+                      <div class="piece-label">เล็ก (3)</div>
+                  </div>
+                  <div class="piece-option-container">
+                      <div class="piece-option piece-medium" data-size="medium">🐱</div>
+                      <div class="piece-label">กลาง (3)</div>
+                  </div>
+                  <div class="piece-option-container">
+                      <div class="piece-option piece-large" data-size="large">🐯</div>
+                      <div class="piece-label">ใหญ่ (3)</div>
+                  </div>
+              </div>
+             
+              <button id="leave-game-btn" class="button button-danger mt-4">ยอมแพ้/ออกจากเกม</button>
+          </div>
+    
+          <div id="game-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
+               <h2 id="game-over-message" class="text-4xl font-bold mb-2"></h2>
+               <div id="rematch-status" class="h-10 my-4 text-2xl font-bold"></div>
+               <div id="rematch-buttons" class="flex gap-4">
+                 <button id="rematch-btn" class="button button-primary !w-auto !px-8">เล่นอีกครั้ง</button>
+                 <button id="back-to-menu-from-game-btn" class="button button-secondary !w-auto !px-8">กลับเมนูหลัก</button>
+               </div>
+          </div>
+      </div>
   </main>
 
   <script src="firebase-config.js"></script>
