@@ -1,140 +1,114 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Super XO Game</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
-  
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  
-  <link rel="stylesheet" href="main.css">
-  <link rel="stylesheet" href="game.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ช็อปปิ้งไทย</title>
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="style.css">
+	<style>
+		/* ปรับแต่งเพิ่มเติม */
+		header {
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		}
+		body {
+			font-family: 'Sarabun', sans-serif;
+			background-color: #f8f9fa;
+		}
+		.card {
+			margin-bottom: 20px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			border: none;
+		}
+		.card img {
+			border-top-left-radius: 0.25rem;
+			border-top-right-radius: 0.25rem;
+		}
+		.navbar-brand {
+			font-weight: bold;
+			color: #007bff !important;
+		}
+		.navbar-nav .nav-link {
+			color: #555 !important;
+		}
+		.footer {
+			background-color: #343a40;
+			color: white;
+			padding: 20px 0;
+			text-align: center;
+		}
+	</style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
+	<!-- Header -->
+	<header>
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<a class="navbar-brand" href="#">ช็อปปิ้งไทย</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item active">
+						<a class="nav-link" href="#">หน้าแรก</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">สินค้า</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">ติดต่อเรา</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+	</header>
 
-  <div id="loading-overlay" class="loader-overlay">
-      <div class="loader"></div>
-  </div>
- 
-  <div id="connection-error-overlay" class="screen fixed inset-0 bg-white flex-col justify-center items-center p-5 text-center" style="z-index: 9998; display: none;">
-      <h2 class="text-2xl font-bold text-red-500 mb-4">เกิดข้อผิดพลาดในการเชื่อมต่อ</h2>
-      <p class="text-lg mb-6">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้<br>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง</p>
-      <button onclick="window.location.reload()" class="button button-primary">โหลดใหม่</button>
-  </div>
+	<!-- Content -->
+	<div class="container py-5">
+		<h1 class="text-center mb-5">สินค้าของเรา</h1>
+		<div class="row">
+			<div class="col-md-4">
+				<div class="card">
+					<img src="https://via.placeholder.com/300" class="card-img-top" alt="สินค้าตัวอย่าง">
+					<div class="card-body">
+						<h5 class="card-title">ชื่อสินค้า</h5>
+						<p class="card-text">รายละเอียดสินค้าแบบสั้นเพื่อดึงดูดใจ</p>
+						<a href="#" class="btn btn-primary btn-block">ซื้อเลย</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card">
+					<img src="https://via.placeholder.com/300" class="card-img-top" alt="สินค้าตัวอย่าง">
+					<div class="card-body">
+						<h5 class="card-title">ชื่อสินค้า</h5>
+						<p class="card-text">รายละเอียดสินค้าแบบสั้นเพื่อดึงดูดใจ</p>
+						<a href="#" class="btn btn-primary btn-block">ซื้อเลย</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card">
+					<img src="https://via.placeholder.com/300" class="card-img-top" alt="สินค้าตัวอย่าง">
+					<div class="card-body">
+						<h5 class="card-title">ชื่อสินค้า</h5>
+						<p class="card-text">รายละเอียดสินค้าแบบสั้นเพื่อดึงดูดใจ</p>
+						<a href="#" class="btn btn-primary btn-block">ซื้อเลย</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-  <div id="toast-notification" class="fixed top-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transform -translate-y-10 transition-all duration-300 z-50">
-      <p id="toast-message"></p>
-  </div>
- <div id="loading-overlay" class="loader-overlay">
-    <div class="loader"></div>
-    <p id="loading-percentage" class="loading-text">กำลังเริ่มต้น 0%</p>
-    <button id="reset-button" class="button button-secondary" style="display: none;">ลองอีกครั้ง</button>
-</div>
+	<!-- Footer -->
+	<footer class="footer">
+		<p>&copy; 2025 ช็อปปิ้งไทย. สงวนลิขสิทธิ์</p>
+	</footer>
 
-  <main id="app-container" class="w-full h-screen overflow-hidden">
-      <div id="main-menu" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
-          <h1 class="text-5xl font-bold mb-2">Super XO</h1>
-          <div class="flex flex-col items-center mb-6">
-              <h2 id="welcome-message" class="text-2xl"></h2>
-          </div>
-          <button id="play-bot-btn" class="button button-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect x="4" y="12" width="16" height="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 18v-2a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2Z"></path></svg>
-              <span>เล่นกับบอท</span>
-          </button>
-          <button id="play-coop-btn" class="button button-success">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>เล่นกับเพื่อน (Online)</span>
-          </button>
-          <button id="settings-btn" class="button button-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              <span>ตั้งค่า</span>
-          </button>
-      </div>
-
-      <div id="settings-screen" class="screen w-full h-full flex-col justify-start items-center p-5 overflow-y-auto">
-          <h2 class="text-3xl font-bold my-6 text-center w-full">ตั้งค่า</h2>
-          <div class="w-full max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md mb-6">
-              <h3 class="text-xl font-semibold mb-2">เปลี่ยนชื่อผู้ใช้</h3>
-              <input type="text" id="change-username-input" class="input-field" placeholder="อังกฤษ/ตัวเลข, 3-12 ตัว" maxlength="12">
-              <p id="change-username-error" class="text-red-500 mb-2 h-5 text-sm"></p>
-              <button id="save-settings-btn" class="button button-primary !w-auto !px-6 !py-2 !text-base">บันทึกชื่อใหม่</button>
-          </div>
-          <button id="back-to-main-from-settings-btn" class="button button-secondary mx-auto mt-6">กลับเมนูหลัก</button>
-      </div>
-
-      <div id="coop-menu" class="screen w-full h-full flex-col justify-center items-center p-5">
-          <h2 class="text-3xl font-bold mb-8">เล่นกับเพื่อน</h2>
-          <button id="create-room-btn" class="button button-primary">สร้างห้อง</button>
-          <input type="text" id="room-code-input" class="input-field max-w-sm" placeholder="ใส่รหัสห้อง" style="text-transform: uppercase;">
-          <button id="join-room-btn" class="button button-success">เข้าร่วมห้อง</button>
-          <button id="back-to-main-from-coop-btn" class="button button-secondary">กลับ</button>
-      </div>
-
-      <div id="room-lobby" class="screen w-full h-full flex-col justify-center items-center p-5 text-center">
-          <h2 class="text-2xl mb-2">รหัสห้อง:</h2>
-           <div class="flex items-center justify-center gap-2 mb-6">
-              <span id="room-code-display" class="text-4xl font-bold text-red-500 tracking-widest"></span>
-              <button id="copy-room-code-btn" class="bg-gray-200 p-2 rounded-md hover:bg-gray-300">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              </button>
-          </div>
-          <div id="player-list" class="text-xl mb-6 space-y-2 w-full max-w-sm"></div>
-          <p id="lobby-status" class="mb-6 h-12 text-2xl flex justify-center items-center"></p>
-          <button id="ready-btn" class="button button-success">เตรียมพร้อม</button>
-          <button id="leave-room-btn" class="button button-danger">ออกจากห้อง</button>
-      </div>
-     
-      <div id="game-screen" class="screen w-full h-full flex-col justify-between items-center p-2 sm:p-5">
-          <div id="turn-display" class="text-2xl font-semibold mt-4 h-8"></div>
-          
-          <div id="game-board-container" class="relative">
-              <div id="game-board"></div>
-              </div>
-          
-          <div class="w-full max-w-[450px] flex flex-col items-center mb-4">
-              <div id="piece-selector" class="piece-selector">
-                  <div class="piece-option-container">
-                      <div class="piece-option piece-small" data-size="small">🐭</div>
-                      <div class="piece-label">เล็ก (3)</div>
-                  </div>
-                  <div class="piece-option-container">
-                      <div class="piece-option piece-medium" data-size="medium">🐱</div>
-                      <div class="piece-label">กลาง (3)</div>
-                  </div>
-                  <div class="piece-option-container">
-                      <div class="piece-option piece-large" data-size="large">🐯</div>
-                      <div class="piece-label">ใหญ่ (3)</div>
-                  </div>
-              </div>
-             
-              <button id="leave-game-btn" class="button button-danger mt-4">ยอมแพ้/ออกจากเกม</button>
-          </div>
-    
-          <div id="game-over-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex-col justify-center items-center text-center p-5 hidden">
-               <h2 id="game-over-message" class="text-4xl font-bold mb-2"></h2>
-               <div id="rematch-status" class="h-10 my-4 text-2xl font-bold"></div>
-               <div id="rematch-buttons" class="flex gap-4">
-                 <button id="rematch-btn" class="button button-primary !w-auto !px-8">เล่นอีกครั้ง</button>
-                 <button id="back-to-menu-from-game-btn" class="button button-secondary !w-auto !px-8">กลับเมนูหลัก</button>
-               </div>
-          </div>
-      </div>
-  </main>
-
-  <script src="firebase-config.js"></script>
-  <script src="utils.js"></script>
-  <script src="ui-manager.js"></script>
-  <script src="game-core.js"></script>
-  <script src="bot-mode.js"></script>
-  <script src="coop-mode.js"></script>
-  <script src="main.js"></script>
+	<!-- Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
