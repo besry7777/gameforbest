@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PARTY HUB - SUSPENSE EDITION</title>
+    <title>PARTY HUB - MOBILE FIXED</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -40,28 +40,20 @@
         }
 
         h1 {
-    font-size: 4rem;
-    margin-bottom: 10px;
-    color: #fff;
-    text-transform: uppercase;
-    text-align: center;
-    /* สร้างแสงฟุ้งรอบตัวหนังสือ */
-    text-shadow: 
-        0 0 7px #fff,
-        0 0 10px #fff,
-        0 0 21px #fff,
-        0 0 42px var(--accent-green),
-        0 0 82px var(--accent-green),
-        0 0 92px var(--accent-green);
-    letter-spacing: 5px;
-    font-weight: 900;
-}
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--accent-green);
+            font-weight: 900;
+        }
 
         .menu-container {
             width: 100%;
             max-width: 400px;
             display: grid;
-            gap: 25px;
+            gap: 20px;
         }
 
         .game-section {
@@ -81,17 +73,17 @@
 
         .btn {
             width: 100%;
-            padding: 25px;
-            font-size: 1.8rem;
+            padding: 22px;
+            font-size: 1.6rem;
             border: none;
-            border-radius: 25px;
+            border-radius: 20px;
             font-weight: 900;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             transition: transform 0.1s;
         }
 
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { opacity: 0.5; filter: grayscale(1); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.6; }
 
         .btn-game1 { background: var(--accent-green); color: #000; }
         .btn-game2 { background: var(--accent-pink); color: #fff; }
@@ -101,7 +93,7 @@
             background: #222; 
             color: #888; 
             padding: 15px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: env(safe-area-inset-bottom, 10px);
         }
 
@@ -116,44 +108,29 @@
         }
 
         .big-instruction {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 900;
             line-height: 1.1;
             margin-bottom: 20px;
-            min-height: 4rem;
         }
 
         .sub-instruction {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--accent-yellow);
-            font-weight: bold;
             background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 20px;
+            padding: 15px;
+            border-radius: 15px;
             width: 100%;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .card-symbol {
-            font-size: 8rem;
-            line-height: 1;
-            height: 120px;
-        }
-
-        /* Animation สั่นๆ ตอนลุ้น */
         .shaking {
             animation: shake 0.1s infinite;
-            filter: blur(2px);
-            opacity: 0.7;
         }
 
         @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            50% { transform: translate(-1px, -2px) rotate(-1deg); }
-            100% { transform: translate(1px, 1px) rotate(0deg); }
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            100% { transform: translate(1px, 1px); }
         }
 
         .no-scroll { overflow: hidden !important; }
@@ -163,8 +140,6 @@
 
     <div id="main-menu">
         <h1>🍻 PARTY</h1>
-        <p style="color: #666; margin-bottom: 30px;">เลือกเกมที่ต้องการเล่น</p>
-        
         <div class="menu-container">
             <button class="btn btn-game1" onclick="showGame('game-wheel')">🎡 วงล้อวัดดวง</button>
             <button class="btn btn-game2" onclick="showGame('game-kings')">🃏 KING'S CUP</button>
@@ -176,31 +151,31 @@
         <div class="display-area">
             <div class="big-instruction" id="wheel-result" style="color: var(--accent-green);">???</div>
         </div>
-        <button class="btn btn-game1" id="wheel-btn" onclick="spinWheel()">🔥 กดเพื่อลุ้น!</button>
+        <button class="btn btn-game1" onclick="spinWheel(this)">🔥 กดเพื่อลุ้น!</button>
         <button class="btn btn-back" onclick="goBack()">« กลับเมนูหลัก</button>
     </div>
 
     <div id="game-kings" class="game-section">
         <div class="display-area">
-            <div class="card-symbol" id="card-symbol">🃏</div>
+            <div id="card-symbol" style="font-size: 7rem;">🃏</div>
             <div class="big-instruction" id="card-rule" style="color: var(--accent-pink);">พร้อมมั้ย?</div>
             <div class="sub-instruction" id="card-desc">เตรียมดื่มได้เลย</div>
         </div>
-        <button class="btn btn-game2" id="kings-btn" onclick="drawCard()">🃏 สุ่มจั่วไพ่</button>
+        <button class="btn btn-game2" onclick="drawCard(this)">🃏 สุ่มจั่วไพ่</button>
         <button class="btn btn-back" onclick="goBack()">« กลับเมนูหลัก</button>
     </div>
 
     <div id="game-never" class="game-section">
         <div class="display-area">
-            <div class="big-instruction" style="font-size: 2rem; color: #888;">ใครเคย...</div>
-            <div class="big-instruction" id="never-result" style="color: var(--accent-blue); font-size: 2.5rem;">? ? ?</div>
+            <div style="font-size: 1.5rem; color: #888;">ใครเคย...</div>
+            <div class="big-instruction" id="never-result" style="color: var(--accent-blue);">? ? ?</div>
         </div>
-        <button class="btn btn-game3" id="never-btn" onclick="nextQuestion()">👉 สุ่มคำถาม</button>
+        <button class="btn btn-game3" onclick="nextQuestion(this)">👉 สุ่มคำถาม</button>
         <button class="btn btn-back" onclick="goBack()">« กลับเมนูหลัก</button>
     </div>
 
     <script>
-        const wheelTasks = ["หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
+       const wheelTasks = ["หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
     "คนมีแฟนแล้วดื่ม!", "คนใส่เสื้อสีดำดื่ม", "ใครเตี้ยที่สุดในวงดื่ม", "ใครสูงที่สุดในวงดื่ม", "เลือกดื่มคู่กับคนข้างๆ",
     "สั่งใครก็ได้ดื่ม 2 ช็อต", "คนจั่วรอด! ที่เหลือดื่ม", "ใครอายุน้อยที่สุดดื่ม", "ใครอายุมากที่สุดดื่ม", "คนใส่รองเท้าดื่ม",
     "ใครมีพี่น้องดื่ม", "ใครขับรถมาวันนี้...ดื่มน้ำเปล่า (ที่เหลือดื่มเหล้า)", "คนใส่แว่นดื่ม", "ใครใช้ iPhone ดื่ม", "ใครใช้ Android ดื่ม",
@@ -214,21 +189,12 @@
      "ใครพกยาดมติดตัว...ดื่ม!", "คนที่มีแอพหาคู่ในเครื่อง (Tinder ฯลฯ)...ดื่ม!", "ใครอัพสตอรี่ IG ไปแล้วเกิน 3 อันวันนี้...ดื่ม!", "คนที่มีส่วนสูงลงท้ายด้วยเลขคี่...ดื่ม!",
      "คนที่มีส่วนสูงลงท้ายด้วยเลขคู่...ดื่ม!", "ใครอายุลงท้ายด้วยเลขคี่...ดื่ม!", "ใครอายุลงท้ายด้วยเลขคู่...ดื่ม!", "คนที่มีชื่อเล่นด้วยสระ (อิ, อี, อา) ดื่ม!", ];
         const cards = [
-            { s: "A", r: "Waterfall", d: "ดื่มวนไป! ห้ามหยุดจนกว่าคนก่อนหน้าจะหยุด" },
-            { s: "2", r: "You", d: "เลือกคนมาดื่ม 1 คน!" },
+            { s: "A", r: "Waterfall", d: "ดื่มวนไปจนกว่าคนก่อนหน้าจะหยุด" },
+            { s: "2", r: "You", d: "สั่งใครก็ได้ 1 คนดื่ม" },
             { s: "3", r: "Me", d: "คนจั่วดื่มเอง 1 ช็อต" },
-            { s: "4", r: "Whore", d: "ผู้หญิงทุกคนดื่ม!" },
-            { s: "5", r: "Thumb", d: "ใครวางนิ้วบนโต๊ะช้าสุด...ดื่ม!" },
-            { s: "6", r: "Dicks", d: "ผู้ชายทุกคนดื่ม!" },
-            { s: "7", r: "Heaven", d: "ใครชี้ฟ้าช้าสุด...ดื่ม!" },
-            { s: "8", r: "Mate", d: "เลือกคู่หู 1 คน ดื่มพร้อมเราทุกครั้ง" },
-            { s: "9", r: "Rhyme", d: "ต่อคำคล้องจอง ใครนึกไม่ออกดื่ม!" },
-            { s: "10", r: "Category", d: "ตั้งหมวดหมู่ ใครตอบซ้ำหรือช้าดื่ม!" },
-            { s: "J", r: "Rule", d: "ตั้งกฎใหม่ (เช่น ห้ามพูดคำว่า พี่) ใครทำผิดดื่ม!" },
-            { s: "Q", r: "Question", d: "ถามตอบไปเรื่อยๆ ใครชะงักดื่ม!" },
-            { s: "K", r: "King's Cup", d: "เทเหล้าลงแก้วกลาง ใบที่ 4 ดื่มจนหมด!" }
+            { s: "K", r: "King's Cup", d: "คนสุดท้ายดื่มแก้วกลาง!" }
         ];
-        const questions = ["จูบเพศเดียวกัน", "แอบแซ่บในรถ", "อ้วกกลางวงเหล้า", "ทักไปหาแฟนเก่าตอนเมา", "จำชื่อคนข้างๆ ไม่ได้", "คุยซ้อนมากกว่า 3 คน", "เคยแอบชอบเพื่อนในวงนี้", "เคยโดนเท", "เคยโกหกพ่อแม่ว่ามานอนบ้านเพื่อน"];
+        const questions = ["จูบเพศเดียวกัน", "แอบแซ่บในรถ", "อ้วกกลางวงเหล้า", "ทักหาแฟนเก่าตอนเมา"];
 
         function showGame(id) {
             document.querySelectorAll('.game-section').forEach(s => s.style.display = 'none');
@@ -241,5 +207,42 @@
             document.body.classList.remove('no-scroll');
         }
 
-        // ฟังก์ชันช่วยสุ่มแบบมีความหน่วง (ลุ้น)
-        function shuffleEffect(elementId, array, dur
+        // แก้ไข: รับค่า btnInstance มาจากปุ่มโดยตรง
+        function shuffleEffect(elementId, array, duration, btnInstance, callback) {
+            const el = document.getElementById(elementId);
+            if(btnInstance) btnInstance.disabled = true;
+            el.classList.add('shaking');
+            
+            let startTime = Date.now();
+            let timer = setInterval(() => {
+                let randomVal = array[Math.floor(Math.random() * array.length)];
+                el.innerText = typeof randomVal === 'object' ? (randomVal.r || randomVal.s) : randomVal;
+                
+                if (Date.now() - startTime > duration) {
+                    clearInterval(timer);
+                    el.classList.remove('shaking');
+                    if(btnInstance) btnInstance.disabled = false;
+                    callback();
+                }
+            }, 80);
+        }
+
+        function spinWheel(btn) {
+            shuffleEffect('wheel-result', wheelTasks, 1200, btn, () => {
+                document.getElementById('wheel-result').innerText = wheelTasks[Math.floor(Math.random() * wheelTasks.length)];
+            });
+        }
+
+        function drawCard(btn) {
+            const elRule = document.getElementById('card-rule');
+            const elSym = document.getElementById('card-symbol');
+            const elDesc = document.getElementById('card-desc');
+            
+            btn.disabled = true;
+            elRule.classList.add('shaking');
+            elSym.classList.add('shaking');
+
+            setTimeout(() => {
+                elRule.classList.remove('shaking');
+                elSym.classList.remove('shaking');
+           
