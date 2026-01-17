@@ -225,24 +225,27 @@
         }
 
         // ปรับปรุงฟังก์ชันสุ่มให้รองรับ Mobile 100%
-        function shuffleEffect(elementId, array, duration, btn, callback) {
-            const el = document.getElementById(elementId);
-            btn.disabled = true; // ป้องกันการกดซ้ำ
-            el.classList.add('shaking');
-            
-            let startTime = Date.now();
-            let timer = setInterval(() => {
-                let randomVal = array[Math.floor(Math.random() * array.length)];
-                el.innerText = typeof randomVal === 'object' ? randomVal.r || randomVal.s : randomVal;
-                
-                if (Date.now() - startTime > duration) {
-                    clearInterval(timer);
-                    el.classList.remove('shaking');
-                    btn.disabled = false;
-                    callback();
-                }
-            }, 80);
+     // ฟังก์ชันช่วยสุ่ม (Animation เหมือนเดิมเป๊ะ)
+function shuffleEffect(elementId, array, duration, btn, callback) {
+    const el = document.getElementById(elementId);
+    if (btn) btn.disabled = true;
+    el.classList.add('shaking');
+    
+    let startTime = Date.now();
+    let timer = setInterval(() => {
+        let randomVal = array[Math.floor(Math.random() * array.length)];
+        el.innerText = typeof randomVal === 'object' ? (randomVal.r || randomVal.s) : randomVal;
+        
+        if (Date.now() - startTime > duration) {
+            clearInterval(timer);
+            el.classList.remove('shaking');
+            if (btn) btn.disabled = false;
+            callback();
         }
+    }, 80);
+}
 
-        function spinWheel(btn) {
-            shuffleEffect('wheel-result', 
+// ฟังก์ชันสำหรับ "วงล้อวัดดวง"
+function spinWheel(btn) {
+    shuffleEffect('wheel-result', wheelTasks, 1500, btn, () => {
+        const final = wheelTasks[Math.floor(
