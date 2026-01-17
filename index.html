@@ -17,10 +17,8 @@
 
         * {
             box-sizing: border-box;
-            touch-action: manipulation; 
             -webkit-tap-highlight-color: transparent;
         }
-
         body {
             font-family: 'Sarabun', sans-serif;
             background-color: var(--bg-color);
@@ -248,4 +246,5 @@ function shuffleEffect(elementId, array, duration, btn, callback) {
 // ฟังก์ชันสำหรับ "วงล้อวัดดวง"
 function spinWheel(btn) {
     shuffleEffect('wheel-result', wheelTasks, 1500, btn, () => {
-        const final = wheelTasks[Math.floor(
+        const final = wheelTasks[Math.floor(Math.random() * wheelTasks.length)];
+     
