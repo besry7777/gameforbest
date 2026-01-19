@@ -13,6 +13,7 @@
     --text-main: #ffffff;
     --btn-bg: #1a1a1a;
     --danger-red: #ff3b3b;
+    --glass: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -29,6 +30,7 @@ body {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 #game-container {
@@ -41,6 +43,8 @@ body {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 h1 {
@@ -49,8 +53,10 @@ h1 {
     text-align: center;
     text-shadow: 0 0 15px var(--accent-green);
     font-weight: 900;
+    letter-spacing: 1px;
 }
 
+/* --- พื้นที่แสดงผล --- */
 .display-area {
     flex-grow: 1;
     display: flex;
@@ -59,28 +65,53 @@ h1 {
     align-items: center;
     width: 100%;
     margin: 20px 0;
-    background: rgba(255,255,255,0.03);
+    background: linear-gradient(145deg, #111, #0a0a0a);
     border-radius: 20px;
     padding: 30px 15px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(0, 255, 136, 0.2);
     position: relative;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+    min-height: 250px;
 }
 
 .big-instruction {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 800;
     color: var(--accent-green);
     text-align: center;
+    line-height: 1.3;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Animation ตอนจบ */
+.pop-in {
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Animation ตอนสุ่ม */
+.blur-anim {
+    filter: blur(2px);
+    opacity: 0.8;
+    transform: scale(0.95);
 }
 
 .hint-text {
     margin-top: 15px;
-    color: #888;
+    color: #666;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
+/* --- ปุ่ม --- */
 .btn {
     width: 100%;
-    padding: 25px;
+    padding: 22px;
     font-size: 1.8rem;
     border: none;
     border-radius: 50px;
@@ -88,31 +119,143 @@ h1 {
     cursor: pointer;
     background: var(--accent-green);
     color: #000;
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:active {
+    transform: scale(0.95);
 }
 
 .btn:disabled {
     background: #333;
     color: #666;
+    box-shadow: none;
+    cursor: not-allowed;
 }
 
-.shaking {
-    animation: shake 0.1s infinite;
-}
-
-@keyframes shake {
-    0% { transform: rotate(0deg); }
-    25% { transform: rotate(1deg); }
-    75% { transform: rotate(-1deg); }
-    100% { transform: rotate(0deg); }
-}
-
+/* --- ตัวนับ --- */
 #count-display {
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 15px;
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #444;
+    background: #000;
+    padding: 4px 10px;
+    border-radius: 10px;
+    border: 1px solid #222;
 }
+
+/* --- ปุ่มเสียง --- */
+#sound-toggle {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* --- MODAL HISTORY (หน้าประวัติใหม่) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background: #151515;
+    width: 90%;
+    max-width: 400px;
+    max-height: 70vh;
+    border-radius: 20px;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--accent-green);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    list-style: none;
+    margin: 0;
+}
+
+.history-item {
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 3px solid #444;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.history-item:first-child {
+    border-left: 3px solid var(--accent-green);
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.history-number {
+    font-weight: bold;
+    color: #666;
+    margin-right: 15px;
+    font-size: 0.8rem;
+}
+
 </style>
 </head>
 
@@ -126,40 +269,63 @@ h1 {
         <div class="big-instruction" id="wheel-result">พร้อมแล้ว<br>กดปุ่มเลย!</div>
         <div class="hint-text">PARTY EDITION</div>
 
-        <!-- ⭐ ปุ่มเปิด/ปิดเสียง -->
-        <button id="sound-toggle"
-            style="position:absolute;bottom:10px;right:15px;
-            background:#111;color:#00ff88;border:none;
-            border-radius:20px;padding:6px 12px;font-weight:700;">
-            🔊 เสียง
-        </button>
+        <button id="sound-toggle">🔊 เสียง</button>
     </div>
 
-    <button class="btn" id="spin-btn" onclick="spinWheel()">🔥 กดเพื่อลุ้น!</button>
+    <button class="btn" id="spin-btn" onclick="startSpin()">🔥 กดเพื่อลุ้น!</button>
 
-    <!-- ⭐ ปุ่มดูประวัติ -->
-    <button class="btn" style="margin-top:10px;background:#222;color:#00ff88;"
-        onclick="showHistory()">📜 ดูประวัติ</button>
+    <button class="btn" style="margin-top:15px; background:#222; color:#fff; border:1px solid #444; font-size:1.2rem; padding:15px;"
+        onclick="openHistory()">📜 ดูประวัติ</button>
 </div>
 
-<!-- ⭐ เสียง -->
-<audio id="spinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1930.mp3"></audio>
-<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
+<div class="modal-overlay" id="historyModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📜 ประวัติย้อนหลัง</h2>
+            <button class="close-modal" onclick="closeHistory()">✕</button>
+        </div>
+        <ul class="history-list" id="historyListDisplay">
+            <li style="text-align:center; color:#666; padding:20px;">ยังไม่มีประวัติ</li>
+        </ul>
+    </div>
+</div>
+
+<audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.mp3"></audio>
+<audio id="rollingSound" src="https://assets.mixkit.co/sfx/preview/mixkit-poker-card-shuffle-1994.mp3"></audio>
+<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
 
 <script>
 // =================== ระบบเสียง ===================
 let soundEnabled = true;
 
-const spinSound = document.getElementById("spinSound");
+const clickSound = document.getElementById("clickSound");
+const rollingSound = document.getElementById("rollingSound");
 const resultSound = document.getElementById("resultSound");
 const soundToggle = document.getElementById("sound-toggle");
+
+// ปรับระดับเสียง
+rollingSound.volume = 0.5;
+rollingSound.loop = true; // ให้เสียงวนลูปตอนสุ่ม
 
 soundToggle.onclick = () => {
     soundEnabled = !soundEnabled;
     soundToggle.innerText = soundEnabled ? "🔊 เสียง" : "🔇 ปิดเสียง";
+    soundToggle.style.opacity = soundEnabled ? "1" : "0.5";
 };
 
-// =================== คำถาม (ไม่แตะ) ===================
+function playSound(sound) {
+    if (soundEnabled) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log("Audio play failed", e));
+    }
+}
+
+function stopSound(sound) {
+    sound.pause();
+    sound.currentTime = 0;
+}
+
+// =================== คำถาม (ห้ามแตะต้อง) ===================
  const allQuestions = [
             "หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
             "คนมีแฟนแล้วดื่ม!", "คนใส่เสื้อสีดำดื่ม", "ใครเตี้ยที่สุดในวงดื่ม", "ใครสูงที่สุดในวงดื่ม", "เลือกดื่มคู่กับคนข้างๆ",
@@ -220,49 +386,73 @@ soundToggle.onclick = () => {
             "เลือก 1 คน ดื่มแทนคุณ 1 แก้ว", "คนซ้ายหรือขวาเป่ายิ้งฉุบ คนแพ้ดื่ม!", "ดื่มครึ่งแก้ว แล้วห้ามพูด 1 นาที (พูด = ดื่มเพิ่ม)",
             
         ];
-// =================== ระบบไม่ซ้ำ ===================
+
+// =================== ระบบเกม ===================
 let availableTasks = [...allQuestions];
-let history = []; // ⭐ ประวัติ
+let history = []; 
 
 const resultDisplay = document.getElementById('wheel-result');
 const spinBtn = document.getElementById('spin-btn');
 const countDisplay = document.getElementById('count-display');
+const historyModal = document.getElementById('historyModal');
+const historyListDisplay = document.getElementById('historyListDisplay');
 
 updateCountDisplay();
 
-function spinWheel() {
+// ฟังก์ชันเริ่มสุ่ม (Animation ใหม่)
+function startSpin() {
     if (availableTasks.length === 0) {
-        alert("🎉 ครบทุกคำถามแล้ว รีเซ็ตใหม่!");
+        alert("🎉 ครบทุกคำถามแล้ว! ระบบจะรีเซ็ตใหม่");
         availableTasks = [...allQuestions];
         history = [];
+        updateCountDisplay();
     }
 
+    playSound(clickSound); // เสียงกด
     spinBtn.disabled = true;
-    resultDisplay.classList.add("shaking");
-
-    if (soundEnabled) {
-        spinSound.currentTime = 0;
-        spinSound.play();
+    
+    // เริ่มเสียงสุ่ม
+    if(soundEnabled) {
+        rollingSound.currentTime = 0;
+        rollingSound.play();
     }
 
-    setTimeout(finalizeResult, 1500);
+    resultDisplay.classList.remove("pop-in");
+    resultDisplay.classList.add("blur-anim");
+
+    // Animation: สลับคำเร็วๆ (Digital Shuffle)
+    let shuffleInterval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * availableTasks.length);
+        resultDisplay.innerText = availableTasks[randomIndex];
+    }, 50); // เปลี่ยนคำทุกๆ 50ms
+
+    // หยุดสุ่มเมื่อเวลาผ่านไป 2 วินาที
+    setTimeout(() => {
+        clearInterval(shuffleInterval);
+        finalizeResult();
+    }, 1500);
 }
 
 function finalizeResult() {
+    stopSound(rollingSound); // หยุดเสียงสุ่ม
+
     const index = Math.floor(Math.random() * availableTasks.length);
     const result = availableTasks[index];
 
+    // ลบคำถามที่ใช้ออก และเก็บประวัติ
     availableTasks.splice(index, 1);
     history.unshift(result);
-    if (history.length > 20) history.pop();
+    // if (history.length > 50) history.pop(); // เก็บเยอะๆ ได้เพราะมี scroll แล้ว
 
-    resultDisplay.classList.remove("shaking");
+    // แสดงผล
+    resultDisplay.classList.remove("blur-anim");
     resultDisplay.innerText = result;
+    
+    // Trigger Animation Pop-in
+    void resultDisplay.offsetWidth; // Trigger reflow
+    resultDisplay.classList.add("pop-in");
 
-    if (soundEnabled) {
-        resultSound.currentTime = 0;
-        resultSound.play();
-    }
+    playSound(resultSound); // เสียงจบ
 
     spinBtn.disabled = false;
     updateCountDisplay();
@@ -272,14 +462,35 @@ function updateCountDisplay() {
     countDisplay.innerText = `เหลือ ${availableTasks.length} / ${allQuestions.length}`;
 }
 
-// =================== ดูประวัติ ===================
-function showHistory() {
+// =================== ระบบประวัติ (Modal) ===================
+function openHistory() {
+    playSound(clickSound);
+    historyModal.classList.add('active');
+    
     if (history.length === 0) {
-        alert("ยังไม่มีประวัติ");
+        historyListDisplay.innerHTML = '<li style="text-align:center; color:#666; padding:20px;">ยังไม่มีประวัติ</li>';
         return;
     }
-    alert("📜 ประวัติล่าสุด\n\n" + history.map((h,i)=>`${i+1}. ${h}`).join("\n"));
+
+    historyListDisplay.innerHTML = history.map((h, i) => `
+        <li class="history-item">
+            <span class="history-number">#${history.length - i}</span>
+            <span>${h}</span>
+        </li>
+    `).join("");
 }
+
+function closeHistory() {
+    historyModal.classList.remove('active');
+}
+
+// ปิด Modal เมื่อกดพื้นที่ว่าง
+historyModal.addEventListener('click', (e) => {
+    if (e.target === historyModal) {
+        closeHistory();
+    }
+});
+
 </script>
 
 </body>
