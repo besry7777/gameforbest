@@ -1,497 +1,110 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PARTY WHEEL (NO REPEAT)</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PARTY HUB - เลือกเกม</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            height: 100dvh;
+            padding: 20px;
+        }
 
-<style>
-:root {
-    --bg-color: #050505;
-    --accent-green: #00ff88;
-    --text-main: #ffffff;
-    --btn-bg: #1a1a1a;
-    --danger-red: #ff3b3b;
-    --glass: rgba(255, 255, 255, 0.05);
-}
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
+        .logo-area h1 {
+            font-size: 3.5rem;
+            line-height: 1;
+            margin: 0;
+            color: var(--accent-green);
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
 
-body {
-    font-family: 'Sarabun', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    margin: 0;
-    padding: 0;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-}
+        .logo-area p {
+            color: #888;
+            letter-spacing: 5px;
+            margin-top: 10px;
+        }
 
-#game-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-}
+        .mode-card {
+            width: 100%;
+            max-width: 350px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+        }
 
-h1 {
-    font-size: 2.5rem;
-    margin: 20px 0;
-    text-align: center;
-    text-shadow: 0 0 15px var(--accent-green);
-    font-weight: 900;
-    letter-spacing: 1px;
-}
+        .mode-card:hover {
+            border-color: var(--accent-green);
+            background: rgba(0, 255, 136, 0.05);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-/* --- พื้นที่แสดงผล --- */
-.display-area {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    margin: 20px 0;
-    background: linear-gradient(145deg, #111, #0a0a0a);
-    border-radius: 20px;
-    padding: 30px 15px;
-    border: 1px solid rgba(0, 255, 136, 0.2);
-    position: relative;
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
-    min-height: 250px;
-}
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
 
-.big-instruction {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--accent-green);
-    text-align: center;
-    line-height: 1.3;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+        .mode-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+        }
 
-/* Animation ตอนจบ */
-.pop-in {
-    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
+        .mode-desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
 
-@keyframes popIn {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* Animation ตอนสุ่ม */
-.blur-anim {
-    filter: blur(2px);
-    opacity: 0.8;
-    transform: scale(0.95);
-}
-
-.hint-text {
-    margin-top: 15px;
-    color: #666;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-/* --- ปุ่ม --- */
-.btn {
-    width: 100%;
-    padding: 22px;
-    font-size: 1.8rem;
-    border: none;
-    border-radius: 50px;
-    font-weight: 900;
-    cursor: pointer;
-    background: var(--accent-green);
-    color: #000;
-    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn:active {
-    transform: scale(0.95);
-}
-
-.btn:disabled {
-    background: #333;
-    color: #666;
-    box-shadow: none;
-    cursor: not-allowed;
-}
-
-/* --- ตัวนับ --- */
-#count-display {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 0.9rem;
-    color: #444;
-    background: #000;
-    padding: 4px 10px;
-    border-radius: 10px;
-    border: 1px solid #222;
-}
-
-/* --- ปุ่มเสียง --- */
-#sound-toggle {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    background: rgba(0,0,0,0.5);
-    color: var(--accent-green);
-    border: 1px solid var(--accent-green);
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-/* --- MODAL HISTORY (หน้าประวัติใหม่) --- */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.modal-overlay.active {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.modal-content {
-    background: #151515;
-    width: 90%;
-    max-width: 400px;
-    max-height: 70vh;
-    border-radius: 20px;
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.active .modal-content {
-    transform: translateY(0);
-}
-
-.modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #333;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--accent-green);
-}
-
-.close-modal {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.history-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    list-style: none;
-    margin: 0;
-}
-
-.history-item {
-    background: rgba(255,255,255,0.05);
-    margin-bottom: 10px;
-    padding: 15px;
-    border-radius: 10px;
-    border-left: 3px solid #444;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-}
-
-.history-item:first-child {
-    border-left: 3px solid var(--accent-green);
-    background: rgba(0, 255, 136, 0.1);
-}
-
-.history-number {
-    font-weight: bold;
-    color: #666;
-    margin-right: 15px;
-    font-size: 0.8rem;
-}
-
-</style>
+        .footer-text {
+            position: absolute;
+            bottom: 20px;
+            color: #333;
+            font-size: 0.8rem;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="game-container">
-    <h1>🎡 วงล้อ<br>วัดดวง</h1>
-
-    <div class="display-area">
-        <div id="count-display"></div>
-        <div class="big-instruction" id="wheel-result">พร้อมแล้ว<br>กดปุ่มเลย!</div>
-        <div class="hint-text">PARTY EDITION</div>
-
-        <button id="sound-toggle">🔊 เสียง</button>
+<div class="menu-container">
+    <div class="logo-area">
+        <h1>PARTY<br>WHEEL</h1>
+        <p>EDITION 2026</p>
     </div>
 
-    <button class="btn" id="spin-btn" onclick="startSpin()">🔥 กดเพื่อลุ้น!</button>
+    <a href="game.html" class="mode-card">
+        <span class="mode-icon">🎡</span>
+        <div class="mode-title">วงล้อวัดดวง</div>
+        <div class="mode-desc">สุ่มคำสั่งสุดมันส์ ไม่ซ้ำคำถามเดิม</div>
+    </a>
 
-    <button class="btn" style="margin-top:15px; background:#222; color:#fff; border:1px solid #444; font-size:1.2rem; padding:15px;"
-        onclick="openHistory()">📜 ดูประวัติ</button>
+    <a href="#" class="mode-card" style="opacity: 0.6; cursor: not-allowed;" onclick="alert('เร็วๆ นี้!')">
+        <span class="mode-icon">🔞</span>
+        <div class="mode-title">จริงหรือท้า</div>
+        <div class="mode-desc">COMING SOON</div>
+    </a>
+
+    <div class="footer-text">DESIGNED FOR GOOD VIBES ONLY</div>
 </div>
-
-<div class="modal-overlay" id="historyModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>📜 ประวัติย้อนหลัง</h2>
-            <button class="close-modal" onclick="closeHistory()">✕</button>
-        </div>
-        <ul class="history-list" id="historyListDisplay">
-            <li style="text-align:center; color:#666; padding:20px;">ยังไม่มีประวัติ</li>
-        </ul>
-    </div>
-</div>
-
-<audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.mp3"></audio>
-<audio id="rollingSound" src="https://assets.mixkit.co/sfx/preview/mixkit-poker-card-shuffle-1994.mp3"></audio>
-<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
-
-<script>
-// =================== ระบบเสียง ===================
-let soundEnabled = true;
-
-const clickSound = document.getElementById("clickSound");
-const rollingSound = document.getElementById("rollingSound");
-const resultSound = document.getElementById("resultSound");
-const soundToggle = document.getElementById("sound-toggle");
-
-// ปรับระดับเสียง
-rollingSound.volume = 0.5;
-rollingSound.loop = true; // ให้เสียงวนลูปตอนสุ่ม
-
-soundToggle.onclick = () => {
-    soundEnabled = !soundEnabled;
-    soundToggle.innerText = soundEnabled ? "🔊 เสียง" : "🔇 ปิดเสียง";
-    soundToggle.style.opacity = soundEnabled ? "1" : "0.5";
-};
-
-function playSound(sound) {
-    if (soundEnabled) {
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log("Audio play failed", e));
-    }
-}
-
-function stopSound(sound) {
-    sound.pause();
-    sound.currentTime = 0;
-}
-
-// =================== คำถาม (ห้ามแตะต้อง) ===================
- const allQuestions = [
-            "หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
-            "คนมีแฟนแล้วดื่ม!", "คนใส่เสื้อสีดำดื่ม", "ใครเตี้ยที่สุดในวงดื่ม", "ใครสูงที่สุดในวงดื่ม", "เลือกดื่มคู่กับคนข้างๆ",
-            "สั่งใครก็ได้ดื่ม 2 ช็อต", "คนกดรอด! ที่เหลือดื่ม", "ใครอายุน้อยที่สุดดื่ม", "ใครอายุมากที่สุดดื่ม", "คนใส่รองเท้าดื่ม",
-            "ใครมีพี่น้องดื่ม", "ใครขับรถมาวันนี้...ดื่มน้ำเปล่า (ที่เหลือดื่มเหล้า)", "คนใส่แว่นดื่ม", "ใครใช้ iPhone ดื่ม", "ใครใช้ Android ดื่ม",
-            "คนผมสั้นดื่ม", "คนผมยาวดื่ม", "ใครใส่เครื่องประดับ (แหวน/สร้อย/ตุ้มหู) ดื่ม", "ใครตื่นหลังเที่ยงวันนี้ดื่ม", "ใครอาบน้ำก่อนมาดื่ม",
-            "ดื่มแบบไม่ใช้มือจับแก้ว ทำไม่ได้ดื่มเพิ่ม", "คนข้างซ้ายสั่งให้คุณทำอะไรก็ได้ ไม่ทำดื่ม!", "ชนแก้วรอบวง!", "คนกดสุ่มดื่มครึ่งแก้ว", "ใครมาถึงงานคนสุดท้ายดื่ม",
-            "คนคออ่อนที่สุดในวง...ดื่ม!(ให้เพื่อนทั้งวงปิดตาโหวต)", "ใครยังไม่ได้เข้าห้องน้ำตั้งแต่เริ่ม...ดื่ม!", "คนที่มีเงินในบัญชีน้อยที่สุดตอนนี้...ดื่ม!", 
-            "ใครเต้นท่า 'งัดถั่งงัด' ไม่เป็น...ดื่ม!", "คนใส่เสื้อมีกระดุมดื่มตามจำนวนกระดุม!", "คนผมทำสีดื่ม 2 ช็อต!", 
-            "คนที่มีชื่อเล่นขึ้นด้วยสระ (เอ, แอ, โอ) ดื่ม!", "ใครถือโทรศัพท์อยู่ในมือตอนนี้...ดื่ม!",
-            "ใครสะพายกระเป๋ามา...ดื่ม!", "ใครที่มีรอยสัก...ดื่ม!", "คนมีพี่สาวดื่ม คนมีน้องสาวรอด!", "ใครเคยเรียนซ้ำชั้นหรือติด F...ดื่ม!", 
-            "ใครแต่งตัวมาจัดเต็มที่สุดในสายตาเพื่อน...ดื่ม!", "คนชอบนอนดึก (หลังตี 2) ดื่ม!", "คนใส่เสื้อยืดดื่ม คนใส่เสื้อเชิ้ตรอด!", 
-            "ใครใช้น้ำหอมวันนี้...ดื่ม!", "ใครไม่ได้สระผมมา...ดื่ม!", "คนที่มีแฟนเก่าเป็นรุ่นพี่...ดื่ม!", "ใครเคยโดนเทที่ร้านเหล้า...ดื่ม!", 
-            "ใครพกยาดมติดตัว...ดื่ม!", "คนที่มีแอพหาคู่ในเครื่อง (Tinder ฯลฯ)...ดื่ม!", "ใครอัพสตอรี่ IG ไปแล้วเกิน 3 อันวันนี้...ดื่ม!", 
-            "คนที่มีส่วนสูงลงท้ายด้วยเลขคี่...ดื่ม!", "คนที่มีส่วนสูงลงท้ายด้วยเลขคู่...ดื่ม!", "ใครอายุลงท้ายด้วยเลขคี่...ดื่ม!", 
-            "ใครอายุลงท้ายด้วยเลขคู่...ดื่ม!", "คนที่มีชื่อเล่นด้วยสระ (อิ, อี, อา) ดื่ม!",
-            "ใครเคยโกหกแม่ว่า 'นอนบ้านเพื่อน' แต่ไปหาผู้...ดื่ม!",
-            "ใครเคยส่อง IG แฟนเก่าใน 24 ชม. ที่ผ่านมา ดื่ม!",
-            "ใครเคย 'ฉี่ราด' ตอนโตแล้ว (ยอมรับมา) ดื่ม!",
-            
-            // --- โซนจับผิดรูปร่างหน้าตา/การแต่งตัว (เน้นฮา) ---
-            "ใครใส่กางเกงในสีฉูดฉาด (แดง/ส้ม/เหลือง) ดื่ม!",
-            "ใครไม่ใส่กางเกงในมา...ดื่ม (ถ้ากล้าบอก)",
-            "ใครหน้าจอโทรศัพท์แตก...ดื่มซะ ชีวิตสู้กลับ!",
-            "ใครใส่ถุงเท้ามาข้างละสี หรือถุงเท้าขาด/ย้วย ดื่ม!",
-            "ใครหน้ามันที่สุดในตอนนี้...ดื่มซับมันหน่อย",
-            "ใครสักลาย 'ชื่อแฟนเก่า' ไว้บนตัว ดื่ม 2 แก้ว!",
-            "ใครอ้วนขึ้นจากปีที่แล้วเกิน 3 โล...ดื่ม!",
-            "ใครแต่งหน้าหนาที่สุดในวง ดื่ม!",
-            
-            // --- โซนพฤติกรรม & โซเชียล ---
-            "ใครแบตมือถือเหลือต่ำกว่า 20% ดื่ม!",
-            "ใครตั้งรูปหน้าจอเป็นรูปตัวเอง...ดื่ม (หลงตัวเองนะ)",
-            "ใคร Follow IG ยอดฟอลน้อยกว่ายอดฟอลคนอื่น...ดื่ม!",
-            "ใครดองแชทเก่ง ตอบช้าข้ามวัน...ดื่ม!",
-            "ใครติด TikTok (ดูเกินวันละ 2 ชม.) ดื่ม!",
-            "ใครมีรูปหลุดในเครื่องเพื่อน...ดื่ม!",
-            "ใครพูดคำหยาบทุกประโยค...ดื่มล้างปาก",
-            "ใครชอบถ่ายรูปอาหารก่อนกิน...ดื่ม!",
-            
-            // --- โซนวัดดวง & Action ---
-            "จ้องตากับคนตรงข้าม ห้ามกระพริบตา ใครแพ้ดื่ม!",
-            "โทรหาแฟนเก่าแล้ววาง (ไม่ทำดื่มหมดแก้ว!)",
-            "ให้คนซ้ายมือหยิกแก้ม 1 ที (ไม่ยอมให้หยิก ดื่ม)",
-            "เปลี่ยนท่านั่งเดี๋ยวนี้! (คนสุดท้ายเปลี่ยน ดื่ม)",
-            "หัวเราะแบบนางร้าย 5 วินาที (ไม่ทำดื่ม)",
-            "หมุนไหล่ 1 รอบ ใครอายุเยอะสุดในวงดื่ม",
-            "ใครเกิดเดือนนี้ ดื่มฉลอง!",
-            "เจ้าของเครื่อง (คนถือเกมนี้) สั่งใครก็ได้ดื่ม 1 ช็อต!",
-            "ใครโสดเกิน 2 ปี ดื่มแก้เหงา",
-            "ใครมีแฟนแล้ว...โทรบอกรักแฟนเดี๋ยวนี้ (ไม่ทำดื่ม)",
-            
-            // --- โซน Hardcore 18+ & การเงิน ---
-            "ใครมีแอพธนาคารในเครื่องน้อยกว่า 2 แอพ ดื่ม!",
-            "ใครเคยโดนจับเป่าแอลกอฮอล์...ดื่ม!",
-            "ใครเคยจูบกับเพศเดียวกัน ดื่ม!","คนที่เสียงดังที่สุดตอนนี้ ดื่ม!","ใครเถียงเก่งที่สุดในวง ดื่ม 2 ช็อต!",
-            "ลุกขึ้นเดินแบบนางแบบ 5 ก้าว ใครขำ ดื่ม", "ทำเสียงหมา/แมว 3 วิ (ไม่ทำ ดื่ม 2 ช็อต)",
-            "เลือก 1 คน ดื่มแทนคุณ 1 แก้ว", "คนซ้ายหรือขวาเป่ายิ้งฉุบ คนแพ้ดื่ม!", "ดื่มครึ่งแก้ว แล้วห้ามพูด 1 นาที (พูด = ดื่มเพิ่ม)",
-            
-        ];
-
-// =================== ระบบเกม ===================
-let availableTasks = [...allQuestions];
-let history = []; 
-
-const resultDisplay = document.getElementById('wheel-result');
-const spinBtn = document.getElementById('spin-btn');
-const countDisplay = document.getElementById('count-display');
-const historyModal = document.getElementById('historyModal');
-const historyListDisplay = document.getElementById('historyListDisplay');
-
-updateCountDisplay();
-
-// ฟังก์ชันเริ่มสุ่ม (Animation ใหม่)
-function startSpin() {
-    if (availableTasks.length === 0) {
-        alert("🎉 ครบทุกคำถามแล้ว! ระบบจะรีเซ็ตใหม่");
-        availableTasks = [...allQuestions];
-        history = [];
-        updateCountDisplay();
-    }
-
-    playSound(clickSound); // เสียงกด
-    spinBtn.disabled = true;
-    
-    // เริ่มเสียงสุ่ม
-    if(soundEnabled) {
-        rollingSound.currentTime = 0;
-        rollingSound.play();
-    }
-
-    resultDisplay.classList.remove("pop-in");
-    resultDisplay.classList.add("blur-anim");
-
-    // Animation: สลับคำเร็วๆ (Digital Shuffle)
-    let shuffleInterval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * availableTasks.length);
-        resultDisplay.innerText = availableTasks[randomIndex];
-    }, 50); // เปลี่ยนคำทุกๆ 50ms
-
-    // หยุดสุ่มเมื่อเวลาผ่านไป 2 วินาที
-    setTimeout(() => {
-        clearInterval(shuffleInterval);
-        finalizeResult();
-    }, 1500);
-}
-
-function finalizeResult() {
-    stopSound(rollingSound); // หยุดเสียงสุ่ม
-
-    const index = Math.floor(Math.random() * availableTasks.length);
-    const result = availableTasks[index];
-
-    // ลบคำถามที่ใช้ออก และเก็บประวัติ
-    availableTasks.splice(index, 1);
-    history.unshift(result);
-    // if (history.length > 50) history.pop(); // เก็บเยอะๆ ได้เพราะมี scroll แล้ว
-
-    // แสดงผล
-    resultDisplay.classList.remove("blur-anim");
-    resultDisplay.innerText = result;
-    
-    // Trigger Animation Pop-in
-    void resultDisplay.offsetWidth; // Trigger reflow
-    resultDisplay.classList.add("pop-in");
-
-    playSound(resultSound); // เสียงจบ
-
-    spinBtn.disabled = false;
-    updateCountDisplay();
-}
-
-function updateCountDisplay() {
-    countDisplay.innerText = `เหลือ ${availableTasks.length} / ${allQuestions.length}`;
-}
-
-// =================== ระบบประวัติ (Modal) ===================
-function openHistory() {
-    playSound(clickSound);
-    historyModal.classList.add('active');
-    
-    if (history.length === 0) {
-        historyListDisplay.innerHTML = '<li style="text-align:center; color:#666; padding:20px;">ยังไม่มีประวัติ</li>';
-        return;
-    }
-
-    historyListDisplay.innerHTML = history.map((h, i) => `
-        <li class="history-item">
-            <span class="history-number">#${history.length - i}</span>
-            <span>${h}</span>
-        </li>
-    `).join("");
-}
-
-function closeHistory() {
-    historyModal.classList.remove('active');
-}
-
-// ปิด Modal เมื่อกดพื้นที่ว่าง
-historyModal.addEventListener('click', (e) => {
-    if (e.target === historyModal) {
-        closeHistory();
-    }
-});
-
-</script>
 
 </body>
 </html>
