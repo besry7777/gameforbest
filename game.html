@@ -2,12 +2,12 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PARTY WHEEL (MODULAR)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PARTY WHEEL</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body scroll="no" style="overflow: hidden; position: fixed; width: 100%; height: 100%;" ontouchmove="if(!event.target.closest('.history-list')) event.preventDefault();"></body>
+<body style="margin: 0; padding: 0; overflow: hidden; position: fixed; width: 100%; height: 100%;">
 
 <div id="game-container">
     <h1>🎡 วงล้อ<br>วัดดวง</h1>
@@ -16,12 +16,13 @@
         <div id="count-display"></div>
         <div class="big-instruction" id="wheel-result">พร้อมแล้ว<br>กดปุ่มเลย!</div>
         <div class="hint-text">PARTY EDITION</div>
-
         <button id="sound-toggle">🔊 เสียง</button>
     </div>
 
-    <button class="btn" id="spin-btn">🔥 กดเพื่อลุ้น!</button>
-    <button class="btn btn-history" id="history-btn">📜 ดูประวัติ</button>
+    <div class="button-group">
+        <button class="btn" id="spin-btn">🔥 กดเพื่อลุ้น!</button>
+        <button class="btn btn-history" id="history-btn">📜 ดูประวัติ</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="historyModal">
@@ -31,8 +32,7 @@
             <button class="close-modal" id="close-modal-btn">✕</button>
         </div>
         <ul class="history-list" id="historyListDisplay">
-            <li style="text-align:center; color:#666; padding:20px;">ยังไม่มีประวัติ</li>
-        </ul>
+            </ul>
     </div>
 </div>
 
