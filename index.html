@@ -297,13 +297,9 @@ h1 {
 let soundEnabled = true;
 
 const clickSound = document.getElementById("clickSound");
-const rollingSound = document.getElementById("rollingSound");
-const resultSound = document.getElementById("resultSound");
 const soundToggle = document.getElementById("sound-toggle");
 
 // ปรับระดับเสียง
-rollingSound.volume = 0.5;
-rollingSound.loop = true; // ให้เสียงวนลูปตอนสุ่ม
 
 soundToggle.onclick = () => {
     soundEnabled = !soundEnabled;
@@ -408,12 +404,6 @@ function startSpin() {
 
     playSound(clickSound); // เสียงกด
     spinBtn.disabled = true;
-    
-    // เริ่มเสียงสุ่ม
-    if(soundEnabled) {
-        rollingSound.currentTime = 0;
-        rollingSound.play();
-    }
 
     resultDisplay.classList.remove("pop-in");
     resultDisplay.classList.add("blur-anim");
@@ -432,7 +422,6 @@ function startSpin() {
 }
 
 function finalizeResult() {
-    stopSound(rollingSound); // หยุดเสียงสุ่ม
 
     const index = Math.floor(Math.random() * availableTasks.length);
     const result = availableTasks[index];
