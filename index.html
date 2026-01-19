@@ -1,176 +1,154 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PARTY WHEEL (NO REPEAT)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #050505;
-            --accent-green: #00ff88;
-            --text-main: #ffffff;
-            --btn-bg: #1a1a1a;
-            --danger-red: #ff3b3b;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PARTY WHEEL (NO REPEAT)</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;800&display=swap" rel="stylesheet">
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+:root {
+    --bg-color: #050505;
+    --accent-green: #00ff88;
+    --text-main: #ffffff;
+    --btn-bg: #1a1a1a;
+    --danger-red: #ff3b3b;
+}
 
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            min-height: 100dvh; 
-            display: flex;
-            flex-direction: column;
-        }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        #game-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-        }
+body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
 
-        h1 {
-            font-size: 2.5rem;
-            margin: 20px 0;
-            text-transform: uppercase;
-            text-align: center;
-            text-shadow: 0 0 15px var(--accent-green);
-            letter-spacing: 2px;
-            font-weight: 900;
-            line-height: 1;
-        }
+#game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
 
-        .display-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            text-align: center;
-            margin: 20px 0;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 30px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            <button id="sound-toggle" style="
-    position:absolute;
-    bottom:10px;
-    right:15px;
-    background:#111;
-    color:#00ff88;
-    border:none;
-    border-radius:20px;
-    padding:6px 12px;
-    font-weight:700;
-">
-🔊 เสียง
-</button>
-        }
+h1 {
+    font-size: 2.5rem;
+    margin: 20px 0;
+    text-align: center;
+    text-shadow: 0 0 15px var(--accent-green);
+    font-weight: 900;
+}
 
-        .big-instruction {
-            font-size: 2rem;
-            font-weight: 800;
-            line-height: 1.3;
-            color: var(--accent-green);
-            word-wrap: break-word;
-            transition: transform 0.1s;
-        }
+.display-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 20px 0;
+    background: rgba(255,255,255,0.03);
+    border-radius: 20px;
+    padding: 30px 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+}
 
-        .hint-text {
-            margin-top: 15px;
-            color: #888;
-            font-size: 1rem;
-        }
+.big-instruction {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-green);
+    text-align: center;
+}
 
-        .btn {
-            width: 100%;
-            padding: 25px;
-            font-size: 1.8rem;
-            border: none;
-            border-radius: 50px;
-            font-weight: 900;
-            cursor: pointer;
-            background: var(--accent-green);
-            color: #000;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-            transition: all 0.2s;
-            touch-action: manipulation;
-            position: relative;
-            overflow: hidden;
-        }
+.hint-text {
+    margin-top: 15px;
+    color: #888;
+}
 
-        .btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-        }
+.btn {
+    width: 100%;
+    padding: 25px;
+    font-size: 1.8rem;
+    border: none;
+    border-radius: 50px;
+    font-weight: 900;
+    cursor: pointer;
+    background: var(--accent-green);
+    color: #000;
+}
 
-        .btn:disabled {
-            background: #333;
-            color: #666;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
+.btn:disabled {
+    background: #333;
+    color: #666;
+}
 
-        .shaking {
-            animation: shake 0.1s infinite;
-            filter: blur(1px);
-        }
+.shaking {
+    animation: shake 0.1s infinite;
+}
 
-        @keyframes shake {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-            100% { transform: rotate(0deg); }
-        }
+@keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(1deg); }
+    75% { transform: rotate(-1deg); }
+    100% { transform: rotate(0deg); }
+}
 
-        /* ส่วนแสดงจำนวนข้อที่เหลือ */
-        #count-display {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 0.85rem;
-            color: #666;
-            background: rgba(0,0,0,0.3);
-            padding: 5px 10px;
-            border-radius: 10px;
-        }
-
-    </style>
+#count-display {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 0.85rem;
+    color: #666;
+}
+</style>
 </head>
+
 <body>
 
-    <div id="game-container">
-        <div>
-            <h1>🎡 วงล้อ<br>วัดดวง</h1>
-        </div>
+<div id="game-container">
+    <h1>🎡 วงล้อ<br>วัดดวง</h1>
 
-        <div class="display-area">
-            <div id="count-display">โหลดข้อมูล...</div>
-            <div class="big-instruction" id="wheel-result">พร้อมแล้ว<br>กดปุ่มเลย!</div>
-            <div class="hint-text">PARTY EDITION</div>
-        </div>
+    <div class="display-area">
+        <div id="count-display"></div>
+        <div class="big-instruction" id="wheel-result">พร้อมแล้ว<br>กดปุ่มเลย!</div>
+        <div class="hint-text">PARTY EDITION</div>
 
-        <button class="btn" id="spin-btn" onclick="spinWheel()">🔥 กดเพื่อลุ้น!</button>
+        <!-- ⭐ ปุ่มเปิด/ปิดเสียง -->
+        <button id="sound-toggle"
+            style="position:absolute;bottom:10px;right:15px;
+            background:#111;color:#00ff88;border:none;
+            border-radius:20px;padding:6px 12px;font-weight:700;">
+            🔊 เสียง
+        </button>
     </div>
 
-    <script>
-    let soundEnabled = true;
+    <button class="btn" id="spin-btn" onclick="spinWheel()">🔥 กดเพื่อลุ้น!</button>
+
+    <!-- ⭐ ปุ่มดูประวัติ -->
+    <button class="btn" style="margin-top:10px;background:#222;color:#00ff88;"
+        onclick="showHistory()">📜 ดูประวัติ</button>
+</div>
+
+<!-- ⭐ เสียง -->
+<audio id="spinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1930.mp3"></audio>
+<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
+
+<script>
+// =================== ระบบเสียง ===================
+let soundEnabled = true;
 
 const spinSound = document.getElementById("spinSound");
 const resultSound = document.getElementById("resultSound");
@@ -180,8 +158,9 @@ soundToggle.onclick = () => {
     soundEnabled = !soundEnabled;
     soundToggle.innerText = soundEnabled ? "🔊 เสียง" : "🔇 ปิดเสียง";
 };
-        // --- 1. คลังคำถามทั้งหมด (Master List - ห้ามลบ) ---
-        const allQuestions = [
+
+// =================== คำถาม (ไม่แตะ) ===================
+ const allQuestions = [
             "หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
             "คนมีแฟนแล้วดื่ม!", "คนใส่เสื้อสีดำดื่ม", "ใครเตี้ยที่สุดในวงดื่ม", "ใครสูงที่สุดในวงดื่ม", "เลือกดื่มคู่กับคนข้างๆ",
             "สั่งใครก็ได้ดื่ม 2 ช็อต", "คนกดรอด! ที่เหลือดื่ม", "ใครอายุน้อยที่สุดดื่ม", "ใครอายุมากที่สุดดื่ม", "คนใส่รองเท้าดื่ม",
@@ -241,86 +220,67 @@ soundToggle.onclick = () => {
             "เลือก 1 คน ดื่มแทนคุณ 1 แก้ว", "คนซ้ายหรือขวาเป่ายิ้งฉุบ คนแพ้ดื่ม!", "ดื่มครึ่งแก้ว แล้วห้ามพูด 1 นาที (พูด = ดื่มเพิ่ม)",
             
         ];
+// =================== ระบบไม่ซ้ำ ===================
+let availableTasks = [...allQuestions];
+let history = []; // ⭐ ประวัติ
 
-        // --- 2. ตัวแปรเก็บคำถามที่ "ยังเหลืออยู่" ในรอบนี้ ---
-        let availableTasks = [...allQuestions];
+const resultDisplay = document.getElementById('wheel-result');
+const spinBtn = document.getElementById('spin-btn');
+const countDisplay = document.getElementById('count-display');
 
-        const resultDisplay = document.getElementById('wheel-result');
-        const spinBtn = document.getElementById('spin-btn');
-        const countDisplay = document.getElementById('count-display');
-        let isSpinning = false;
+updateCountDisplay();
 
-        // เริ่มต้นอัปเดตตัวเลข
-        updateCountDisplay();
+function spinWheel() {
+    if (availableTasks.length === 0) {
+        alert("🎉 ครบทุกคำถามแล้ว รีเซ็ตใหม่!");
+        availableTasks = [...allQuestions];
+        history = [];
+    }
 
-        function spinWheel() {
-            if (isSpinning) return;
-            
-            // --- ตรวจสอบว่าคำถามหมดหรือยัง ---
-            if (availableTasks.length === 0) {
-                // ถ้าหมดแล้ว ให้รีเซ็ตใหม่
-                alert("🎉 สุดยอด! เล่นครบทุกคำถามแล้ว ระบบจะทำการสับไพ่เริ่มรอบใหม่!");
-                availableTasks = [...allQuestions]; // คัดลอกคำถามทั้งหมดกลับมาใหม่
-                updateCountDisplay(); // อัปเดตตัวเลขกลับเป็นเต็ม
-            }
+    spinBtn.disabled = true;
+    resultDisplay.classList.add("shaking");
 
-            isSpinning = true;
-            spinBtn.disabled = true;
-            spinBtn.innerText = "กำลังสุ่ม...";
-            
-            resultDisplay.classList.add('shaking');
-            resultDisplay.style.color = "#ffffff";
+    if (soundEnabled) {
+        spinSound.currentTime = 0;
+        spinSound.play();
+    }
 
-            let counter = 0;
-            const duration = 1500; // เวลาสุ่ม (มิลลิวินาที)
-            const intervalTime = 60; // ความเร็วในการสลับคำ
+    setTimeout(finalizeResult, 1500);
+}
 
-            const interval = setInterval(() => {
-                // ระหว่าง Animation เอาคำถามจากกองหลักมาโชว์สุ่มๆ เพื่อความมันส์
-                const randomTemp = allQuestions[Math.floor(Math.random() * allQuestions.length)];
-                resultDisplay.innerText = randomTemp;
-                counter += intervalTime;
+function finalizeResult() {
+    const index = Math.floor(Math.random() * availableTasks.length);
+    const result = availableTasks[index];
 
-                if (counter >= duration) {
-                    clearInterval(interval);
-                    finalizeResult();
-                }
-            }, intervalTime);
-        }
+    availableTasks.splice(index, 1);
+    history.unshift(result);
+    if (history.length > 20) history.pop();
 
-        function finalizeResult() {
-            // --- LOGIC การสุ่มแบบไม่ซ้ำ ---
-            
-            // 1. สุ่ม Index จากกอง availableTasks (ที่ลดจำนวนลงเรื่อยๆ)
-            const randomIndex = Math.floor(Math.random() * availableTasks.length);
-            
-            // 2. ดึงข้อความออกมา
-            const finalResult = availableTasks[randomIndex];
-            
-            // 3. **สำคัญมาก** ลบข้อความนั้นออกจากกอง availableTasks
-            // เพื่อไม่ให้สุ่มเจอซ้ำในรอบถัดไป
-            availableTasks.splice(randomIndex, 1);
-            
-            // --------------------------------
+    resultDisplay.classList.remove("shaking");
+    resultDisplay.innerText = result;
 
-            resultDisplay.classList.remove('shaking');
-            resultDisplay.innerText = finalResult;
-            resultDisplay.style.color = "var(--accent-green)";
-            
-            spinBtn.innerText = "🔥 เอาอีกรอบ!";
-            spinBtn.disabled = false;
-            isSpinning = false;
+    if (soundEnabled) {
+        resultSound.currentTime = 0;
+        resultSound.play();
+    }
 
-            // อัปเดตตัวเลขที่หน้าจอ
-            updateCountDisplay();
-        }
+    spinBtn.disabled = false;
+    updateCountDisplay();
+}
 
-        function updateCountDisplay() {
-            // แสดงผลให้ผู้เล่นเห็นเลยว่าเหลือกี่ข้อ จะได้มั่นใจว่าไม่ซ้ำ
-            countDisplay.innerText = `เหลือคำถาม ${availableTasks.length} / ${allQuestions.length}`;
-        }
-    </script>
-    <audio id="spinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1930.mp3"></audio>
-<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
+function updateCountDisplay() {
+    countDisplay.innerText = `เหลือ ${availableTasks.length} / ${allQuestions.length}`;
+}
+
+// =================== ดูประวัติ ===================
+function showHistory() {
+    if (history.length === 0) {
+        alert("ยังไม่มีประวัติ");
+        return;
+    }
+    alert("📜 ประวัติล่าสุด\n\n" + history.map((h,i)=>`${i+1}. ${h}`).join("\n"));
+}
+</script>
+
 </body>
 </html>
