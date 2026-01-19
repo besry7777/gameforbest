@@ -68,6 +68,19 @@
             padding: 30px 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
+            <button id="sound-toggle" style="
+    position:absolute;
+    bottom:10px;
+    right:15px;
+    background:#111;
+    color:#00ff88;
+    border:none;
+    border-radius:20px;
+    padding:6px 12px;
+    font-weight:700;
+">
+🔊 เสียง
+</button>
         }
 
         .big-instruction {
@@ -157,6 +170,16 @@
     </div>
 
     <script>
+    let soundEnabled = true;
+
+const spinSound = document.getElementById("spinSound");
+const resultSound = document.getElementById("resultSound");
+const soundToggle = document.getElementById("sound-toggle");
+
+soundToggle.onclick = () => {
+    soundEnabled = !soundEnabled;
+    soundToggle.innerText = soundEnabled ? "🔊 เสียง" : "🔇 ปิดเสียง";
+};
         // --- 1. คลังคำถามทั้งหมด (Master List - ห้ามลบ) ---
         const allQuestions = [
             "หมดแก้ว!", "คนซ้ายดื่ม 1 ช็อต", "คนขวาดื่ม 1 ช็อต", "เพศตรงข้ามดื่มให้หมด", "คนโสดดื่ม!", 
@@ -297,5 +320,7 @@
             countDisplay.innerText = `เหลือคำถาม ${availableTasks.length} / ${allQuestions.length}`;
         }
     </script>
+    <audio id="spinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1930.mp3"></audio>
+<audio id="resultSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
 </body>
 </html>
