@@ -473,10 +473,6 @@ const rawQuestions = [
     // ******* ไฮไลท์: เกมจับเวลา *******
     { t: "เริ่มจับเวลา 40 วิ ใครเปล่งเสียงก่อน → จัดการดื่ม 1 แก้ว", c: "MINI GAME", color: "#ff3b3b", type: "timer", time: 40 },
     { t: "หยุดเวลาที่ 5.00 วิ (±0.20) ใครพลาดดื่ม!", c: "SKILL", color: "#00ccff", type: "stopwatch", target: 5.00, range: 0.20 },
-    // --- ⚡ โซนเกมรัวนิ้ว (Rapid Tap) ---
-    { t: "รัวนิ้ว! กดปุ่มให้ครบ 30 ครั้งใน 5 วิ! (ทำไม่ได้ดื่ม)", c: "SPEED", color: "#ffae00", type: "clicker", goal: 30, time: 5 },
-    // --- 💣 โซนระเบิดเวลา (Mystery Bomb) ---
-    { t: "ระเบิดเวลา! ส่งมือถือวนไปเรื่อยๆ หยุดที่ใครคนนั้นดื่ม!", c: "BOMB", color: "#ff0000", type: "bomb", min: 10, max: 30 },
 
     // --- โซนจับผิดรูปร่างหน้าตา ---
     { t: "ใครใส่เสื้อสีขาว (ระวังเปื้อนนะ)...ดื่ม!", c: "LOOKS", color: "#fff" },
@@ -700,128 +696,6 @@ function stopStopwatch(btn, target, range) {
     btn.disabled = true;
     spinBtn.disabled = false;
 }
-
-// =================== 3. เกมรัวนิ้ว (Clicker) ===================
-function setupClickerGame(goal, time) {
-    specialGameArea.style.display = 'flex';
-    specialGameArea.innerHTML = `<button class="game-btn" onclick="startCommonCountdown(3, () => runClicker(${goal}, ${time}))">⚡ พร้อมจะรัวนิ้ว?</button>`;
-}
-
-function runClicker(goal, time) {
-    let clicks = 0;
-    let timeLeft = time;
-    
-    specialGameArea.innerHTML = `
-        <div style="font-size:1.5rem;">เหลือเวลา: <span id="click-timer" style="color:#ff3b3b">${timeLeft}</span></div>
-        <div class="timer-text" id="click-count" style="font-size:4rem; margin:10px 0;">0 / ${goal}</div>
-        <button class="game-btn" id="tap-btn" style="width:100%; height:100px; font-size:2rem;">🔥 รัวตรงนี้!!</button>
-    `;
-
-    const tapBtn = document.getElementById('tap-btn');
-    const countDisplay = document.getElementById('click-count');
-    const timeDisplay = document.getElementById('click-timer');
-
-    // จับเวลา
-    const timerInterval = setInterval(() => {
-        timeLeft--;
-        timeDisplay.innerText = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            tapBtn.disabled = true;
-            if (clicks >= goal) {
-                tapBtn.innerText = "🎉 ทำสำเร็จ!";
-                tapBtn.style.background = "#00ff88";
-                tapBtn.style.color = "#000";
-                playSound(resultSound);
-            } else {
-                tapBtn.innerText = "💀 ไม่ทัน! ดื่ม!";
-                tapBtn.style.background = "#ff3b3b";
-                playSound(alarmSound);
-            }
-            spinBtn.disabled = false;
-        }
-    }, 1000);
-
-    // รับการกด
-    tapBtn.onclick = () => {
-        clicks++;
-        countDisplay.innerText = `${clicks} / ${goal}`;
-        playSound(clickSound);
-        // เอฟเฟกต์ปุ่มขยาย
-        tapBtn.style.transform = "scale(0.95)";
-        setTimeout(() => tapBtn.style.transform = "scale(1)", 50);
-        
-        if (clicks >= goal) {
-            // ชนะก่อนเวลาหมด
-            clearInterval(timerInterval);
-            tapBtn.innerText = "🎉 สำเร็จก่อนเวลา!!";
-            tapBtn.style.background = "#00ff88";
-            tapBtn.style.color = "#000";
-            tapBtn.disabled = true;
-            playSound(resultSound);
-            spinBtn.disabled = false;
-        }
-    };
-}
-
-// =================== 4. เกมระเบิดเวลา (Bomb) ===================
-function setupBombGame(minTime, maxTime) {
-    specialGameArea.style.display = 'flex';
-    specialGameArea.innerHTML = `<button class="game-btn" style="background:#ff0000;" onclick="startBomb(${minTime}, ${maxTime})">💣 จุดชนวนระเบิด!</button>`;
-}
-
-function startBomb(min, max) {
-    const randomTime = Math.floor(Math.random() * (max - min + 1) + min);
-    let timeLeft = randomTime;
-    
-    specialGameArea.innerHTML = `
-        <div class="timer-text" style="font-size:6rem; animation: pulse 0.5s infinite;">💣</div>
-        <div style="font-size:1.5rem; color:#ff3b3b;">ส่งต่อเร็วเข้า!!!</div>
-    `;
-
-    // เล่นเสียงติ๊กๆ
-    let tickInterval = setInterval(() => {
-        playSound(clickSound);
-    }, 1000);
-
-    // ระเบิดลง
-    setTimeout(() => {
-        clearInterval(tickInterval);
-        specialGameArea.innerHTML = `
-            <div class="timer-text" style="font-size:8rem;">💥</div>
-            <div style="font-size:2rem; color:#ff3b3b; font-weight:bold;">BOOM!!! ดื่มซะ</div>
-        `;
-        playSound(alarmSound);
-        spinBtn.disabled = false;
-    }, randomTime * 1000);
-}
-
-// =================== Helper: Countdown 3-2-1 ===================
-function startCommonCountdown(seconds, callback) {
-    const gameBtn = document.querySelector('.game-btn');
-    if(gameBtn) gameBtn.style.display = 'none';
-
-    const countdownOverlay = document.createElement('div');
-    countdownOverlay.className = 'countdown-overlay';
-    document.querySelector('.display-area').appendChild(countdownOverlay);
-
-    let count = seconds;
-    playSound(clickSound);
-    countdownOverlay.innerText = count;
-
-    let startInterval = setInterval(() => {
-        count--;
-        if (count > 0) {
-            playSound(clickSound);
-            countdownOverlay.innerText = count;
-        } else {
-            clearInterval(startInterval);
-            countdownOverlay.remove();
-            callback(); // เรียกฟังก์ชันเกมจริง
-        }
-    }, 800);
-}
-
 // =================== History & Utils ===================
 function updateCountDisplay() {
     countDisplay.innerText = `เหลือ ${availableTasks.length} / ${rawQuestions.length}`;
