@@ -522,11 +522,11 @@ soundToggle.onclick = () => {
 };
 
 function playSound(sound) {
-    if (soundEnabled) {
-        sound.currentTime = 0;
-        sound.play().catch(e => {});
-    }
+    if (!soundEnabled) return;
+    if (!sound.paused) return; // กันเสียงซ้อน
+    sound.play().catch(()=>{});
 }
+
 
 function updateCountDisplay() {
     countDisplay.innerText = `${availableQuestions.length} / ${normalQuestions.length}`;
@@ -741,10 +741,20 @@ async function setupSmileGame() {
     backBtn.style.display = 'none'; 
 
     try {
-        // Load Models
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
-        await faceapi.nets.faceExpressionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
-        
+        let faceModelsLoaded = false;
+    
+    async function preloadFaceAPI() {
+        if (faceModelsLoaded) return;
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+          'https://justadudewhohacks.github.io/face-api.js/models'
+        );
+        await faceapi.nets.faceExpressionNet.loadFromUri(
+          'https://justadudewhohacks.github.io/face-api.js/models'
+        );
+        faceModelsLoaded = true;
+    }
+    preloadFaceAPI();
+
         // Open Camera
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         video.srcObject = stream;
@@ -867,5 +877,6 @@ function openHistory() {
 function closeHistory() { historyModal.classList.remove('active'); }
 historyModal.addEventListener('click', (e) => { if (e.target === historyModal) closeHistory(); });
 </script>
+    
 </body>
 </html>
