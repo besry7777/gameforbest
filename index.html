@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PARTY ขี้เหล้า</title>
+<title>PARTY ขี้เหล้า (ONLY GAMES)</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
-/* ================= CSS ================= */
+/* ================= CSS (คงเดิมทั้งหมด) ================= */
 :root {
     --bg-color: #121212;
     --card-bg: #1e1e1e;
@@ -252,87 +252,14 @@ h1 {
     font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;
     margin-right: 8px; color: #000; font-weight: bold; white-space: nowrap; margin-top: 3px;
 }
-
-/* --- Camera Overlay (หน้าจอเกมห้ามยิ้ม) --- */
-#camera-overlay {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #000;
-    z-index: 2000;
-    display: none; /* ซ่อนไว้ก่อน */
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-#camera-video {
-    position: absolute;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    opacity: 0.7;
-}
-#smile-ui-layer {
-    position: relative; z-index: 2005;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    width: 100%; height: 100%;
-    padding: 20px;
-    text-align: center;
-}
-#smile-status {
-    font-size: 1.5rem; font-weight: 800;
-    color: #fff; text-shadow: 0 0 10px #000;
-    margin-bottom: 20px;
-}
-#smile-timer {
-    font-size: 5rem; font-weight: 800;
-    color: #00e676;
-    text-shadow: 0 0 20px #000;
-    font-variant-numeric: tabular-nums;
-}
-.scanning-line {
-    position: absolute; top: 0; left: 0; width: 100%; height: 5px;
-    background: #00e676; box-shadow: 0 0 15px #00e676;
-    z-index: 2001; animation: scan 2s infinite linear;
-}
-@keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-.smile-detected {
-    border: 10px solid #ef5350;
-    box-shadow: inset 0 0 100px #ef5350;
-}
-@keyframes shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    50% { transform: translate(-1px, 2px) rotate(1deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    100% { transform: translate(1px, -2px) rotate(0deg); }
-}
-.back-btn {
-    background: #fff; color: #000;
-    border: none; padding: 15px 30px;
-    border-radius: 50px; font-size: 1.2rem;
-    font-weight: bold; margin-top: 30px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    display: none; cursor: pointer;
-}
 </style>
 </head>
 
 <body>
 
-<div id="camera-overlay">
-    <video id="camera-video" autoplay muted playsinline></video>
-    <div class="scanning-line"></div>
-    <div id="smile-ui-layer">
-        <div id="smile-status">กำลังโหลด AI...</div>
-        <div id="smile-timer">--</div>
-        <button class="back-btn" onclick="closeCameraGame()">🔙 กลับหน้าหลัก</button>
-    </div>
-</div>
-
 <div id="game-container">
     <header>
-        <h1>PARTY GAME</h1>
+        <h1>PARTY GAME (VIP)</h1>
     </header>
 
     <div class="display-area">
@@ -342,16 +269,16 @@ h1 {
         <div id="category-badge" class="category-badge">CATEGORY</div>
         
         <div class="big-instruction" id="wheel-result">
-            พร้อมแล้ว<br>กดปุ่มเริ่มเลย!
+            โหมดเกมล้วน<br>พร้อมแล้วกดเลย!
         </div>
 
         <div id="special-game-area"></div>
 
-        <div class="hint-text">ไทบ้านห้วยทราย EDITION</div>
+        <div class="hint-text">ONLY MINI-GAMES EDITION</div>
     </div>
 
     <div class="controls-area">
-        <button class="btn" id="spin-btn" onclick="startSpin()">🔥 กดเพื่อลุ้น!</button>
+        <button class="btn" id="spin-btn" onclick="startSpin()">🎮 สุ่มเกม (ห้ามซ้ำ)</button>
         <button class="btn btn-secondary" onclick="openHistory()">📜 ดูประวัติ</button>
     </div>
 </div>
@@ -373,118 +300,10 @@ h1 {
 <audio id="bangSound" src="bang.wav"></audio>
 
 <script>
-// =================== 1. ข้อมูล ===================
+// =================== 1. ข้อมูลเกม (ตัด Normal Questions ออกจาก Logic) ===================
 
-const normalQuestions = [
-   // --- โซนทั่วไป / Hardcore ---
-   { t: "หมดแก้ว!", c: "HARDCORE", color: "#ff3b3b" },
-    { t: "คนซ้ายดื่ม 1 ช็อต", c: "ดวงเพื่อน", color: "#00ff88" },
-    { t: "คนขวาดื่ม 1 ช็อต", c: "ดวงเพื่อน", color: "#00ff88" },
-    { t: "เพศตรงข้ามดื่มให้หมด", c: "HARDCORE", color: "#ff3b3b" },
-    { t: "คนโสดดื่ม!", c: "STATUS", color: "#00ccff" },
-    { t: "คนมีแฟนแล้วดื่ม!", c: "STATUS", color: "#00ccff" },
-    { t: "คนใส่เสื้อสีดำดื่ม", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครเตี้ยที่สุดในวงดื่ม", c: "BODY", color: "#ff00cc" },
-    { t: "ใครสูงที่สุดในวงดื่ม", c: "BODY", color: "#ff00cc" },
-    { t: "คนใส่กางเกงขาสั้นแล้วเลือกคนดื่ม 1 คน", c: "LOOKS", color: "#ff00cc" },
-    { t: "เลือกดื่มคู่กับคนข้างๆ", c: "BUDDY", color: "#ffae00" },
-    { t: "สั่งใครก็ได้ดื่ม 2 ช็อต", c: "POWER", color: "#ffd700" },
-    { t: "คนกดรอด! ที่เหลือดื่ม", c: "LUCKY", color: "#ffd700" },
-    { t: "ใครอายุน้อยที่สุดลุกเต้นไม่ทำดื่ม", c: "AGE", color: "#00ccff" },
-    { t: "ใครอายุมากสุดลุกเเก๋ๆ5ก้าวไม่ทำดื่ม", c: "AGE", color: "#00ccff" },
-    { t: "คนใส่รองเท้าแก่สุดดื่ม", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครมีพี่น้องดื่ม", c: "FAMILY", color: "#00ccff" },
-    { t: "ใครขับรถมาวันนี้...ดื่มน้ำเปล่า (ที่เหลือดื่มเหล้า)", c: "SAFETY", color: "#00ff88" },
-    { t: "คนเยี่ยวหรือเข้าห้องน้ำคนล่าสุดดื่ม", c: "ACTION", color: "#ffae00" },
-    { t: "ใครใช้ iPhone ดื่ม", c: "LIFESTYLE", color: "#b19cd9" },
-    { t: "ใครใช้ Android ดื่ม", c: "LIFESTYLE", color: "#b19cd9" },
-    { t: "คนผมสั้นดื่ม", c: "LOOKS", color: "#ff00cc" },
-    { t: "คนผมยาวดื่ม", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครใส่เครื่องประดับ (แหวน/สร้อย/ตุ้มหู) ดื่ม", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครตื่นหลังเที่ยงวันนี้ดื่ม พักตับ", c: "LIFESTYLE", color: "#b19cd9" },
-    { t: "ใครอาบน้ำก่อนมาดื่ม(เป่ายิ่งฉุบถ้ามี2คนขึ้นไป)", c: "HYGIENE", color: "#00ccff" },
-    { t: "ดื่มแบบไม่ใช้มือจับแก้ว ทำไม่ได้ดื่มเพิ่ม", c: "CHALLENGE", color: "#ffae00" },
-    { t: "คนข้างซ้ายสั่งให้คุณทำอะไรก็ได้ ไม่ทำดื่ม!", c: "DARE", color: "#ff3b3b" },
-    { t: "ชนแก้วรอบวง!", c: "PARTY", color: "#ffd700" },
-    { t: "คนกดสุ่มดื่มครึ่งแก้ว", c: "BAD LUCK", color: "#888" },
-    { t: "ใครมาถึงงานคนสุดท้ายดื่ม", c: "TIME", color: "#b19cd9" },
-    { t: "คนคออ่อนที่สุดในวง...ดื่ม!(ให้เพื่อนทั้งวงปิดตาโหวต)", c: "VOTE", color: "#ff3b3b" },
-    { t: "ใครยังไม่ได้เข้าห้องน้ำตั้งแต่เริ่ม...ดื่ม!", c: "BODY", color: "#ff00cc" },
-    { t: "ถามเพื่อนว่ารอดหรือดื่ม", c: "ดวงเพื่อน", color: "#ffd700" },
-    { t: "ถามคนเทเหล้าว่าให้กินไหม", c: "ดวงเพื่อน", color: "#ffd700" },
-    { t: "ลุกเต้น 'งัดถั่งงัด' ไม่เป็น...ดื่ม!", c: "DANCE", color: "#ffae00" },
-    { t: "คนใส่เสื้อมีกระดุมดื่มตามจำนวนกระดุม", c: "LOOKS", color: "#ff00cc" },
-    { t: "เล่นเกมคนที่สุ่มได้เลือก", c: "GAME MASTER", color: "#ffd700" },
-    { t: "คนที่มีชื่อเล่นขึ้นด้วยสระ (เอ, แอ, โอ) ดื่ม!", c: "NAME", color: "#00ccff" },
-    { t: "ใครถือโทรศัพท์อยู่ในมือตอนนี้...ดื่ม!", c: "ADDICT", color: "#b19cd9" },
-    { t: "ใครสะพายกระเป๋ามา...ดื่ม!", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครที่มีรอยสัก...ดื่ม!", c: "INK", color: "#555" },
-    { t: "คนมีพี่สาวดื่ม คนมีน้องสาวรอด!", c: "FAMILY", color: "#00ccff" },
-    { t: "คนที่มีแม่เป็นผู้หญิงดื่ม (แค่อยากให้ดื่มดับกระหาย)", c: "FAMILY", color: "#00ccff" },
-    { t: "ใครเคยร้องไห่เพราะผู้ชาย...พักแล้วเลือกเพื่อนดื่มแทน (ดื่มปลอบใจเพื่อน)", c: "SCHOOL", color: "#b19cd9" },
-    { t: "ใครแต่งตัวมาจัดเต็มที่สุดในสายตาเพื่อน...ดื่ม!", c: "FASHION", color: "#ff00cc" },
-    { t: "เมื่อวานใครนอนเร็ว (ก่อน 2 ทุ่ม) ดื่ม!", c: "LIFESTYLE", color: "#b19cd9" },
-    { t: "คนใส่เสื้อไม่มีกระดุมรอด คนใส่เสื้อมีกระดุมดื่มมม!(ถ้าข้ามให้คนกดดื่ม)", c: "LOOKS", color: "#ff00cc" },
-    { t: "ใครใช้น้ำหอมวันนี้...ดื่ม!", c: "SMELL", color: "#ff00cc" },
-    { t: "ใครไม่ได้สระผมมา...ดื่ม!", c: "HYGIENE", color: "#555" },
-    { t: "คนที่มีแฟนเก่าเป็นรุ่นพี่...ดื่ม!", c: "EX-LOVE", color: "#ff3b3b" },
-    { t: "เลือกเพื่อนกิน", c: "FRIEND", color: "#00ff88" },
-    { t: "คนที่เสื้อมีกระเป๋าดื่ม ...ดื่ม!", c: "Luck", color: "#ff3b3b" },
-    { t: "ใครอัพสตอรี่ IG ไปแล้วเกิน 3 อันวันนี้...ดื่ม!", c: "SOCIAL", color: "#b19cd9" },
-    { t: "คนที่มีส่วนสูงลงท้ายด้วยเลขคี่...ดื่ม!", c: "LUCK", color: "#ffd700" },
-    { t: "คนที่มีส่วนสูงลงท้ายด้วยเลขคู่...ดื่ม!", c: "LUCK", color: "#ffd700" },
-    { t: "ใครอายุลงท้ายด้วยเลขคี่...ดื่ม!", c: "LUCK", color: "#ffd700" },
-    { t: "ใครอายุลงท้ายด้วยเลขคู่...ดื่ม!", c: "LUCK", color: "#ffd700" },
-    { t: "ใครนั่งใกล้แก้วเหล้าที่สุดตอนนี้ดื่ม", c: "LUCK", color: "#ffd700" },
-    { t: "คนที่มีชื่อเล่นด้วยสระ (อิ, อี, อา) ดื่ม!", c: "NAME", color: "#00ccff" },
-    { t: "ใครเคยโกหกแม่ว่า 'นอนบ้านเพื่อน' แต่ไปหาผู้...ดื่ม!", c: "SECRET", color: "#ff3b3b" },
-    { t: "ใครเคย 'ฉี่ราด' ตอนโตแล้ว (ยอมรับมาไม่มีดื่มยกวง) ดื่ม!", c: "SECRET", color: "#888" },
-    { t: "ชนแก้วน้ำรอบวงเบาๆ แบบไม่เสียงดัง เดี๋ยวเพื่อนบ้านรู้!", c: "QUIET", color: "#00ff88" },
-    { t: "ใครหัวเราะง่ายที่สุดในวง ดื่ม!", c: "HAPPY", color: "#ffae00" },
-    // --- โซนจับผิดรูปร่างหน้าตา ---
-    { t: "ใครใส่เสื้อสีขาว (ระวังเปื้อนนะ)...ดื่ม!", c: "LOOKS", color: "#fff" },
-    { t: "ใครใส่กางเกงสีฉูดฉาด (แดง/ส้ม/เหลือง) ดื่ม!", c: "UNDERWEAR", color: "#ff3b3b" },
-    { t: "ใครใส่เสื้อแขนยาวมา...ดื่ม (แก้หนาว)", c: "Cool", color: "#ff3b3b" },
-    { t: "ใครหน้าจอโทรศัพท์แตก...ดื่มซะ ชีวิตสู้กลับ!", c: "SAD", color: "#888" },
-    { t: "ใครหน้ามันที่สุดในตอนนี้...ดื่มซับมันหน่อย", c: "FACE", color: "#ff00cc" },
-    { t: "ใครอ้วนขึ้นจากปีที่แล้วเกิน 3 โล...ดื่ม!", c: "BODY", color: "#ff00cc" },
-    { t: "ใครแต่งหน้าหนาที่สุดในวง ดื่ม!", c: "MAKEUP", color: "#ff00cc" },
-    // --- โซนพฤติกรรม & โซเชียล ---
-    { t: "ใครแบตมือถือเหลือต่ำกว่า 20% ดื่ม!", c: "BATTERY", color: "#ff3b3b" },
-    { t: "ใครตั้งรูปหน้าจอเป็นรูปตัวเอง...ดื่ม (หลงตัวเองนะ)", c: "NARCISSIST", color: "#b19cd9" },
-    { t: "ใคร Follow IG ยอดฟอลน้อยกว่ายอดฟอลคนอื่น...ดื่ม!", c: "SOCIAL", color: "#b19cd9" },
-    { t: "ใครดองแชทเก่ง ตอบช้าข้ามวัน...ดื่ม!", c: "SOCIAL", color: "#b19cd9" },
-    { t: "ใครกดใจ TikTok คริปล่าสุดยอดกดใจน้อยสุด ดื่ม!", c: "SOCIAL", color: "#000" },
-    { t: "ใครพูดคำหยาบทุกประโยค...ดื่มล้างปาก", c: "RUDE", color: "#555" },
-    { t: "ใครแบตมือถือ 90-50% (พวกเตรียมตัวมาดี)...ดื่ม!", c: "BATTERY", color: "#00ff88" },
-    { t: "ใครเกิดเดือนคี่ (ม.ค., มี.ค., พ.ค., ...) ดื่ม!", c: "BIRTH MONTH", color: "#00ccff" },
-    { t: "ใครเกิดเดือนคู่ (ก.พ., เม.ย., มิ.ย., ...) ดื่ม!", c: "BIRTH MONTH", color: "#00ccff" },
-    // --- โซนวัดดวง & Action ---
-    { t: "ใครเกิดวันอาทิตย์...ดื่ม!", c: "BIRTHDAY", color: "#ff0000" }, // สีแดง
-    { t: "ใครเกิดวันจันทร์...ดื่ม!", c: "BIRTHDAY", color: "#ffff00" }, // สีเหลือง
-    { t: "ใครเกิดวันศุกร์...ดื่ม!", c: "BIRTHDAY", color: "#00ccff" }, // สีฟ้า
-    { t: "โยนเหรียญหัวก้อย (ออกหัว=ซ้ายดื่ม, ออกก้อย=ขวาดื่ม)", c: "LUCK", color: "#ffd700" },
-    { t: "จ้องตากับคนตรงข้าม ห้ามกระพริบตา ใครแพ้ดื่ม!", c: "BATTLE", color: "#ff3b3b" },
-    { t: "โทรหาคนเก่าแล้ววาง (ไม่ทำดื่มหมดแก้ว!)", c: "DARE", color: "#ff3b3b" },
-    { t: "ให้คนซ้ายมือหยิกแก้ม 1 ที (ไม่ยอมให้หยิก ดื่ม)", c: "TOUCH", color: "#ffae00" },
-    { t: "เปลี่ยนท่านั่งเดี๋ยวนี้! (คนสุดท้ายเปลี่ยน ดื่ม)", c: "ACTION", color: "#00ff88" },
-    { t: "หัวเราะแบบนางร้าย 5 วินาที (ไม่ทำดื่ม)", c: "ACTING", color: "#b19cd9" },
-    { t: "ใครเกิดเดือนนี้ ดื่มฉลอง!", c: "BIRTHDAY", color: "#ffd700" },
-    { t: "ใครโสดเกิน 2 ปี ดื่มแก้เหงา", c: "LONELY", color: "#555" },
-    // --- โซน Hardcore 18+ & การเงิน ---
-    { t: "ใครมีแอพธนาคารในเครื่องน้อยกว่า 2 แอพ ดื่ม!", c: "MONEY", color: "#00ff88" },
-    { t: "ใครเคยโดนจับเป่าแอลกอฮอล์...ดื่ม!", c: "POLICE", color: "#ff3b3b" },
-    { t: "ใครเคยจูบกับเพศเดียวกัน ดื่ม!", c: "SECRET", color: "#ff00cc" },
-    { t: "คนที่เสียงดังที่สุดตอนนี้ ดื่ม!", c: "LOUD", color: "#ffae00" },
-    { t: "ใครเถียงเก่งที่สุดในวง ดื่ม 2 ช็อต!", c: "ARGUE", color: "#ff3b3b" },
-    { t: "คนกดลุกขึ้นเดินแบบนางแบบ 5 ก้าว ใครขำ ดื่ม(ไม่ลุกเดินดื่ม 2 แก้ว)", c: "MODEL", color: "#ff00cc" },
-    { t: "ทำเสียงหมา/แมว 3 วิ (ไม่ทำ ดื่ม 2 ช็อต)", c: "ACTING", color: "#ffae00" },
-    { t: "เลือก 1 คน ดื่มแทนคุณ 1 แก้ว", c: "VIP", color: "#ffd700" },
-    { t: "คนซ้ายกับขวาเป่ายิ้งฉุบ คนแพ้ดื่ม!", c: "BATTLE", color: "#ff3b3b" },
-    { t: "ดื่มครึ่งแก้ว แล้วอีกครึ่งให้ใครก็ได้", c: "SILENCE", color: "#888" }
-];
-
-const specialGamesList = [
+// รายชื่อมินิเกมทั้งหมด
+const allSpecialGames = [
     { t: "เริ่มจับเวลา 40 วิ ใครเปล่งเสียงก่อน → จัดการดื่ม 1 ครั้ง", c: "MINI GAME", color: "#ffca28", type: "timer", time: 40 },
     { t: "หยุดเวลาที่ 5.00 วิ (±0.10) ใครพลาดดื่ม!", c: "SKILL", color: "#42a5f5", type: "stopwatch", target: 5.00, range: 0.10 },
     { t: "ส่งมือถือวนไป กดเหนี่ยวไก..ใครโดนดื่ม!", c: "LUCK", color: "#ef5350", type: "roulette" },
@@ -498,12 +317,10 @@ const specialGamesList = [
 ];
 
 // =================== 2. ตัวแปรระบบ ===================
-let availableQuestions = [...normalQuestions];
+let gamePool = [...allSpecialGames]; // กองกลางสำหรับสุ่ม (จะลดลงเรื่อยๆ)
 let history = []; 
-let turnCount = 0;
-let nextGameThreshold = Math.floor(Math.random() * 4) + 7; 
-
 let soundEnabled = true;
+
 const clickSound = document.getElementById("clickSound");
 const resultSound = document.getElementById("resultSound");
 const alarmSound = document.getElementById("alarmSound");
@@ -527,26 +344,30 @@ soundToggle.onclick = () => {
 
 function playSound(sound) {
     if (!soundEnabled) return;
-    if (!sound.paused) return; // กันเสียงซ้อน
+    if (!sound.paused) {
+        sound.pause();
+        sound.currentTime = 0;
+    }
     sound.play().catch(()=>{});
 }
 
-
 function updateCountDisplay() {
-    countDisplay.innerText = `${availableQuestions.length} / ${normalQuestions.length}`;
+    // แสดงจำนวนเกมที่เหลือในกอง
+    countDisplay.innerText = `Games Left: ${gamePool.length} / ${allSpecialGames.length}`;
 }
 
 updateCountDisplay();
 
 function startSpin() {
+    // รีเซ็ตหน้าจอ
     specialGameArea.style.display = 'none';
     specialGameArea.innerHTML = ''; 
     categoryBadge.style.opacity = '0';
     
-    if (availableQuestions.length === 0) {
-        alert("🎉 ครบทุกคำถามแล้ว! ระบบจะรีเซ็ตใหม่");
-        availableQuestions = [...normalQuestions];
-        history = [];
+    // ตรวจสอบว่าเกมหมดกองหรือยัง
+    if (gamePool.length === 0) {
+        alert("🎉 เล่นครบทุกเกมแล้ว! ระบบจะรีเซ็ตเริ่มรอบใหม่");
+        gamePool = [...allSpecialGames]; // เติมเกมกลับเข้ากอง
         updateCountDisplay();
     }
 
@@ -555,76 +376,50 @@ function startSpin() {
     resultDisplay.classList.remove("pop-in");
     resultDisplay.classList.add("blur-anim");
 
+    // Animation สุ่มตัวอักษร (เอาชื่อเกมมาสุ่มโชว์)
     let shuffleInterval = setInterval(() => {
-        const randomQ = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-        resultDisplay.innerText = randomQ ? randomQ.t : "Loading...";
+        const randomPreview = allSpecialGames[Math.floor(Math.random() * allSpecialGames.length)];
+        resultDisplay.innerText = randomPreview.t; 
+        resultDisplay.style.fontSize = "1.2rem"; // ลดขนาดตอนสุ่มนิดหน่อยจะได้ไม่อ่านยาก
     }, 50);
 
     setTimeout(() => {
         clearInterval(shuffleInterval);
+        resultDisplay.style.fontSize = ""; // คืนค่าขนาดฟอนต์
         processResult();
     }, 1200);
 }
 
-// หรือถ้าประกาศไว้ใน scope เดียวกับ specialGamesList ก็ได้ครับ
-let availableSpecialGames = []; 
-
 function processResult() {
-    turnCount++;
-    let selectedObj;
+    // สุ่มเกมจาก gamePool
+    const index = Math.floor(Math.random() * gamePool.length);
+    const selectedObj = gamePool[index];
 
-    if (turnCount >= nextGameThreshold) {
+    // ลบเกมที่ได้ออกจากกอง (เพื่อไม่ให้ซ้ำ)
+    gamePool.splice(index, 1);
 
-        if (availableSpecialGames.length === 0) {
-            availableSpecialGames = [...specialGamesList];
-        }
-
-        const gameIndex = Math.floor(Math.random() * availableSpecialGames.length);
-        selectedObj = availableSpecialGames[gameIndex];
-
-        availableSpecialGames.splice(gameIndex, 1);
-
-        turnCount = 0;
-        nextGameThreshold = Math.floor(Math.random() * 4) + 5;
-
-    } else {
-        if (availableQuestions.length === 0) {
-             console.log("คำถามหมดแล้ว!"); 
-        }
-
-        if (availableQuestions.length > 0) {
-            const index = Math.floor(Math.random() * availableQuestions.length);
-            selectedObj = availableQuestions[index];
-            availableQuestions.splice(index, 1);
-        }
-    }
-
+    // บันทึกประวัติ
     history.unshift(selectedObj);
-    resultDisplay.classList.remove("blur-anim");
     
-    // ตรวจสอบว่ามี selectedObj หรือไม่ (เผื่อกรณีคำถามหมดแล้วไม่ได้รีเซ็ต)
-    if (selectedObj) {
-        resultDisplay.innerText = selectedObj.t;
-        categoryBadge.innerText = selectedObj.c;
-        categoryBadge.style.backgroundColor = selectedObj.color;
-        categoryBadge.style.color = "#000"; 
-        categoryBadge.style.opacity = '1';
+    // แสดงผล
+    resultDisplay.classList.remove("blur-anim");
+    resultDisplay.innerText = selectedObj.t;
+    categoryBadge.innerText = selectedObj.c;
+    categoryBadge.style.backgroundColor = selectedObj.color;
+    categoryBadge.style.color = "#000"; 
+    categoryBadge.style.opacity = '1';
 
-        void resultDisplay.offsetWidth; 
-        resultDisplay.classList.add("pop-in");
-        playSound(resultSound);
+    void resultDisplay.offsetWidth; // Trigger reflow
+    resultDisplay.classList.add("pop-in");
+    playSound(resultSound);
 
-        if (selectedObj.type) {
-            setupGame(selectedObj);
-        } else {
-            spinBtn.disabled = false;
-        }
-    }
+    // เริ่มเกมทันที
+    setupGame(selectedObj);
     
     updateCountDisplay();
 }
 
-// =================== 4. Logic Games ===================
+// =================== 4. Logic Games (คงเดิม) ===================
 
 async function setupGame(gameObj) {
     specialGameArea.style.display = 'flex';
@@ -641,17 +436,19 @@ async function setupGame(gameObj) {
 }
 
 function skipGame() {
-    clearInterval(window.currentInterval);
+    if(window.currentInterval) clearInterval(window.currentInterval);
+    if(window.mathTimer) clearInterval(window.mathTimer);
     specialGameArea.style.display = 'none';
     spinBtn.disabled = false;
     playSound(clickSound);
 }
 
 function getSkipButtonHTML() {
-    return `<button class="skip-btn" onclick="skipGame()">⏭ ข้ามเกมนี้</button>`;
+    return `<button class="skip-btn" onclick="skipGame()">⏭ ข้ามเกมนี้ / จบเกม</button>`;
 }
 
-// --- Game 1-5 Logic (เดิม) ---
+// --- Game Logic Functions (เหมือนเดิมเป๊ะ) ---
+
 function setupTimerGame(seconds) {
     specialGameArea.innerHTML = `<button class="game-btn" onclick="runTimer(${seconds})">⏱️ เริ่มจับเวลา (${seconds} วิ)</button>${getSkipButtonHTML()}`;
 }
@@ -671,7 +468,6 @@ function runTimer(seconds) {
     }, 1000);
 }
 
-// --- Stopwatch Blind Game Logic (Fixed & Hardcore-Ready) ---
 function setupStopwatchGame(target, range) {
     specialGameArea.style.display = 'flex';
     specialGameArea.innerHTML = `
@@ -690,34 +486,25 @@ function setupStopwatchGame(target, range) {
 }
 
 function runStopwatch(target, range) {
-    if (window.currentInterval) {
-        clearInterval(window.currentInterval);
-    }
-
+    if (window.currentInterval) clearInterval(window.currentInterval);
     window.swStart = performance.now();
 
     specialGameArea.innerHTML = `
         <div class="timer-text" id="sw-display">0.00</div>
-        <div id="blind-status"
-             style="margin-bottom:15px; height:20px; color:#ffca28; font-weight:bold;">
-        </div>
+        <div id="blind-status" style="margin-bottom:15px; height:20px; color:#ffca28; font-weight:bold;"></div>
         <button class="game-btn" id="stop-btn">🟥 หยุด!</button>
         ${getSkipButtonHTML()}
     `;
 
-    // 🔥 ผูกปุ่มหยุดตรงนี้ (สำคัญ)
     const stopBtn = document.getElementById("stop-btn");
-    stopBtn.addEventListener("click", () => {
-        stopStopwatch(target, range);
-    });
+    stopBtn.addEventListener("click", () => { stopStopwatch(target, range); });
 
     window.currentInterval = setInterval(() => {
         const elapsed = (performance.now() - window.swStart) / 1000;
         const display = document.getElementById("sw-display");
         const status = document.getElementById("blind-status");
 
-        if (!display) return; // กัน DOM หาย
-
+        if (!display) return;
         if (elapsed <= 2) {
             display.innerText = elapsed.toFixed(2);
         } else {
@@ -729,22 +516,18 @@ function runStopwatch(target, range) {
 }
 
 function stopStopwatch(target, range) {
-    if (!window.swStart) return; // กันกดซ้ำ
-
+    if (!window.swStart) return;
     clearInterval(window.currentInterval);
     window.currentInterval = null;
 
     const finalTime = (performance.now() - window.swStart) / 1000;
     window.swStart = null;
-
     const diff = Math.abs(finalTime - target);
-
     const display = document.getElementById("sw-display");
     const status = document.getElementById("blind-status");
     const stopBtn = document.getElementById("stop-btn");
 
     if (!display || !stopBtn) return;
-
     display.innerText = finalTime.toFixed(2);
     display.style.color = "#fff";
 
@@ -761,17 +544,14 @@ function stopStopwatch(target, range) {
         stopBtn.innerText = "ดื่ม! 🍺";
         stopBtn.style.background = "#ef5350";
     }
-
     stopBtn.disabled = true;
     spinBtn.disabled = false;
 }
 
-// --- Roulette Game Logic ---
 function setupRouletteGame() {
     window.bulletChamber = Math.floor(Math.random() * 6);
     window.currentChamber = 0;
     specialGameArea.style.display = 'flex';
-    // ลบพวก animation แฝงออกเพื่อให้หน้าจอนิ่งสนิทตอนเริ่ม
     specialGameArea.style.animation = "none"; 
     
     specialGameArea.innerHTML = `
@@ -794,12 +574,10 @@ function pullTrigger() {
 
     setTimeout(() => {
         if (window.currentChamber === window.bulletChamber) {
-            // --- ผลลัพธ์: โดนยิง (เฉพาะจุดนี้ที่อาจจะสั่นได้ถ้าคุณต้องการ แต่ถ้าไม่เอาเลยผมลบออกให้แล้วครับ) ---
             playSound(bangSound);
             currentDot.style.background = "#ef5350";
             currentDot.style.boxShadow = "0 0 15px #ef5350";
             
-            // ลบบรรทัด shake ออกเรียบร้อย หน้าจะนิ่งแต่เปลี่ยนสีแทน
             specialGameArea.innerHTML = `
                 <div class="timer-text" style="font-size: 5rem;">💀</div>
                 <div style="color:#ef5350; font-size: 1.5rem; font-weight:bold; margin-bottom: 10px;">ปัง! ตายสนิท</div>
@@ -808,7 +586,6 @@ function pullTrigger() {
             `;
             spinBtn.disabled = false;
         } else {
-            // --- ผลลัพธ์: รอด ---
             playSound(clickSound); 
             currentDot.style.background = "#444"; 
             currentDot.innerHTML = "✕";
@@ -821,7 +598,6 @@ function pullTrigger() {
             window.currentChamber++;
             btn.disabled = false;
             btn.innerText = `🤞 เหนี่ยวไก (นัดที่ ${window.currentChamber + 1})`;
-            
             const statusLabel = document.getElementById('roulette-status');
             statusLabel.innerText = `นัดที่ ${window.currentChamber} รอด! ส่งเครื่องต่อ...`;
             statusLabel.style.color = "#00e676";
@@ -829,12 +605,9 @@ function pullTrigger() {
     }, 800);
 }
 
-// --- Bomb Game Logic ---
 function setupBombGame() {
     const bombWire = Math.floor(Math.random() * 4);
     const colors = ["#ef5350", "#00e676", "#42a5f5", "#ffca28"];
-    
-    // เริ่มเสียงเตือนเบาๆ (ถ้ามีเสียงบี๊บ)
     let wiresHTML = colors.map((color, i) => `
         <div class="wire-btn" 
              style="background:${color}; position:relative; overflow:hidden; border:none; box-shadow: 0 4px #000, inset 0 -4px rgba(0,0,0,0.2);" 
@@ -860,7 +633,6 @@ function cutWire(el, isBomb) {
         el.style.transform = "translateY(4px)";
         el.style.boxShadow = "none";
         
-        // Effect หน้าจอแดงวาบ
         document.body.style.background = "#ef5350";
         setTimeout(() => { document.body.style.background = "var(--bg-color)"; }, 200);
 
@@ -872,7 +644,6 @@ function cutWire(el, isBomb) {
         `;
         specialGameArea.style.animation = "shake 0.5s infinite";
         setTimeout(() => { specialGameArea.style.animation = ""; }, 500);
-        
         resultDisplay.innerText = "ภารกิจล้มเหลว! ดื่มมมม";
         spinBtn.disabled = false;
     } else {
@@ -885,7 +656,6 @@ function cutWire(el, isBomb) {
     }
 }
 
-// --- Memory Game Logic ---
 function setupMemoryGame() {
     const num = Math.floor(10000 + Math.random() * 90000);
     specialGameArea.innerHTML = `<div style="font-size:0.9rem; margin-bottom:10px; color:#aaa;">จดจำตัวเลขนี้ใน 2 วินาที!</div><div class="timer-text" id="mem-num" style="color:#00e676;">${num}</div><div style="width:100%; height:6px; background:#333; border-radius:10px; overflow:hidden; margin-top:10px;"><div id="mem-progress" style="width:100%; height:100%; background:#00e676; transition: width 2s linear;"></div></div>`;
@@ -906,7 +676,6 @@ function checkMemory(correct) {
     specialGameArea.innerHTML = getSkipButtonHTML(); spinBtn.disabled = false;
 }
 
-// --- Alphabet Random Game Logic ---
 function setupAlphabetGame() {
     specialGameArea.innerHTML = `
         <div id="alpha-display" class="timer-text" style="color:#00ccff;">?</div>
@@ -923,8 +692,6 @@ function runAlphabetSpin() {
     
     let counter = 0;
     let speed = 50;
-    
-    // เสียงกดรัวๆ ระหว่างสุ่ม
     let spinInterval = setInterval(() => {
         const randomChar = letters[Math.floor(Math.random() * letters.length)];
         display.innerText = randomChar;
@@ -935,17 +702,15 @@ function runAlphabetSpin() {
             clearInterval(spinInterval);
             const finalLetter = letters[Math.floor(Math.random() * letters.length)];
             display.innerText = finalLetter;
-            display.style.fontSize = "6rem"; // ขยายตัวอักษรที่สุ่มได้
-            
+            display.style.fontSize = "6rem"; 
             playSound(resultSound);
             btn.innerText = "ใครมีตัว '" + finalLetter + "' ดื่ม!";
             btn.style.background = "#444";
-            spinBtn.disabled = false; // ปลดล็อกปุ่มเริ่มเกมหลัก
+            spinBtn.disabled = false; 
         }
     }, speed);
 }
 
-// --- Simon Says Game Logic (6 Colors Edition) ---
 function setupSimonGame() {
     specialGameArea.style.display = 'flex';
     specialGameArea.innerHTML = `
@@ -968,7 +733,6 @@ function startSimon() {
     html += `</div><div id="simon-status" style="margin-top:10px; color:var(--warning);">ตั้งใจดู...</div>`;
     specialGameArea.innerHTML = html;
 
-    // เล่น Sequence
     let i = 0;
     const interval = setInterval(() => {
         if(i >= seq.length) {
@@ -976,7 +740,6 @@ function startSimon() {
             document.getElementById('simon-status').innerText = "ตาคุณแล้ว! กดตามเลย";
             document.getElementById('simon-status').style.color = "#00e676";
             
-            // เปิดให้ผู้เล่นกด
             colors.forEach((c, idx) => {
                 const el = document.getElementById(`simon-${idx}`);
                 el.style.opacity = "1";
@@ -987,22 +750,17 @@ function startSimon() {
                     setTimeout(() => el.style.transform = "scale(1)", 100);
 
                     if(idx !== seq[userIdx]) {
-                        // --- กรณีที่ 1: กดผิด (ดื่ม!) ---
-                        playSound(bangSound); // เสียงเตือน
+                        playSound(bangSound); 
                         resultDisplay.innerText = "พลาดแล้ว! ดื่มซะดีๆ";
                         document.getElementById('simon-status').innerText = "❌ ผิดลำดับ!";
                         document.getElementById('simon-status').style.color = "#ef5350";
                         spinBtn.disabled = false;
-                        // ปิดปุ่มห้ามกดต่อ
                         document.querySelectorAll('[id^="simon-"]').forEach(d => d.onclick = null);
                     } else {
-                        // --- กรณีที่ 2: กดถูก (ไปต่อหรือชนะ) ---
                         playSound(clickSound); 
                         userIdx++;
-                        
                         if(userIdx === seq.length) {
-                            // ชนะแล้ว
-                            playSound(resultSound); // เสียงชนะ
+                            playSound(resultSound); 
                             resultDisplay.innerText = "สมองดีมาก! รอดตาย";
                             document.getElementById('simon-status').innerText = "✅ ถูกต้องทั้งหมด!";
                             spinBtn.disabled = false;
@@ -1014,14 +772,12 @@ function startSimon() {
             return;
         }
 
-        // แสดงผล Sequence ไฟ
         const active = document.getElementById(`simon-${seq[i]}`);
         if(active) {
             active.style.opacity = "1";
             active.style.boxShadow = `0 0 20px ${colors[seq[i]]}`;
             active.style.transform = "scale(1.05)";
             playSound(clickSound);
-            
             setTimeout(() => {
                 active.style.opacity = "0.2";
                 active.style.boxShadow = "none";
@@ -1029,10 +785,9 @@ function startSimon() {
             }, 450);
         }
         i++;
-    }, 700); // ความเร็วในการแสดงไฟ
+    }, 700); 
 }
 
-// --- Bottle Game Logic ---
 function setupBottleGame() {
     specialGameArea.innerHTML = `<div id="bottle" style="font-size:4rem; transition: transform 3s ease-out;">🍾</div><button class="game-btn" style="margin-top:20px;" onclick="spinBottle()">หมุน!</button>${getSkipButtonHTML()}`;
 }
@@ -1046,10 +801,10 @@ function spinBottle() {
         spinBtn.disabled = false;
     }, 3000);
 }
-// --- Chain Math Game Logic ---
+
 function setupChainMathGame() {
     const ops = ['+', '-'];
-    const n1 = Math.floor(Math.random() * 15) + 5; // เพิ่มตัวเลขให้ยากขึ้นนิดนึง
+    const n1 = Math.floor(Math.random() * 15) + 5; 
     const n2 = Math.floor(Math.random() * 9) + 1;
     const n3 = Math.floor(Math.random() * 9) + 1;
     const op1 = ops[Math.floor(Math.random() * 2)];
@@ -1074,10 +829,8 @@ function setupChainMathGame() {
         ${getSkipButtonHTML()}
     `;
 
-    // โฟกัสไปที่ช่องพิมพ์ทันที
     setTimeout(() => document.getElementById('math-ans').focus(), 100);
 
-    // ระบบจับเวลา 7 วินาที
     let timeLeft = 7.0;
     const totalTime = 7.0;
     
@@ -1088,16 +841,15 @@ function setupChainMathGame() {
             const percent = (timeLeft / totalTime) * 100;
             progressBar.style.width = percent + "%";
         }
-
         if (timeLeft <= 0) {
             clearInterval(window.mathTimer);
-            failMathGame(ans); // หมดเวลา = แพ้
+            failMathGame(ans); 
         }
     }, 100);
 }
 
 function solveChain(ans) {
-    clearInterval(window.mathTimer); // หยุดเวลาทันทีที่กดตอบ
+    clearInterval(window.mathTimer);
     const input = document.getElementById('math-ans');
     const user = parseInt(input.value);
     
@@ -1114,9 +866,8 @@ function solveChain(ans) {
 
 function failMathGame(correctAns) {
     clearInterval(window.mathTimer);
-    playSound(bangSound); // เสียงระเบิดเพิ่มความสะดุ้ง
+    playSound(bangSound); 
     specialGameArea.style.animation = "shake 0.5s";
-    
     specialGameArea.innerHTML = `
         <div class="timer-text" style="color:#ef5350;">💥 บึ้ม!</div>
         <div style="color:#ef5350; font-weight:bold; font-size:1.2rem;">เฉลยคือ: ${correctAns}</div>
@@ -1126,10 +877,9 @@ function failMathGame(correctAns) {
     spinBtn.disabled = false;
 }
 
-// --- Tap War: Battle Royale Edition ---
 function setupTapWarGame() {
-    window.warScore = 50; // เริ่มที่ครึ่งๆ
-    window.warActive = false; // ยังไม่เริ่มจนกว่าจะนับถอยหลังจบ
+    window.warScore = 50; 
+    window.warActive = false;
     
     specialGameArea.style.display = 'flex';
     specialGameArea.innerHTML = `
@@ -1161,14 +911,12 @@ function startTapWarCountdown() {
     const btn = document.getElementById('start-war-btn');
     const overlay = document.getElementById('war-overlay');
     let count = 3;
-    
     btn.disabled = true;
     let timer = setInterval(() => {
         btn.innerText = count;
         btn.style.fontSize = "3rem";
         playSound(clickSound);
         count--;
-        
         if(count < 0) {
             clearInterval(timer);
             overlay.style.display = 'none';
@@ -1181,12 +929,9 @@ function startTapWarCountdown() {
 
 function tapWar(player) {
     if(!window.warActive) return;
-
-    // ปรับความไว: กด 1 ครั้งเพิ่ม/ลด 4% (ใครกดเร็วกว่าคนนั้นชนะ)
     if(player === 1) window.warScore += 4;
     else window.warScore -= 4;
     
-    // อัปเดต UI
     const p1 = document.getElementById('p1-area');
     const p2 = document.getElementById('p2-area');
     p1.style.flex = window.warScore;
@@ -1197,13 +942,11 @@ function tapWar(player) {
     
     playSound(clickSound);
 
-    // ตรวจสอบผู้ชนะ
     if(window.warScore >= 100 || window.warScore <= 0) {
         window.warActive = false;
         const winner = window.warScore >= 100 ? "น้ำเงิน" : "แดง";
         const winColor = window.warScore >= 100 ? "#2196f3" : "#f44336";
         const loser = window.warScore >= 100 ? "แดง" : "น้ำเงิน";
-        
         showWarWinner(winner, winColor, loser);
     }
 }
@@ -1211,7 +954,6 @@ function tapWar(player) {
 function showWarWinner(winner, color, loser) {
     playSound(resultSound);
     const container = document.getElementById('tap-war-container');
-    
     container.innerHTML = `
         <div style="text-align:center; padding:20px; background:${color}; border-radius:15px; animation: bounce 0.5s infinite alternate;">
             <div style="font-size:3rem; margin-bottom:10px;">👑</div>
@@ -1220,7 +962,6 @@ function showWarWinner(winner, color, loser) {
         </div>
         ${getSkipButtonHTML()}
     `;
-    
     resultDisplay.innerText = `จบศึก! สี${winner} เป็นฝ่ายชนะ`;
     spinBtn.disabled = false;
 }
@@ -1236,5 +977,4 @@ historyModal.addEventListener('click', (e) => { if (e.target === historyModal) c
 </script>
     
 </body>
-
 </html>
