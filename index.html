@@ -252,6 +252,13 @@ h1 {
     font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;
     margin-right: 8px; color: #000; font-weight: bold; white-space: nowrap; margin-top: 3px;
 }
+
+/* Round indicator */
+.round-badge {
+    position: absolute; bottom: 10px; left: 10px;
+    font-size: 0.7rem; color: #555; background: #111;
+    padding: 3px 8px; border-radius: 6px;
+}
 </style>
 </head>
 
@@ -274,7 +281,8 @@ h1 {
 
         <div id="special-game-area"></div>
 
-        <div class="hint-text">ONLY MINI-GAMES</div>
+        <div class="hint-text" id="hint-label">MINI-GAMES + QUESTIONS</div>
+        <div class="round-badge" id="round-badge"></div>
     </div>
 
     <div class="controls-area">
@@ -300,9 +308,8 @@ h1 {
 <audio id="bangSound" src="bang.wav"></audio>
 
 <script>
-// =================== 1. ข้อมูลเกม (ตัด Normal Questions ออกจาก Logic) ===================
+// =================== 1. ข้อมูลเกม ===================
 
-// รายชื่อมินิเกมทั้งหมด
 const allSpecialGames = [
     { t: "เริ่มจับเวลา 40 วิ ใครเปล่งเสียงก่อน → จัดการดื่ม 1 ครั้ง", c: "MINI GAME", color: "#ffca28", type: "timer", time: 40 },
     { t: "หยุดเวลาที่ 5.00 วิ (±0.10) ใครพลาดดื่ม!", c: "SKILL", color: "#42a5f5", type: "stopwatch", target: 5.00, range: 0.10 },
@@ -316,9 +323,145 @@ const allSpecialGames = [
     { t: "สงครามจิ้มจอ! (2 คนช่วยกันจิ้ม)", c: "BATTLE", color: "#ff1744", type: "tapwar" },
 ];
 
+// =================== 110 คำถาม/ท้าทาย ===================
+const allQuestions = [
+    // ใครเคย...
+    { t: "ใครเคยโทรหาแฟนเก่าตอนเมา → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยนอนหลับในห้องน้ำ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยส่ง แชท ผิดคน → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยร้องไห้เพราะสัตว์ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยโกหกพ่อแม่ว่าค้างบ้านเพื่อน → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยถ่ายรูปอาหารก่อนกิน → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยหัวเราะเสียงดังที่สุด → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยทำของหล่นในร้านสะดวกซื้อแล้วแกล้งทำเป็นไม่รู้ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยฝันว่าตกจากที่สูงแล้วสะดุ้งตื่น → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยกดถูกใจโพสต์เก่ามากของคนที่ชอบ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครนอนดึกเกิน 3 ทุ่มทุกวันในสัปดาห์นี้ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยหัวเราะคนล้มแล้วค่อยถามว่าเป็นไง → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยแกล้งทำเป็นว่าไม่ได้ยินเวลาถูกเรียก → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยอ่านแชทแล้วไม่ตอบเกิน 1 วัน → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยกินข้าวคนเดียวในร้านอาหารหรู → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยขโมยกินของในตู้เย็นบ้านคนอื่น → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยแพนิกเพราะหาโทรศัพท์ไม่เจอทั้งที่อยู่ในมือ → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครชื่อเนย → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยกลัวเข้าห้องน้ำเพราะมืด → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    { t: "ใครเคยพิมพ์ข้อความไปแล้วลบทิ้งก่อนส่ง → ยก!", c: "ใครเคย", color: "#ff6b6b" },
+    // ใครใส่...
+    { t: "ใครใส่ชุดเดิม 2 วันติด → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่รองเท้าผิดข้างออกจากบ้านมาแล้ว → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่เสื้อในออกนอก → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่กางเกงนอนมาที่นี่ → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่แว่นแต่สายตาดีปกติ → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่เสื้อเด่นสุด → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "ใครใส่กางเกงขาดมาแบบตั้งใจ → ยก!", c: "ใครใส่", color: "#ffa94d" },
+    { t: "หมดวง → ยก!", c: "ล้างคอ", color: "#ffa94d" },
+    // ท้าทาย ทำท่า
+    { t: "ทำท่าวิ่งอยู่กับที่ 5 วิ ไม่ทำ → ยก 1 ครั้ง!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำหน้าโกรธสุดๆ ค้างไว้ 3 วิ ไม่ทำ → ยก 1 ครั้ง!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำท่า 'รำวง' 5 วิ ไม่ทำ → ยก 1 ครั้ง!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "พูดชื่อตัวเองย้อนหลัง ไม่ได้ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำเสียงสัตว์ที่คนข้างๆ บอก ไม่ยอมทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "กอดคนซ้ายมือ 3 วิ ไม่ยอม → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ลุกขึ้นยืนแล้วปรบมือ 10 ครั้ง ไม่ทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "พูดคำว่า 'ฉันรักทุกคน' ดังๆ ไม่พูด → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "แลบลิ้นออกค้างไว้ 3 วิ ไม่ทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "นับ 1 ถึง 20 เร็วสุดๆ ไม่ถึง 5 วิ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำท่า selfie ค้างไว้ 5 วิ ไม่ทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ส่งจูบ 3 ครั้งให้คนตรงข้าม ไม่ยอม → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำท่าแมวเดินรอบวง 1 รอบ ไม่ทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ร้องเพลงชาติ 4 บรรทัดแรก ได้ไม่ครบ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    { t: "ทำท่าพรีเซนต์สินค้า 5 วิ ไม่ทำ → ยก!", c: "ท้าทาย", color: "#51cf66" },
+    // โดน...
+    { t: "ใครเคยโดนครูจับได้ว่าคุยในห้อง → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยโดนบอกเลิกทางไลน์ → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยโดนนกขี้ใส่ → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยทำท่าใกล้องวงจรปิด → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยโดนแฟนของคนอื่นแอบชอบ → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยโดนเพื่อนวางแผนเซอร์ไพรส์แล้วรู้ก่อน → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครเคยโดนใส่ข้อมูลปลอมในกลุ่มเพื่อน → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครจอดรถขวาง → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครตื่นสายไปเรียนสาย → ยก!", c: "โดน", color: "#cc5de8" },
+    { t: "ใครน่ารักสุดในวง → ยก!", c: "โดน", color: "#cc5de8" },
+    // ถ้า...
+    { t: "คนที่นอนดึกที่สุดในสัปดาห์นี้ → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่แกล้งทำตัวยุ่งเพื่อหนีงานบ้าน → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่ไม่ได้ออกกำลังกายทั้งเดือน → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่กิน delivery มากกว่า 3 ครั้งสัปดาห์นี้ → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่มีรูปเซลฟี่มากกว่า 50 รูปในโทรศัพท์ → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่ยังไม่ได้ซักผ้ามา 2 อาทิตย์ → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่เคยปิดเสียงกลุ่มแชท → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่อ่านหนังสือไม่ถึง 1 เล่มต่อปี → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่มีหนี้บัตรเครดิต → ยก!", c: "ถ้า", color: "#339af0" },
+    { t: "คนที่กินขนมก่อนกินข้าว → ยก!", c: "ถ้า", color: "#339af0" },
+    // สารภาพ
+    { t: "ใครเคยแกล้งทำเป็นป่วยเพื่อหนีงาน/เรียน → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยแอบดูโทรศัพท์แฟน/เพื่อน → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยบอกว่าออกมาแล้วแต่จริงๆ ยังอยู่บ้าน → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยลอกการบ้านหรือ copy งานส่ง → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยแกล้งหัวเราะทั้งที่ไม่ขำ → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยพูดถึงลับหลังแล้วถูกได้ยิน → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยอ้างว่าของมาแต่จริงๆ ซื้อเอง → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยแกล้งทำเป็นไม่รู้จักคนที่รู้จัก → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยอ่านไดอารี่หรือของส่วนตัวคนอื่น → ยก!", c: "สารภาพ", color: "#f06595" },
+    { t: "ใครเคยบอกว่ากำลังจะไปแต่ไม่ไป → ยก!", c: "สารภาพ", color: "#f06595" },
+    // มหกรรม
+    { t: "ทุกคนดื่มพร้อมกัน! สุขภาพดีทุกคน! 🥂", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่นั่งใกล้ประตูที่สุด → ยก 2 ครั้ง!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่สวมเสื้อสีเข้มที่สุด → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่โทรศัพท์แบตเหลือน้อยที่สุด → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนเกิดวันที่เร็วที่สุดในปี → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่ผมยาวที่สุดในวง → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่รองเท้าเบอร์ใหญ่ที่สุด → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่ตัวสูงที่สุด → ยก!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่อายุมากที่สุดในวง → ยก 2 ครั้ง รุ่นใหญ่ต้องแข็ง!", c: "มหกรรม", color: "#00e676" },
+    { t: "คนที่ตัวเล็กที่สุด → ยกครึ่งแก้วก็พอ! 🫶", c: "มหกรรม", color: "#00e676" },
+    // ฮา
+    { t: "บอกชื่อตัวเองแต่ออกเสียงสระผิดทั้งหมด ทำไม่ได้ → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "ทำหน้า 'วาว' ค้างไว้ 5 วิ แล้วถ่ายรูป ไม่ยอม → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "ร้องเพลงที่ชอบ 10 วิ ร้องไม่ได้ → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "แสดงท่าเต้นที่ชอบ 5 วิ ไม่ยอม → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "พูด 'ฉันเป็นแมวน้ำ' แบบจริงจัง ไม่ยอม → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "ทำเสียงหัวเราะของวิลเลจพีเพิล ไม่ยอม → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "บอกที่ตั้งของข้อศอกโดยไม่พูดว่าข้อศอก ไม่ได้ → ยก!", c: "ฮา", color: "#ffd43b" },
+    { t: "ชี้ไปทางซ้าย 3 ครั้งและบอกว่า 'ขวา' ทำไม่ได้ → ยก!", c: "ฮา", color: "#ffd43b" },
+    // สถานการณ์
+    { t: "ใครเคยตกหลุมรักเพื่อนสนิท → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครเคย like รูป ex ตัวเองหลังจากเลิกกันมากกว่าปี → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครเคยส่งข้อความหา crush แล้วไม่ได้รับตอบ → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครมีแมวหรือสุนัขมากกว่า 2 ตัว → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครเคยเที่ยวต่างประเทศ 3 ประเทศขึ้นไป → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครไม่มีแฟนมากกว่า 1 ปีแล้ว → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครแซ่มาคนเดียวไม่ได้มาเป็นกลุ่ม → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    { t: "ใครเป็นลูกคนเดียวในบ้าน → ยก!", c: "สถานการณ์", color: "#74c0fc" },
+    // ดวง
+    { t: "ใครเกิดราศีมังกรหรือมีน → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเกิดเดือนคู่ (2,4,6,8,10,12) → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเลขบัตรประชาชนลงท้ายด้วยเลขคี่ → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครชื่อจริงมีพยัญชนะ ก, ข, ค → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเบอร์โทรลงท้าย 5 หรือ 9 → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครชื่อ 3 พยางค์ขึ้นไป → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเกิดในช่วงฤดูหนาว (พ.ย. - ม.ค.) → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเลขโปรดเป็นเลขคู่ → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครชื่อเล่นมีตัวอักษรไม่เกิน 2 พยางค์ → ยก!", c: "ดวง", color: "#a9e34b" },
+    { t: "ใครเกิดวันจันทร์ → ยก!", c: "ดวง", color: "#a9e34b" },
+];
+
 // =================== 2. ตัวแปรระบบ ===================
-let gamePool = [...allSpecialGames]; // กองกลางสำหรับสุ่ม (จะลดลงเรื่อยๆ)
-let history = []; 
+
+// กองไพ่
+let gamePool = [...allSpecialGames];
+let questionPool = [...allQuestions];
+
+// นับรอบ (รอบของเกม)
+let gameRound = 1;
+let questionRound = 1;
+
+// สุ่มคำถาม 5-6 ข้อแล้วจึงสุ่มเกม 1 เกม
+let spinCounter = 0; // นับจำนวนครั้งที่กดสุ่ม
+let questionCountInBatch = 0; // นับคำถามในชุดปัจจุบัน
+let questionsPerBatch = 5; // คำถามกี่ข้อก่อนจะสุ่มเกม (สุ่มระหว่าง 5-6)
+
+let history = [];
 let soundEnabled = true;
 
 const clickSound = document.getElementById("clickSound");
@@ -333,6 +476,8 @@ const spinBtn = document.getElementById('spin-btn');
 const countDisplay = document.getElementById('count-display');
 const categoryBadge = document.getElementById('category-badge');
 const specialGameArea = document.getElementById('special-game-area');
+const hintLabel = document.getElementById('hint-label');
+const roundBadge = document.getElementById('round-badge');
 
 // =================== 3. ฟังก์ชันหลัก ===================
 
@@ -352,74 +497,129 @@ function playSound(sound) {
 }
 
 function updateCountDisplay() {
-    // แสดงจำนวนเกมที่เหลือในกอง
-    countDisplay.innerText = `Games Left: ${gamePool.length} / ${allSpecialGames.length}`;
+    const totalQ = allQuestions.length;
+    const usedQ = totalQ - questionPool.length;
+    countDisplay.innerText = `❓ ${usedQ}/${totalQ} คำถาม`;
+}
+
+function updateRoundBadge(isQuestion) {
+    if (!isQuestion) {
+        roundBadge.innerText = `🎮 เกมรอบ ${gameRound} | คำถาม ${questionRound-1}/${allQuestions.length}`;
+    } else {
+        roundBadge.innerText = `❓ คำถาม ${questionCountInBatch}/${questionsPerBatch} | รอบ ${questionRound}`;
+    }
 }
 
 updateCountDisplay();
 
-function startSpin() {
-    // รีเซ็ตหน้าจอ
-    specialGameArea.style.display = 'none';
-    specialGameArea.innerHTML = ''; 
-    categoryBadge.style.opacity = '0';
-    
-    // ตรวจสอบว่าเกมหมดกองหรือยัง
-    if (gamePool.length === 0) {
-        alert("🎉 เล่นครบทุกเกมแล้ว! ระบบจะรีเซ็ตเริ่มรอบใหม่");
-        gamePool = [...allSpecialGames]; // เติมเกมกลับเข้ากอง
-        updateCountDisplay();
-    }
+// เช็คว่าควรสุ่มเกมหรือคำถาม
+function shouldPickGame() {
+    // ถ้าเกมหมดแล้ว → ไม่สุ่ม (จะรีเซ็ตกอง)
+    // ถ้าถึงเวลาต้องสุ่มเกม
+    return questionCountInBatch >= questionsPerBatch;
+}
 
-    playSound(clickSound); 
+function startSpin() {
+    specialGameArea.style.display = 'none';
+    specialGameArea.innerHTML = '';
+    categoryBadge.style.opacity = '0';
+
+    playSound(clickSound);
     spinBtn.disabled = true;
     resultDisplay.classList.remove("pop-in");
     resultDisplay.classList.add("blur-anim");
 
-    // Animation สุ่มตัวอักษร (เอาชื่อเกมมาสุ่มโชว์)
+    // animation สุ่มชื่อเกม
     let shuffleInterval = setInterval(() => {
         const randomPreview = allSpecialGames[Math.floor(Math.random() * allSpecialGames.length)];
-        resultDisplay.innerText = randomPreview.t; 
-        resultDisplay.style.fontSize = "1.2rem"; // ลดขนาดตอนสุ่มนิดหน่อยจะได้ไม่อ่านยาก
+        resultDisplay.innerText = randomPreview.t;
+        resultDisplay.style.fontSize = "1.2rem";
     }, 50);
 
     setTimeout(() => {
         clearInterval(shuffleInterval);
-        resultDisplay.style.fontSize = ""; // คืนค่าขนาดฟอนต์
+        resultDisplay.style.fontSize = "";
         processResult();
     }, 1200);
 }
 
 function processResult() {
-    // สุ่มเกมจาก gamePool
-    const index = Math.floor(Math.random() * gamePool.length);
-    const selectedObj = gamePool[index];
+    let selectedObj;
+    let isQuestion = false;
 
-    // ลบเกมที่ได้ออกจากกอง (เพื่อไม่ให้ซ้ำ)
-    gamePool.splice(index, 1);
+    if (shouldPickGame()) {
+        // ======= สุ่มเกม =======
+        isQuestion = false;
+
+        // ถ้าเกมหมดกอง → รีเซ็ตกอง
+        if (gamePool.length === 0) {
+            gamePool = [...allSpecialGames];
+            gameRound++;
+        }
+
+        const index = Math.floor(Math.random() * gamePool.length);
+        selectedObj = gamePool[index];
+        gamePool.splice(index, 1);
+
+        // รีเซ็ต counter สำหรับชุดถัดไป (สุ่ม 5 หรือ 6)
+        questionCountInBatch = 0;
+        questionsPerBatch = Math.random() < 0.5 ? 5 : 6;
+
+        hintLabel.innerText = "MINI GAME TIME!";
+        hintLabel.style.color = "#00e676";
+
+    } else {
+        // ======= สุ่มคำถาม =======
+        isQuestion = true;
+
+        // ถ้าคำถามหมดแล้ว → แจ้งและจบ
+        if (questionPool.length === 0) {
+            alert("🎉 เล่นครบ 110 คำถามแล้ว! เกมจบแล้ว ขอบคุณทุกคน!");
+            spinBtn.disabled = false;
+            return;
+        }
+
+        const index = Math.floor(Math.random() * questionPool.length);
+        selectedObj = questionPool[index];
+        questionPool.splice(index, 1);
+
+        questionCountInBatch++;
+        questionRound++;
+
+        hintLabel.innerText = "QUESTION TIME!";
+        hintLabel.style.color = "#ffd43b";
+
+        // ซ่อน special game area สำหรับคำถาม
+        specialGameArea.style.display = 'none';
+    }
 
     // บันทึกประวัติ
     history.unshift(selectedObj);
-    
+
     // แสดงผล
     resultDisplay.classList.remove("blur-anim");
     resultDisplay.innerText = selectedObj.t;
     categoryBadge.innerText = selectedObj.c;
     categoryBadge.style.backgroundColor = selectedObj.color;
-    categoryBadge.style.color = "#000"; 
+    categoryBadge.style.color = "#000";
     categoryBadge.style.opacity = '1';
 
-    void resultDisplay.offsetWidth; // Trigger reflow
+    void resultDisplay.offsetWidth;
     resultDisplay.classList.add("pop-in");
     playSound(resultSound);
 
-    // เริ่มเกมทันที
-    setupGame(selectedObj);
-    
+    if (!isQuestion) {
+        setupGame(selectedObj);
+    } else {
+        // คำถาม ไม่ต้องมี mini game → ปลดล็อกปุ่มทันที
+        spinBtn.disabled = false;
+    }
+
     updateCountDisplay();
+    updateRoundBadge(isQuestion);
 }
 
-// =================== 4. Logic Games (คงเดิม) ===================
+// =================== 4. Logic Games ===================
 
 async function setupGame(gameObj) {
     specialGameArea.style.display = 'flex';
@@ -428,7 +628,7 @@ async function setupGame(gameObj) {
     else if (gameObj.type === 'roulette') setupRouletteGame();
     else if (gameObj.type === 'bomb') setupBombGame();
     else if (gameObj.type === 'memory') setupMemoryGame();
-    else if (gameObj.type === 'alphabet') setupAlphabetGame(); 
+    else if (gameObj.type === 'alphabet') setupAlphabetGame();
     else if (gameObj.type === 'simon') setupSimonGame();
     else if (gameObj.type === 'bottle') setupBottleGame();
     else if (gameObj.type === 'chainmath') setupChainMathGame();
@@ -447,7 +647,7 @@ function getSkipButtonHTML() {
     return `<button class="skip-btn" onclick="skipGame()">⏭ ข้ามเกมนี้ / จบเกม</button>`;
 }
 
-// --- Game Logic Functions (เหมือนเดิมเป๊ะ) ---
+// --- Game Logic Functions ---
 
 function setupTimerGame(seconds) {
     specialGameArea.innerHTML = `<button class="game-btn" onclick="runTimer(${seconds})">⏱️ เริ่มจับเวลา (${seconds} วิ)</button>${getSkipButtonHTML()}`;
@@ -552,8 +752,8 @@ function setupRouletteGame() {
     window.bulletChamber = Math.floor(Math.random() * 6);
     window.currentChamber = 0;
     specialGameArea.style.display = 'flex';
-    specialGameArea.style.animation = "none"; 
-    
+    specialGameArea.style.animation = "none";
+
     specialGameArea.innerHTML = `
         <div id="cylinder-container" style="display: flex; gap: 5px; margin-bottom: 20px;">
             ${Array(6).fill().map((_, i) => `<div id="chamber-${i}" style="width: 30px; height: 30px; border-radius: 50%; border: 2px solid #555; background: #222;"></div>`).join('')}
@@ -567,17 +767,17 @@ function setupRouletteGame() {
 function pullTrigger() {
     const btn = document.getElementById('trigger-btn');
     const currentDot = document.getElementById(`chamber-${window.currentChamber}`);
-    
+
     btn.disabled = true;
-    currentDot.style.background = "#fff"; 
-    playSound(gunSound); 
+    currentDot.style.background = "#fff";
+    playSound(gunSound);
 
     setTimeout(() => {
         if (window.currentChamber === window.bulletChamber) {
             playSound(bangSound);
             currentDot.style.background = "#ef5350";
             currentDot.style.boxShadow = "0 0 15px #ef5350";
-            
+
             specialGameArea.innerHTML = `
                 <div class="timer-text" style="font-size: 5rem;">💀</div>
                 <div style="color:#ef5350; font-size: 1.5rem; font-weight:bold; margin-bottom: 10px;">ปัง! ตายสนิท</div>
@@ -586,15 +786,15 @@ function pullTrigger() {
             `;
             spinBtn.disabled = false;
         } else {
-            playSound(clickSound); 
-            currentDot.style.background = "#444"; 
+            playSound(clickSound);
+            currentDot.style.background = "#444";
             currentDot.innerHTML = "✕";
             currentDot.style.display = "flex";
             currentDot.style.alignItems = "center";
             currentDot.style.justifyContent = "center";
             currentDot.style.fontSize = "12px";
             currentDot.style.color = "#888";
-            
+
             window.currentChamber++;
             btn.disabled = false;
             btn.innerText = `🤞 เหนี่ยวไก (นัดที่ ${window.currentChamber + 1})`;
@@ -609,8 +809,8 @@ function setupBombGame() {
     const bombWire = Math.floor(Math.random() * 4);
     const colors = ["#ef5350", "#00e676", "#42a5f5", "#ffca28"];
     let wiresHTML = colors.map((color, i) => `
-        <div class="wire-btn" 
-             style="background:${color}; position:relative; overflow:hidden; border:none; box-shadow: 0 4px #000, inset 0 -4px rgba(0,0,0,0.2);" 
+        <div class="wire-btn"
+             style="background:${color}; position:relative; overflow:hidden; border:none; box-shadow: 0 4px #000, inset 0 -4px rgba(0,0,0,0.2);"
              onclick="cutWire(this, ${i === bombWire})">
              <div style="position:absolute; top:50%; width:100%; height:2px; background:rgba(255,255,255,0.3);"></div>
         </div>
@@ -628,11 +828,11 @@ function setupBombGame() {
 
 function cutWire(el, isBomb) {
     if (isBomb) {
-        playSound(bangSound); 
+        playSound(bangSound);
         el.style.background = "#000";
         el.style.transform = "translateY(4px)";
         el.style.boxShadow = "none";
-        
+
         document.body.style.background = "#ef5350";
         setTimeout(() => { document.body.style.background = "var(--bg-color)"; }, 200);
 
@@ -642,12 +842,10 @@ function cutWire(el, isBomb) {
             <div style="margin-top: 10px;">มือสั่นเหรอ? ดื่มซะ!</div>
             ${getSkipButtonHTML()}
         `;
-        specialGameArea.style.animation = "shake 0.5s infinite";
-        setTimeout(() => { specialGameArea.style.animation = ""; }, 500);
         resultDisplay.innerText = "ภารกิจล้มเหลว! ดื่มมมม";
         spinBtn.disabled = false;
     } else {
-        playSound(clickSound); 
+        playSound(clickSound);
         el.style.opacity = "0.2";
         el.style.transform = "translateY(2px)";
         el.style.pointerEvents = "none";
@@ -689,7 +887,7 @@ function runAlphabetSpin() {
     const display = document.getElementById('alpha-display');
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     btn.disabled = true;
-    
+
     let counter = 0;
     let speed = 50;
     let spinInterval = setInterval(() => {
@@ -697,16 +895,16 @@ function runAlphabetSpin() {
         display.innerText = randomChar;
         playSound(clickSound);
         counter++;
-        
+
         if (counter > 20) {
             clearInterval(spinInterval);
             const finalLetter = letters[Math.floor(Math.random() * letters.length)];
             display.innerText = finalLetter;
-            display.style.fontSize = "6rem"; 
+            display.style.fontSize = "6rem";
             playSound(resultSound);
             btn.innerText = "ใครมีตัว '" + finalLetter + "' ดื่ม!";
             btn.style.background = "#444";
-            spinBtn.disabled = false; 
+            spinBtn.disabled = false;
         }
     }, speed);
 }
@@ -724,8 +922,10 @@ function startSimon() {
     const btn = document.getElementById('start-simon-btn');
     if(btn) btn.style.display = 'none';
 
-    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0', '#ff9800']; const seq = Array.from({length: 5}, () => Math.floor(Math.random() * 6)); let userIdx = 0;
-    
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0', '#ff9800'];
+    const seq = Array.from({length: 5}, () => Math.floor(Math.random() * 6));
+    let userIdx = 0;
+
     let html = `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; width:100%;">`;
     colors.forEach((c, i) => {
         html += `<div id="simon-${i}" style="height:70px; background:${c}; opacity:0.2; border-radius:10px; transition:all 0.1s; border: 2px solid rgba(255,255,255,0.1);"></div>`;
@@ -739,28 +939,28 @@ function startSimon() {
             clearInterval(interval);
             document.getElementById('simon-status').innerText = "ตาคุณแล้ว! กดตามเลย";
             document.getElementById('simon-status').style.color = "#00e676";
-            
+
             colors.forEach((c, idx) => {
                 const el = document.getElementById(`simon-${idx}`);
                 el.style.opacity = "1";
                 el.style.cursor = "pointer";
-                
+
                 el.onclick = () => {
                     el.style.transform = "scale(0.9)";
                     setTimeout(() => el.style.transform = "scale(1)", 100);
 
                     if(idx !== seq[userIdx]) {
-                        playSound(bangSound); 
+                        playSound(bangSound);
                         resultDisplay.innerText = "พลาดแล้ว! ดื่มซะดีๆ";
                         document.getElementById('simon-status').innerText = "❌ ผิดลำดับ!";
                         document.getElementById('simon-status').style.color = "#ef5350";
                         spinBtn.disabled = false;
                         document.querySelectorAll('[id^="simon-"]').forEach(d => d.onclick = null);
                     } else {
-                        playSound(clickSound); 
+                        playSound(clickSound);
                         userIdx++;
                         if(userIdx === seq.length) {
-                            playSound(resultSound); 
+                            playSound(resultSound);
                             resultDisplay.innerText = "สมองดีมาก! รอดตาย";
                             document.getElementById('simon-status').innerText = "✅ ถูกต้องทั้งหมด!";
                             spinBtn.disabled = false;
@@ -785,7 +985,7 @@ function startSimon() {
             }, 450);
         }
         i++;
-    }, 700); 
+    }, 700);
 }
 
 function setupBottleGame() {
@@ -804,27 +1004,27 @@ function spinBottle() {
 
 function setupChainMathGame() {
     const ops = ['+', '-'];
-    const n1 = Math.floor(Math.random() * 15) + 5; 
+    const n1 = Math.floor(Math.random() * 15) + 5;
     const n2 = Math.floor(Math.random() * 9) + 1;
     const n3 = Math.floor(Math.random() * 9) + 1;
     const op1 = ops[Math.floor(Math.random() * 2)];
     const op2 = ops[Math.floor(Math.random() * 2)];
     const eq = `${n1}${op1}${n2}${op2}${n3}`;
     const ans = eval(eq);
-    
+
     specialGameArea.style.display = 'flex';
     specialGameArea.innerHTML = `
         <div style="margin-bottom:10px; color:#ffca28;">คิดให้ไว! ก่อนระเบิดทำงาน</div>
         <div class="timer-text" style="font-size: 3rem; margin-bottom:10px;">${eq} = ?</div>
-        
+
         <div style="width:100%; height:10px; background:#444; border-radius:5px; margin-bottom:20px; overflow:hidden;">
             <div id="math-progress" style="width:100%; height:100%; background:#ef5350; transition: width 0.1s linear;"></div>
         </div>
 
-        <input type="number" id="math-ans" pattern="[0-9]*" inputmode="numeric" 
-               style="width:60%; padding:15px; text-align:center; font-size:1.5rem; border-radius:10px; border:none; margin-bottom:15px;" 
+        <input type="number" id="math-ans" pattern="[0-9]*" inputmode="numeric"
+               style="width:60%; padding:15px; text-align:center; font-size:1.5rem; border-radius:10px; border:none; margin-bottom:15px;"
                placeholder="คำตอบ...">
-        
+
         <button class="game-btn" id="math-submit" onclick="solveChain(${ans})">ส่งคำตอบ!</button>
         ${getSkipButtonHTML()}
     `;
@@ -833,7 +1033,7 @@ function setupChainMathGame() {
 
     let timeLeft = 7.0;
     const totalTime = 7.0;
-    
+
     window.mathTimer = setInterval(() => {
         timeLeft -= 0.1;
         const progressBar = document.getElementById('math-progress');
@@ -843,7 +1043,7 @@ function setupChainMathGame() {
         }
         if (timeLeft <= 0) {
             clearInterval(window.mathTimer);
-            failMathGame(ans); 
+            failMathGame(ans);
         }
     }, 100);
 }
@@ -852,7 +1052,7 @@ function solveChain(ans) {
     clearInterval(window.mathTimer);
     const input = document.getElementById('math-ans');
     const user = parseInt(input.value);
-    
+
     if (user === ans) {
         resultDisplay.innerText = "สมองไว! รอดตาย";
         resultDisplay.style.color = "#00e676";
@@ -866,7 +1066,7 @@ function solveChain(ans) {
 
 function failMathGame(correctAns) {
     clearInterval(window.mathTimer);
-    playSound(bangSound); 
+    playSound(bangSound);
     specialGameArea.style.animation = "shake 0.5s";
     specialGameArea.innerHTML = `
         <div class="timer-text" style="color:#ef5350;">💥 บึ้ม!</div>
@@ -878,16 +1078,16 @@ function failMathGame(correctAns) {
 }
 
 function setupTapWarGame() {
-    window.warScore = 50; 
+    window.warScore = 50;
     window.warActive = false;
-    
+
     specialGameArea.style.display = 'flex';
     specialGameArea.innerHTML = `
         <div id="tap-war-container" style="width:100%; position:relative;">
             <div style="text-align:center; color:#fff; margin-bottom:10px; font-weight:bold;">
                 🔵 น้ำเงิน VS แดง 🔴
             </div>
-            
+
             <div id="battle-field" style="display:flex; height:200px; width:100%; border-radius:15px; overflow:hidden; border:3px solid #444; position:relative;">
                 <div id="p1-area" onclick="tapWar(1)" style="flex:50; background:linear-gradient(45deg, #1976d2, #2196f3); transition: flex 0.1s ease-out; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                     <span style="font-size:2rem;">🔵</span>
@@ -897,7 +1097,7 @@ function setupTapWarGame() {
                     <span style="font-size:2rem;">🔴</span>
                     <span id="p2-percent" style="font-weight:bold;">50%</span>
                 </div>
-                
+
                 <div id="war-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:10;">
                     <button class="game-btn" id="start-war-btn" onclick="startTapWarCountdown()">เริ่มศึกนี้!</button>
                 </div>
@@ -931,15 +1131,15 @@ function tapWar(player) {
     if(!window.warActive) return;
     if(player === 1) window.warScore += 4;
     else window.warScore -= 4;
-    
+
     const p1 = document.getElementById('p1-area');
     const p2 = document.getElementById('p2-area');
     p1.style.flex = window.warScore;
     p2.style.flex = 100 - window.warScore;
-    
+
     document.getElementById('p1-percent').innerText = window.warScore + "%";
     document.getElementById('p2-percent').innerText = (100 - window.warScore) + "%";
-    
+
     playSound(clickSound);
 
     if(window.warScore >= 100 || window.warScore <= 0) {
@@ -968,13 +1168,21 @@ function showWarWinner(winner, color, loser) {
 
 // =================== History ===================
 function openHistory() {
-    playSound(clickSound); historyModal.classList.add('active');
-    if (history.length === 0) { historyListDisplay.innerHTML = '<li style="text-align:center; padding:20px;">ยังไม่มีประวัติ</li>'; return; }
+    playSound(clickSound);
+    historyModal.classList.add('active');
+    if (history.length === 0) {
+        historyListDisplay.innerHTML = '<li style="text-align:center; padding:20px;">ยังไม่มีประวัติ</li>';
+        return;
+    }
     historyListDisplay.innerHTML = history.map(h => `<li class="history-item"><span class="history-tag" style="background:${h.color}">${h.c}</span><span style="flex:1;">${h.t}</span></li>`).join("");
 }
 function closeHistory() { historyModal.classList.remove('active'); }
 historyModal.addEventListener('click', (e) => { if (e.target === historyModal) closeHistory(); });
+
+// เริ่มต้นตั้งค่า questionsPerBatch แรก
+questionsPerBatch = Math.random() < 0.5 ? 5 : 6;
+updateRoundBadge(true);
 </script>
-    
+
 </body>
 </html>
